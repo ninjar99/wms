@@ -1,0 +1,16 @@
+
+select SYS_VERSION_CODE,SYS_VERSION_NAME from sys_version where SYS_VERSION_CLIENT='WMS' order by SYS_VERSION_CODE desc limit 1  [2015-10-25 09:40:06]
+
+column:2 ; row:1  [2015-10-25 09:40:06]
+
+select SYS_VERSION_CODE,SYS_VERSION_NAME from sys_version where SYS_VERSION_CLIENT='WMS' order by SYS_VERSION_CODE desc limit 1  [2015-10-25 09:40:14]
+
+column:2 ; row:1  [2015-10-25 09:40:14]
+
+select 'hz' CUR_WAREHOUSE_CODE,WAREHOUSE_CODE,USER_CODE,USER_NAME,ROLE_NAME,ACTIVE from sys_user where (user_code= 'admin' or login_code = 'admin') and password='854f36c709b662f53c00ea2c11a40f7a'   [2015-10-25 09:40:21]
+
+column:6 ; row:0  [2015-10-25 09:40:21]
+
+select 'hz' CUR_WAREHOUSE_CODE,WAREHOUSE_CODE,USER_CODE,USER_NAME,ROLE_NAME,ACTIVE from sys_user where (user_code= 'admin' or login_code = 'admin') and password='21232f297a57a5a743894a0e4a801fc3'   [2015-10-25 09:40:25]
+
+column:6 ; row:1  [2015-10-25 09:40:25]
