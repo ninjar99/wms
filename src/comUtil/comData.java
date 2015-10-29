@@ -434,23 +434,116 @@ public class comData {
 		}
 	}
 	
-	public static void main(String[] args){
-		//记录操作日志
-		DataManager dmProcess = getSysProcessHistoryDataModel("sys_process_history");
-		if (dmProcess!=null) {
-			dmdata.xArrayList list = (xArrayList) dmProcess.getRow(0);
-			list.set(dmProcess.getCol("SYS_PROCESS_HISTORY_ID"), "null");
-			list.set(dmProcess.getCol("QTY"), "0");
-			list.set(dmProcess.getCol("STORER_CODE"), "1117");
-			list.set(dmProcess.getCol("WAREHOUSE_CODE"), "HZ");
-			list.set(dmProcess.getCol("PROCESS_TIME"), "now()");
-			list.set(dmProcess.getCol("CREATED_DTM_LOC"), "now()");
-			list.set(dmProcess.getCol("UPDATED_DTM_LOC"), "now()");
-			dmProcess.RemoveRow(0);
-			dmProcess.AddNewRow(list);
-			boolean bool = addSysProcessHistory("sys_process_history", dmProcess);
-			System.out.println(bool);
+	public static DataManager getTableHeader2DataManager(String table){
+		DataManager dm = new DataManager();
+		if(table.equals("")){
+			return dm;
 		}
+		try{
+		String sql = "select * from "+table+" where 1<>1";
+		dm = DBOperator.DoSelect2DM(sql);
+		String[] rowdata = new String[dm.getColCount()];
+		dm.AddNewRow(rowdata);
+		}catch(Exception e){
+			return dm;
+		}
+		return dm;
+	}
+	
+	public static boolean saveTableData(String table,String keyName,DataManager dm){
+		StringBuffer sbf = new StringBuffer();
+		String sql = "select "+keyName+" from "+table+" where 1=1 ";
+		for(int k=0;k<dm.getCurrentCount();k++){
+			String keyValue = dm.getString(keyName, k);
+			sql = sql +" and "+keyName+" = '"+keyValue+"'";
+			Vector vec = DBOperator.DoSelect(sql);
+			if(vec.size()==0){
+				//insert into
+				sbf.append("insert into "+table+"(");
+				for(int i=0;i<dm.getColCount();i++){
+					sbf.append(dm.getCol(i));
+					if(i<dm.getColCount()-1){
+						sbf.append(",");
+					}
+				}
+				sbf.append(") ");
+
+				sbf.append("\n select ");
+				for(int i=0;i<dm.getColCount();i++){
+					//如果是null或者日期函数，需要去掉 单引号
+					if (dm.getString(i, k).equalsIgnoreCase("null")
+							|| dm.getString(i, k).equalsIgnoreCase("now()")) {
+						if(dm.getCol(i).equalsIgnoreCase(keyName)){
+							sbf.append("null");
+						}else{
+							sbf.append(dm.getString(i, k));
+						}
+					} else {
+						if(dm.getCol(i).equalsIgnoreCase(keyName)){
+							sbf.append("null");
+						}else{
+							sbf.append("'"+dm.getString(i, k)+"'");
+						}
+					}
+					if(i<dm.getColCount()-1){
+						sbf.append(",");
+					}
+				}
+				int t = DBOperator.DoUpdate(sbf.toString());
+				if(t>0){
+					continue;
+				}else{
+					return false;
+				}
+			}else{
+				//update
+				sbf.append("update "+table+" set ");
+				for(int i=0;i<dm.getColCount();i++){
+					//如果是null或者日期函数，需要去掉 单引号
+					if(dm.getString(i, k).equalsIgnoreCase("null") || dm.getString(i, k).equalsIgnoreCase("now()")){
+						sbf.append(dm.getCol(i)+" = "+dm.getString(i, k));
+					}else{
+						sbf.append(dm.getCol(i)+" = '"+dm.getString(i, k)+"'");
+					}
+					if(i<dm.getColCount()-1){
+						sbf.append(",");
+					}
+				}
+				int t = DBOperator.DoUpdate(sbf.toString());
+				if(t>0){
+					continue;
+				}else{
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+	public static void main(String[] args){
+		DataManager dmSaveTable = getTableHeader2DataManager("bas_warehouse");
+		dmdata.xArrayList list = (xArrayList) dmSaveTable.getRow(0);
+		list.set(dmSaveTable.getCol("WAREHOUSE_CODE"), "test");
+		dmSaveTable.RemoveRow(0);
+		dmSaveTable.AddNewRow(list);
+		boolean bool = saveTableData("bas_warehouse","BAS_WAREHOUSE_ID", dmSaveTable);
+		
+//		//记录操作日志
+//		DataManager dmProcess = getSysProcessHistoryDataModel("sys_process_history");
+//		if (dmProcess!=null) {
+//			dmdata.xArrayList list = (xArrayList) dmProcess.getRow(0);
+//			list.set(dmProcess.getCol("SYS_PROCESS_HISTORY_ID"), "null");
+//			list.set(dmProcess.getCol("QTY"), "0");
+//			list.set(dmProcess.getCol("STORER_CODE"), "1117");
+//			list.set(dmProcess.getCol("WAREHOUSE_CODE"), "HZ");
+//			list.set(dmProcess.getCol("PROCESS_TIME"), "now()");
+//			list.set(dmProcess.getCol("CREATED_DTM_LOC"), "now()");
+//			list.set(dmProcess.getCol("UPDATED_DTM_LOC"), "now()");
+//			dmProcess.RemoveRow(0);
+//			dmProcess.AddNewRow(list);
+//			boolean bool = addSysProcessHistory("sys_process_history", dmProcess);
+//			System.out.println(bool);
+//		}
 		
 //		String tmp = comData.getValueFromBasNumRule("sys_user", "user_code");
 //		System.out.println(tmp);
