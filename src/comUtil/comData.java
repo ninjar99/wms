@@ -473,16 +473,18 @@ public class comData {
 					//如果是null或者日期函数，需要去掉 单引号
 					if (dm.getString(i, k).equalsIgnoreCase("null")
 							|| dm.getString(i, k).equalsIgnoreCase("now()")) {
+						//主键ID插入NULL
 						if(dm.getCol(i).equalsIgnoreCase(keyName)){
 							sbf.append("null");
 						}else{
-							sbf.append(dm.getString(i, k));
+							sbf.append(dm.getString(i, k).equals("")?"null":dm.getString(i, k));
 						}
 					} else {
+						//主键ID插入NULL
 						if(dm.getCol(i).equalsIgnoreCase(keyName)){
 							sbf.append("null");
 						}else{
-							sbf.append("'"+dm.getString(i, k)+"'");
+							sbf.append(dm.getString(i, k).equals("")?"null":"'"+dm.getString(i, k)+"'");
 						}
 					}
 					if(i<dm.getColCount()-1){
@@ -497,18 +499,25 @@ public class comData {
 				}
 			}else{
 				//update
+				int cycle = 0;
 				sbf.append("update "+table+" set ");
 				for(int i=0;i<dm.getColCount();i++){
+					if(dm.getString(i, k).equals("")) continue;
+					if(dm.getCol(i).equalsIgnoreCase(keyName)) continue;
 					//如果是null或者日期函数，需要去掉 单引号
+					cycle++;
+					if(i<dm.getColCount()-1 && cycle>1){
+						sbf.append(",");
+						cycle --;
+					}
 					if(dm.getString(i, k).equalsIgnoreCase("null") || dm.getString(i, k).equalsIgnoreCase("now()")){
 						sbf.append(dm.getCol(i)+" = "+dm.getString(i, k));
 					}else{
 						sbf.append(dm.getCol(i)+" = '"+dm.getString(i, k)+"'");
 					}
-					if(i<dm.getColCount()-1){
-						sbf.append(",");
-					}
+					
 				}
+				sbf.append(" where "+keyName+" ='"+dm.getString(keyName, k)+"'");
 				int t = DBOperator.DoUpdate(sbf.toString());
 				if(t>0){
 					continue;
@@ -523,7 +532,15 @@ public class comData {
 	public static void main(String[] args){
 		DataManager dmSaveTable = getTableHeader2DataManager("bas_warehouse");
 		dmdata.xArrayList list = (xArrayList) dmSaveTable.getRow(0);
+		list.set(dmSaveTable.getCol("BAS_WAREHOUSE_ID"), "4");
 		list.set(dmSaveTable.getCol("WAREHOUSE_CODE"), "test");
+		list.set(dmSaveTable.getCol("WAREHOUSE_NAME"), "测试仓库");
+		list.set(dmSaveTable.getCol("WAREHOUSE_SHORT_NAME"), "测试仓库");
+		list.set(dmSaveTable.getCol("WAREHOUSE_TYPE"), "0");
+		list.set(dmSaveTable.getCol("PORT_NO"), "101");
+		list.set(dmSaveTable.getCol("IS_ACTIVE"), "1");
+		list.set(dmSaveTable.getCol("CREATED_BY_USER"), "sys");
+		list.set(dmSaveTable.getCol("CREATED_DTM_LOC"), "now()");
 		dmSaveTable.RemoveRow(0);
 		dmSaveTable.AddNewRow(list);
 		boolean bool = saveTableData("bas_warehouse","BAS_WAREHOUSE_ID", dmSaveTable);
