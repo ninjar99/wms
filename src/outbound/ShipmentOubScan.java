@@ -181,7 +181,7 @@ public class ShipmentOubScan extends InnerFrame {
 		JButton btnTransferQuery = new JButton("<");
 		btnTransferQuery.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String sql = "select distinct TRANSFER_ORDER_NO 运单号,WAREHOUSE_CODE 仓库编码,STORER_CODE 货主编码 from oub_shipment_header where status<'500' "
+				String sql = "select distinct TRANSFER_ORDER_NO 运单号,WAREHOUSE_CODE 仓库编码,STORER_CODE 货主编码 from oub_shipment_header where status<500 and status>100 "
 						+" and WAREHOUSE_CODE='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' ";
 				tableQueryDialog tableQuery = new tableQueryDialog(sql,false);
 				Toolkit toolkit = Toolkit.getDefaultToolkit();
@@ -320,7 +320,7 @@ public class ShipmentOubScan extends InnerFrame {
 					}
 					if(Math_SAM.str2Double(allocatedQty)==0){
 						Message.showWarningMessage("此订单未分配库存，不允许做出库扫描");
-						txt_item_bar_code.setText("");;
+						txt_item_bar_code.setText("");
 						txt_item_bar_code.requestFocus();
 						return;
 					}
@@ -329,6 +329,12 @@ public class ShipmentOubScan extends InnerFrame {
 						txt_item_bar_code.setText("");;
 						txt_item_bar_code.requestFocus();
 						return;
+					}
+					if(Math_SAM.str2Double(oqcQty)<Math_SAM.str2Double(allocatedQty)){
+						boolean bool = Message.showOKorCancelMessage("拣货复核扫描数量小于订单库存分配数量，是否继续？");
+						if(!bool){
+							return;
+						}
 					}
 					sql = "update oub_shipment_detail set STATUS='500',PICKED_QTY="+oqcQty+",SORTED_QTY="+oqcQty+",OQC_QTY= "+oqcQty+",UPDATED_DTM_LOC=now(),UPDATED_BY_USER='"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' "
 							+" where SHIPMENT_NO='"+shipmentNo+"' and SHIPMENT_LINE_NO='"+shipmentLineNo+"' "
