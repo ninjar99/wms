@@ -530,20 +530,20 @@ public class comData {
 	}
 	
 	public static void main(String[] args){
-		DataManager dmSaveTable = getTableHeader2DataManager("bas_warehouse");
-		dmdata.xArrayList list = (xArrayList) dmSaveTable.getRow(0);
-		list.set(dmSaveTable.getCol("BAS_WAREHOUSE_ID"), "4");
-		list.set(dmSaveTable.getCol("WAREHOUSE_CODE"), "test");
-		list.set(dmSaveTable.getCol("WAREHOUSE_NAME"), "≤‚ ‘≤÷ø‚");
-		list.set(dmSaveTable.getCol("WAREHOUSE_SHORT_NAME"), "≤‚ ‘≤÷ø‚");
-		list.set(dmSaveTable.getCol("WAREHOUSE_TYPE"), "0");
-		list.set(dmSaveTable.getCol("PORT_NO"), "101");
-		list.set(dmSaveTable.getCol("IS_ACTIVE"), "1");
-		list.set(dmSaveTable.getCol("CREATED_BY_USER"), "sys");
-		list.set(dmSaveTable.getCol("CREATED_DTM_LOC"), "now()");
-		dmSaveTable.RemoveRow(0);
-		dmSaveTable.AddNewRow(list);
-		boolean bool = saveTableData("bas_warehouse","BAS_WAREHOUSE_ID", dmSaveTable);
+//		DataManager dmSaveTable = getTableHeader2DataManager("bas_warehouse");
+//		dmdata.xArrayList list = (xArrayList) dmSaveTable.getRow(0);
+//		list.set(dmSaveTable.getCol("BAS_WAREHOUSE_ID"), "4");
+//		list.set(dmSaveTable.getCol("WAREHOUSE_CODE"), "test");
+//		list.set(dmSaveTable.getCol("WAREHOUSE_NAME"), "≤‚ ‘≤÷ø‚");
+//		list.set(dmSaveTable.getCol("WAREHOUSE_SHORT_NAME"), "≤‚ ‘≤÷ø‚");
+//		list.set(dmSaveTable.getCol("WAREHOUSE_TYPE"), "0");
+//		list.set(dmSaveTable.getCol("PORT_NO"), "101");
+//		list.set(dmSaveTable.getCol("IS_ACTIVE"), "1");
+//		list.set(dmSaveTable.getCol("CREATED_BY_USER"), "sys");
+//		list.set(dmSaveTable.getCol("CREATED_DTM_LOC"), "now()");
+//		dmSaveTable.RemoveRow(0);
+//		dmSaveTable.AddNewRow(list);
+//		boolean bool = saveTableData("bas_warehouse","BAS_WAREHOUSE_ID", dmSaveTable);
 		
 //		//º«¬º≤Ÿ◊˜»’÷æ
 //		DataManager dmProcess = getSysProcessHistoryDataModel("sys_process_history");
