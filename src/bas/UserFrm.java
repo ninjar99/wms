@@ -89,12 +89,6 @@ public class UserFrm extends InnerFrame {
 					 instance = new UserFrm();
 				 }
 			 }
-	            try {
-					instance.setMaximum(true);
-				} catch (PropertyVetoException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} 
 	        }  
 	        return instance;
 		 

@@ -7,6 +7,7 @@ import java.beans.PropertyVetoException;
 import javax.swing.JInternalFrame;
 import javax.swing.plaf.basic.BasicInternalFrameUI;
 
+
 public class InnerFrame extends JInternalFrame {
 	/**
 	 * 
@@ -28,7 +29,7 @@ public class InnerFrame extends JInternalFrame {
         maximizable = true; 
         closable = true; 
         addComponentListener(new ComponentAdapter() { 
-            public void componentResized(ComponentEvent e) { 
+            public void componentResized(ComponentEvent e) {
                 InnerFrame selectedFrame = (InnerFrame)e.getSource(); 
                 if(selectedFrame.isMaximum()){ 
                     selectedFrame.hideNorthPanel(); 
@@ -69,4 +70,5 @@ public class InnerFrame extends JInternalFrame {
             hideNorthPanel(); 
         } 
      } 
+    
 }

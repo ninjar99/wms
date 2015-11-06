@@ -67,12 +67,6 @@ public class inbScanFrm extends InnerFrame {
 					 instance = new inbScanFrm();
 				 }
 			 }
-	            try {
-					instance.setMaximum(true);
-				} catch (PropertyVetoException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} 
 	        }  
 	        return instance;
 	 }

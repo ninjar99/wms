@@ -53,12 +53,6 @@ public class ShipmentOubCheck extends InnerFrame {
 					 instance = new ShipmentOubCheck();
 				 }
 			 }
-	            try {
-					instance.setMaximum(true);
-				} catch (PropertyVetoException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} 
 	        }  
 	        return instance;
 		 

@@ -70,7 +70,7 @@ public class InvQueryFrm extends InnerFrame {
 	private static final long serialVersionUID = 2144940191537591911L;
 	private JPanel contentPane;
 	private static InvQueryFrm instance;
-	private static boolean isOpen = false;
+	public static boolean isOpen = false;
 	private PBSUIBaseGrid table;
 	private String strWheres = "";
 	private PBSUIBaseGrid table2;

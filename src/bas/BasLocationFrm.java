@@ -524,12 +524,6 @@ public class BasLocationFrm extends InnerFrame{
 					 instance = new BasLocationFrm();
 				 }
 			 }
-	            try {
-					instance.setMaximum(true);
-				} catch (PropertyVetoException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} 
 	        }  
 	        return instance;
 		 

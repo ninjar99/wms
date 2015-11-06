@@ -386,11 +386,6 @@ public class BasBrandFrm extends InnerFrame{
 					 instance = new BasBrandFrm();
 				 }
 			 }
-	            try {
-					instance.setMaximum(true);
-				} catch (PropertyVetoException e) {
-					e.printStackTrace();
-				} 
 	        }  
 	        return instance;
 	 }

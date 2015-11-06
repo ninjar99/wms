@@ -56,12 +56,6 @@ public class ShipmentQueryFrm extends InnerFrame {
 					 instance = new ShipmentQueryFrm();
 				 }
 			 }
-	            try {
-					instance.setMaximum(true);
-				} catch (PropertyVetoException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} 
 	        }  
 	        return instance;
 		 

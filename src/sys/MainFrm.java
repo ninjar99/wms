@@ -103,7 +103,7 @@ public class MainFrm extends JPanel {
 	private final JSplitPane split = new JSplitPane();
 	private final JScrollPane leftScroll;
 	private static ImageIcon ico=new ImageIcon("images/aggwms.jpg");
-	private final JDesktopPane desktopPane = new JDesktopPane();
+	private final static JDesktopPane desktopPane = new JDesktopPane();
 	private static DataManager userInfo = new DataManager();
 	private static DataManager versionInfo = new DataManager();
 	public static String wmsVersion = "1.0";
@@ -224,13 +224,6 @@ public class MainFrm extends JPanel {
 
 		List<AccordionPanel> panelList = new ArrayList<AccordionPanel>();
 		panelList.add(new AccordionPanel("基础资料") {
-			testFrm testfrm = null;
-			storerMasterFrm storerFrm = null;
-			UserFrm userfrm = null;
-			BasItemFrm basItemFrm = null;
-			BasLocationFrm basLocationFrm = null;
-			BasBrandFrm basBrandFrm  = null;
-			BasContainerFrm bascontainerFrm = null;
 			private static final long serialVersionUID = 1L;
 
 			public JPanel makePanel() {
@@ -250,246 +243,61 @@ public class MainFrm extends JPanel {
 						try {
 							iFrame.setMaximum(true);
 						} catch (PropertyVetoException e1) {
-							// TODO Auto-generated catch block
 							e1.printStackTrace();
 						}
 					}
 				});
-//				pnl.add(binner);
 
-				JButton b1 = new JButton("testFrm");
 				JButton btnStorer = new JButton("货主信息");
 				JButton btnBrand = new JButton("品牌信息");
 				JButton btnUser = new JButton("用户信息");
 				JButton btnBasItem = new JButton("货品信息");
 				JButton btnBasLocation = new JButton("库位信息");
 				JButton btnContainer = new JButton("容器管理");
-				// testFrm
-				b1.addActionListener(new ActionListener() {
-					public void actionPerformed(ActionEvent e) {
-						if (testfrm == null) {
-							if (!testFrm.getOpenStatus()) {
-								testfrm = testFrm.getInstance();
-								testfrm.setClosable(true);
-								testfrm.setResizable(true);
-								testfrm.setVisible(true);
-								desktopPane.add(testfrm);
-								try {
-									testfrm.setMaximum(true);
-								} catch (PropertyVetoException e1) {
-									// TODO Auto-generated catch block
-									e1.printStackTrace();
-								}
-								try {
-									testfrm.setSelected(true);
-									testfrm = null;
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								testfrm = testFrm.getInstance();
-								testfrm.moveToFront();
-								testfrm = null;
-							}
-						}
-					}
-				});
 
 				// storerMasterFrm
 				btnStorer.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("货主信息")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (storerFrm == null) {
-							if (!storerMasterFrm.getOpenStatus()) {
-								storerFrm = storerMasterFrm.getInstance();
-								storerFrm.setClosable(true);
-								storerFrm.setResizable(true);
-								storerFrm.setVisible(true);
-								desktopPane.add(storerFrm);
-								try {
-									storerFrm.setMaximum(true);
-									storerFrm.setSelected(true);
-									storerFrm = null;
-									frame.setTitle("AGG WMS 【货主信息】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								storerFrm = storerMasterFrm.getInstance();
-								storerFrm.moveToFront();
-								storerFrm = null;
-								frame.setTitle("AGG WMS 【货主信息】");
-							}
-						}
+						initButtonMenu(storerMasterFrm.getInstance(),"AGG WMS 【货主信息】");
 					}
 				});
 				btnBrand.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("品牌信息")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (basBrandFrm == null) {
-							if (!BasBrandFrm.getOpenStatus()) {
-								basBrandFrm = basBrandFrm.getInstance();
-								basBrandFrm.setClosable(true);
-								basBrandFrm.setResizable(true);
-								basBrandFrm.setVisible(true);
-								desktopPane.add(basBrandFrm);
-								try {
-									basBrandFrm.setMaximum(true);
-									basBrandFrm.setSelected(true);
-									basBrandFrm = null;
-									frame.setTitle("AGG WMS 【品牌信息】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								basBrandFrm = BasBrandFrm.getInstance();
-								basBrandFrm.moveToFront();
-								basBrandFrm = null;
-								frame.setTitle("AGG WMS 【品牌信息】");
-							}
-						}
+						initButtonMenu(BasBrandFrm.getInstance(),"AGG WMS 【品牌信息】");
 					}
 				});
 				// UserFrm
 				btnUser.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("用户信息")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (userfrm == null) {
-							if (!UserFrm.getOpenStatus()) {
-								userfrm = UserFrm.getInstance();
-								userfrm.setClosable(true);
-								userfrm.setResizable(true);
-								userfrm.setVisible(true);
-								desktopPane.add(userfrm);
-								try {
-									userfrm.setMaximum(true);
-									userfrm.setSelected(true);
-									userfrm = null;
-									frame.setTitle("AGG WMS 【用户信息】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								userfrm = UserFrm.getInstance();
-								userfrm.moveToFront();
-								userfrm = null;
-								frame.setTitle("AGG WMS 【用户信息】");
-							}
-						}
+						initButtonMenu(UserFrm.getInstance(),"AGG WMS 【用户信息】");
 					}
 				});
 				
 				//货品信息
 				btnBasItem.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
-						if(!comData.getUserMenuPower("货品信息")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if(basItemFrm == null){
-							if(!basItemFrm.getOpenStatus()){
-								basItemFrm= BasItemFrm.getInstance();
-								basItemFrm.setClosable(true);
-								basItemFrm.setResizable(true);
-								basItemFrm.setVisible(true);
-								desktopPane.add(basItemFrm);
-								try {
-									basItemFrm.setMaximum(true);
-									basItemFrm.setSelected(true);
-									basItemFrm = null;
-									frame.setTitle("AGG WMS 【货品信息】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							}else {
-								basItemFrm = BasItemFrm.getInstance();
-								basItemFrm.moveToFront();
-								basItemFrm = null;
-								frame.setTitle("AGG WMS 【货品信息】");
-							}
-						}
+						initButtonMenu(BasItemFrm.getInstance(),"AGG WMS 【货品信息】");
 					}
 				});
 				//库位信息
 				btnBasLocation.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("库位信息")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if(basLocationFrm == null){
-							if(!basLocationFrm.getOpenStatus()){
-								basLocationFrm= BasLocationFrm.getInstance();
-								basLocationFrm.setClosable(true);
-								basLocationFrm.setResizable(true);
-								basLocationFrm.setVisible(true);
-								desktopPane.add(basLocationFrm);
-								try {
-									basLocationFrm.setMaximum(true);
-									basLocationFrm.setSelected(true);
-									basLocationFrm = null;
-									frame.setTitle("AGG WMS 【库位信息】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							}else {
-								basLocationFrm = BasLocationFrm.getInstance();
-								basLocationFrm.moveToFront();
-								basLocationFrm = null;
-								frame.setTitle("AGG WMS 【库位信息】");
-							}
-						}	
+						initButtonMenu(BasLocationFrm.getInstance(),"AGG WMS 【库位信息】");
 					}
 				});
 				
 				btnContainer.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("容器管理")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if(bascontainerFrm == null){
-							if(!bascontainerFrm.getOpenStatus()){
-								bascontainerFrm= BasContainerFrm.getInstance();
-								bascontainerFrm.setClosable(true);
-								bascontainerFrm.setResizable(true);
-								bascontainerFrm.setVisible(true);
-								desktopPane.add(bascontainerFrm);
-								try {
-									bascontainerFrm.setMaximum(true);
-									bascontainerFrm.setSelected(true);
-									bascontainerFrm = null;
-									frame.setTitle("AGG WMS 【容器管理】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							}else {
-								bascontainerFrm = BasContainerFrm.getInstance();
-								bascontainerFrm.moveToFront();
-								bascontainerFrm = null;
-								frame.setTitle("AGG WMS 【容器管理】");
-							}
-						}	
+						initButtonMenu(BasContainerFrm.getInstance(),"AGG WMS 【容器管理】");	
 					}
 				});
 				
-//				b1.setOpaque(false);
 				btnStorer.setOpaque(false);
 				btnUser.setOpaque(false);
 				btnBasItem.setOpaque(false);
 				btnBasLocation.setOpaque(false);
 				btnBrand.setOpaque(false);
 				btnContainer.setOpaque(false);
-//				pnl.add(b1);
 				pnl.add(btnStorer);
 				pnl.add(btnBrand);
 				pnl.add(btnUser);
@@ -503,10 +311,6 @@ public class MainFrm extends JPanel {
 		});
 
 		panelList.add(new AccordionPanel("入库作业") {
-			POFrm pofrm = null;
-			poImportFrm poimportfrm = null;
-			inbScanFrm inbscanfrm = null;
-			putawayFrm putawayfrm = null;
 			private static final long serialVersionUID = 1L;
 
 			public JPanel makePanel() {
@@ -514,32 +318,7 @@ public class MainFrm extends JPanel {
 				JButton b1 = new JButton("PO维护");
 				b1.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("PO维护")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (pofrm == null) {
-							if (!POFrm.getOpenStatus()) {
-								pofrm = POFrm.getInstance();
-								pofrm.setClosable(true);
-								pofrm.setResizable(true);
-								pofrm.setVisible(true);
-								desktopPane.add(pofrm);
-								try {
-									pofrm.setMaximum(true);
-									pofrm.setSelected(true);
-									pofrm = null;
-									frame.setTitle("AGG WMS 【PO维护】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								pofrm = POFrm.getInstance();
-								pofrm.moveToFront();
-								pofrm = null;
-								frame.setTitle("AGG WMS 【PO维护】");
-							}
-						}
+						initButtonMenu(POFrm.getInstance(),"AGG WMS 【PO维护】");
 					}
 				});
 				b1.setOpaque(false);
@@ -547,32 +326,7 @@ public class MainFrm extends JPanel {
 				JButton b2 = new JButton("PO导入");
 				b2.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("PO导入")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (poimportfrm == null) {
-							if (!poImportFrm.getOpenStatus()) {
-								poimportfrm = poImportFrm.getInstance();
-								poimportfrm.setClosable(true);
-								poimportfrm.setResizable(true);
-								poimportfrm.setVisible(true);
-								desktopPane.add(poimportfrm);
-								try {
-									poimportfrm.setMaximum(true);
-									poimportfrm.setSelected(true);
-									poimportfrm = null;
-									frame.setTitle("AGG WMS 【PO导入】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								poimportfrm = poImportFrm.getInstance();
-								poimportfrm.moveToFront();
-								poimportfrm = null;
-								frame.setTitle("AGG WMS 【PO导入】");
-							}
-						}
+						initButtonMenu(poImportFrm.getInstance(),"AGG WMS 【PO导入】");
 					}
 				});
 				b2.setOpaque(false);
@@ -580,32 +334,7 @@ public class MainFrm extends JPanel {
 				JButton b3 = new JButton("入库扫描");
 				b3.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("入库扫描")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (inbscanfrm == null) {
-							if (!inbScanFrm.getOpenStatus()) {
-								inbscanfrm = inbScanFrm.getInstance();
-								inbscanfrm.setClosable(true);
-								inbscanfrm.setResizable(true);
-								inbscanfrm.setVisible(true);
-								desktopPane.add(inbscanfrm);
-								try {
-									inbscanfrm.setMaximum(true);
-									inbscanfrm.setSelected(true);
-									inbscanfrm = null;
-									frame.setTitle("AGG WMS 【入库扫描】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								inbscanfrm = inbScanFrm.getInstance();
-								inbscanfrm.moveToFront();
-								inbscanfrm = null;
-								frame.setTitle("AGG WMS 【入库扫描】");
-							}
-						}
+						initButtonMenu(inbScanFrm.getInstance(),"AGG WMS 【入库扫描】");
 					}
 				});
 				b3.setOpaque(false);
@@ -613,32 +342,7 @@ public class MainFrm extends JPanel {
 				JButton b4 = new JButton("入库上架");
 				b4.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("入库上架")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (putawayfrm == null) {
-							if (!putawayFrm.getOpenStatus()) {
-								putawayfrm = putawayFrm.getInstance();
-								putawayfrm.setClosable(true);
-								putawayfrm.setResizable(true);
-								putawayfrm.setVisible(true);
-								desktopPane.add(putawayfrm);
-								try {
-									putawayfrm.setMaximum(true);
-									putawayfrm.setSelected(true);
-									putawayfrm = null;
-									frame.setTitle("AGG WMS 【入库上架】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								putawayfrm = putawayFrm.getInstance();
-								putawayfrm.moveToFront();
-								putawayfrm = null;
-								frame.setTitle("AGG WMS 【入库上架】");
-							}
-						}
+						initButtonMenu(putawayFrm.getInstance(),"AGG WMS 【入库上架】");
 					}
 				});
 				b4.setOpaque(false);
@@ -654,42 +358,13 @@ public class MainFrm extends JPanel {
 			* 
 			*/
 			private static final long serialVersionUID = 1L;
-			TrackingNoScanFrm trackingNoScanFrm = null;
-			ShipmentQueryFrm shipmentQueryFrm = null;
-			ShipmentOubScan shipmentoubscanFrm = null;
-			ShipmentOubCheck shipmentoubcheckFrm = null;
 
 			public JPanel makePanel() {
 				JPanel pnl = new JPanel(new GridLayout(0, 1));
 				JButton btnTrackingScan = new JButton("运单扫描");
 				btnTrackingScan.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("运单扫描")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (trackingNoScanFrm == null) {
-							if (!TrackingNoScanFrm.getOpenStatus()) {
-								trackingNoScanFrm = TrackingNoScanFrm.getInstance();
-								trackingNoScanFrm.setClosable(true);
-								trackingNoScanFrm.setResizable(true);
-								trackingNoScanFrm.setVisible(true);
-								desktopPane.add(trackingNoScanFrm);
-								try {
-									trackingNoScanFrm.setMaximum(true);
-									trackingNoScanFrm.setSelected(true);
-									trackingNoScanFrm = null;
-									frame.setTitle("AGG WMS 【运单扫描】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								trackingNoScanFrm = TrackingNoScanFrm.getInstance();
-								trackingNoScanFrm.moveToFront();
-								trackingNoScanFrm = null;
-								frame.setTitle("AGG WMS 【运单扫描】");
-							}
-						}
+						initButtonMenu(TrackingNoScanFrm.getInstance(),"AGG WMS 【运单扫描】");
 					}
 				});
 				btnTrackingScan.setOpaque(false);
@@ -698,32 +373,7 @@ public class MainFrm extends JPanel {
 				JButton btnShipmentOubScan = new JButton("拣货复核");
 				btnShipmentOubScan.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("拣货复核")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (shipmentoubscanFrm == null) {
-							if (!ShipmentOubScan.getOpenStatus()) {
-								shipmentoubscanFrm = ShipmentOubScan.getInstance();
-								shipmentoubscanFrm.setClosable(true);
-								shipmentoubscanFrm.setResizable(true);
-								shipmentoubscanFrm.setVisible(true);
-								desktopPane.add(shipmentoubscanFrm);
-								try {
-									shipmentoubscanFrm.setMaximum(true);
-									shipmentoubscanFrm.setSelected(true);
-									shipmentoubscanFrm = null;
-									frame.setTitle("AGG WMS 【拣货复核】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								shipmentoubscanFrm = ShipmentOubScan.getInstance();
-								shipmentoubscanFrm.moveToFront();
-								shipmentoubscanFrm = null;
-								frame.setTitle("AGG WMS 【拣货复核】");
-							}
-						}
+						initButtonMenu(ShipmentOubScan.getInstance(),"AGG WMS 【拣货复核】");
 					}
 				});
 				btnShipmentOubScan.setOpaque(false);
@@ -732,32 +382,7 @@ public class MainFrm extends JPanel {
 				JButton btnShipmentOubCheck = new JButton("出库复核");
 				btnShipmentOubCheck.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("出库复核")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (shipmentoubcheckFrm == null) {
-							if (!ShipmentOubCheck.getOpenStatus()) {
-								shipmentoubcheckFrm = ShipmentOubCheck.getInstance();
-								shipmentoubcheckFrm.setClosable(true);
-								shipmentoubcheckFrm.setResizable(true);
-								shipmentoubcheckFrm.setVisible(true);
-								desktopPane.add(shipmentoubcheckFrm);
-								try {
-									shipmentoubcheckFrm.setMaximum(true);
-									shipmentoubcheckFrm.setSelected(true);
-									shipmentoubcheckFrm = null;
-									frame.setTitle("AGG WMS 【出库复核】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								shipmentoubcheckFrm = ShipmentOubCheck.getInstance();
-								shipmentoubcheckFrm.moveToFront();
-								shipmentoubcheckFrm = null;
-								frame.setTitle("AGG WMS 【出库复核】");
-							}
-						}
+						initButtonMenu(ShipmentOubCheck.getInstance(),"AGG WMS 【出库复核】");
 					}
 				});
 				btnShipmentOubCheck.setOpaque(false);
@@ -766,32 +391,7 @@ public class MainFrm extends JPanel {
 				JButton btnShipmentQuery = new JButton("订单查询");
 				btnShipmentQuery.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("订单查询")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (shipmentQueryFrm == null) {
-							if (!ShipmentQueryFrm.getOpenStatus()) {
-								shipmentQueryFrm = ShipmentQueryFrm.getInstance();
-								shipmentQueryFrm.setClosable(true);
-								shipmentQueryFrm.setResizable(true);
-								shipmentQueryFrm.setVisible(true);
-								desktopPane.add(shipmentQueryFrm);
-								try {
-									shipmentQueryFrm.setMaximum(true);
-									shipmentQueryFrm.setSelected(true);
-									shipmentQueryFrm = null;
-									frame.setTitle("AGG WMS 【订单查询】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								shipmentQueryFrm = ShipmentQueryFrm.getInstance();
-								shipmentQueryFrm.moveToFront();
-								shipmentQueryFrm = null;
-								frame.setTitle("AGG WMS 【订单查询】");
-							}
-						}
+						initButtonMenu(ShipmentQueryFrm.getInstance(),"AGG WMS 【订单查询】");
 					}
 				});
 				btnShipmentQuery.setOpaque(false);
@@ -806,11 +406,6 @@ public class MainFrm extends JPanel {
 		});
 		panelList.add(new AccordionPanel("库内管理") {
 			private static final long serialVersionUID = 1L;
-			InvQueryFrm invqueryFrm = null;
-			InvMoveFrm invmoveFrm = null;
-			StockTakeFrm stocktakeFrm = null;
-			StockTakeQueryFrm stocktakequeryFrm = null;
-			InvTransferFrm invTransferFrm = null;
 
 			public JPanel makePanel() {
 				JPanel pnl = new JPanel(new GridLayout(0, 1));
@@ -818,32 +413,7 @@ public class MainFrm extends JPanel {
 				JButton btnStockTake = new JButton("盘点作业");
 				btnStockTake.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("盘点作业")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (stocktakeFrm == null) {
-							if (!StockTakeFrm.getOpenStatus()) {
-								stocktakeFrm = StockTakeFrm.getInstance();
-								stocktakeFrm.setClosable(true);
-								stocktakeFrm.setResizable(true);
-								stocktakeFrm.setVisible(true);
-								desktopPane.add(stocktakeFrm);
-								try {
-									stocktakeFrm.setMaximum(true);
-									stocktakeFrm.setSelected(true);
-									stocktakeFrm = null;
-									frame.setTitle("AGG WMS 【盘点作业】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								stocktakeFrm = StockTakeFrm.getInstance();
-								stocktakeFrm.moveToFront();
-								stocktakeFrm = null;
-								frame.setTitle("AGG WMS 【盘点作业】");
-							}
-						}
+						initButtonMenu(StockTakeFrm.getInstance(),"AGG WMS 【盘点作业】");
 					}
 				});
 				btnStockTake.setOpaque(false);
@@ -852,32 +422,7 @@ public class MainFrm extends JPanel {
 				JButton btnStockTakeQuery = new JButton("盘点查询");
 				btnStockTakeQuery.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("盘点查询")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (stocktakequeryFrm == null) {
-							if (!StockTakeQueryFrm.getOpenStatus()) {
-								stocktakequeryFrm = StockTakeQueryFrm.getInstance();
-								stocktakequeryFrm.setClosable(true);
-								stocktakequeryFrm.setResizable(true);
-								stocktakequeryFrm.setVisible(true);
-								desktopPane.add(stocktakequeryFrm);
-								try {
-									stocktakequeryFrm.setMaximum(true);
-									stocktakequeryFrm.setSelected(true);
-									stocktakequeryFrm = null;
-									frame.setTitle("AGG WMS 【盘点查询】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								stocktakequeryFrm = StockTakeQueryFrm.getInstance();
-								stocktakequeryFrm.moveToFront();
-								stocktakequeryFrm = null;
-								frame.setTitle("AGG WMS 【盘点查询】");
-							}
-						}
+						initButtonMenu(StockTakeQueryFrm.getInstance(),"AGG WMS 【盘点查询】");
 					}
 				});
 				btnStockTakeQuery.setOpaque(false);
@@ -886,32 +431,7 @@ public class MainFrm extends JPanel {
 				JButton btnInvMove = new JButton("移库管理");
 				btnInvMove.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("移库管理")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (invmoveFrm == null) {
-							if (!InvMoveFrm.getOpenStatus()) {
-								invmoveFrm = InvMoveFrm.getInstance();
-								invmoveFrm.setClosable(true);
-								invmoveFrm.setResizable(true);
-								invmoveFrm.setVisible(true);
-								desktopPane.add(invmoveFrm);
-								try {
-									invmoveFrm.setMaximum(true);
-									invmoveFrm.setSelected(true);
-									invmoveFrm = null;
-									frame.setTitle("AGG WMS 【移库管理】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								invmoveFrm = InvMoveFrm.getInstance();
-								invmoveFrm.moveToFront();
-								invmoveFrm = null;
-								frame.setTitle("AGG WMS 【移库管理】");
-							}
-						}
+						initButtonMenu(InvMoveFrm.getInstance(),"AGG WMS 【移库管理】");
 					}
 				});
 				btnInvMove.setOpaque(false);
@@ -920,32 +440,7 @@ public class MainFrm extends JPanel {
 				JButton btnInvQuery = new JButton("库存查询");
 				btnInvQuery.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("库存查询")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (invqueryFrm == null) {
-							if (!InvQueryFrm.getOpenStatus()) {
-								invqueryFrm = InvQueryFrm.getInstance();
-								invqueryFrm.setClosable(true);
-								invqueryFrm.setResizable(true);
-								invqueryFrm.setVisible(true);
-								desktopPane.add(invqueryFrm);
-								try {
-									invqueryFrm.setMaximum(true);
-									invqueryFrm.setSelected(true);
-									invqueryFrm = null;
-									frame.setTitle("AGG WMS 【库存查询】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								invqueryFrm = InvQueryFrm.getInstance();
-								invqueryFrm.moveToFront();
-								invqueryFrm = null;
-								frame.setTitle("AGG WMS 【库存查询】");
-							}
-						}
+						initButtonMenu(InvQueryFrm.getInstance(),"AGG WMS 【库存查询】");
 					}
 				});
 				btnInvQuery.setOpaque(false);
@@ -954,32 +449,7 @@ public class MainFrm extends JPanel {
 				JButton btnInvTransfer = new JButton("库存属性变更");
 				btnInvTransfer.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(!comData.getUserMenuPower("库存属性变更")){
-							Message.showWarningMessage("无此功能权限");
-							return;
-						}
-						if (invTransferFrm == null) {
-							if (!InvTransferFrm.getOpenStatus()) {
-								invTransferFrm = InvTransferFrm.getInstance();
-								invTransferFrm.setClosable(true);
-								invTransferFrm.setResizable(true);
-								invTransferFrm.setVisible(true);
-								desktopPane.add(invTransferFrm);
-								try {
-									invTransferFrm.setMaximum(true);
-									invTransferFrm.setSelected(true);
-									invTransferFrm = null;
-									frame.setTitle("AGG WMS 【库存属性变更】");
-								} catch (java.beans.PropertyVetoException ex) {
-									System.out.println("Exception while selecting");
-								}
-							} else {
-								invTransferFrm = InvTransferFrm.getInstance();
-								invTransferFrm.moveToFront();
-								invTransferFrm = null;
-								frame.setTitle("AGG WMS 【库存属性变更】");
-							}
-						}
+						initButtonMenu(InvTransferFrm.getInstance(),"AGG WMS 【库存属性变更】");
 					}
 				});
 				btnInvTransfer.setOpaque(false);
@@ -992,6 +462,34 @@ public class MainFrm extends JPanel {
 			}
 		});
 		return panelList;
+	}
+	
+	public static void initButtonMenu(InnerFrame innerframe, String menuTitle) {
+		if(!comData.getUserMenuPower(menuTitle.substring(menuTitle.indexOf("【")+1,menuTitle.indexOf("】")))){
+			Message.showWarningMessage("无此功能权限");
+			return;
+		}
+		System.out.println(innerframe.toString());
+		innerframe.setClosable(true);
+		innerframe.setResizable(true);
+		innerframe.setVisible(true);
+		try {
+			desktopPane.add(innerframe);
+			innerframe.setMaximum(true);
+			innerframe.setSelected(true);
+			frame.setTitle(menuTitle);
+		} catch (Exception ex) {
+			try {
+				desktopPane.add(innerframe);
+				innerframe.moveToFront();
+				innerframe.setMaximum(true);
+				innerframe.setSelected(true);
+			} catch (PropertyVetoException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			frame.setTitle(menuTitle);
+		}
 	}
 
 	public static void main(String[] args) {

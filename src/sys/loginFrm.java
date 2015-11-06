@@ -49,7 +49,7 @@ public class loginFrm extends JFrame {
 	private JPasswordField txt_user_pwd;
 	private JButton btnLogin;
 	private WMSCombobox cbWarehouse;
-	Configuration saveCf = new Configuration(System.getProperty("user.dir")+"/logon.properties");
+	private Configuration saveCf = null;
 
 	/**
 	 * Launch the application.
@@ -203,9 +203,12 @@ public class loginFrm extends JFrame {
 		labelVersion.setBounds(0, 0, 259, 15);
 		panel.add(labelVersion);
 		
+		//检查配置文件
+		checkLogonFile();
+		saveCf = new Configuration(System.getProperty("user.dir")+"/logon.properties");
 		//登录时候判断是否要版本更新
 		labelVersion.setText("当前版本号:"+MainFrm.wmsVersion);
-		checkLogonFile();
+		
 		
 		JLabel lbll_1 = new JLabel("\u4ED3  \u5E93\uFF1A");
 		lbll_1.setBounds(62, 40, 54, 15);
@@ -273,6 +276,12 @@ public class loginFrm extends JFrame {
 					System.exit(0);
 	            }
 	        }.execute();
+		}
+		
+		f = new File(System.getProperty("user.dir")+"/AGGWMS_lib/");
+		if(!f.exists()){
+			Message.showWarningMessage("请执行系统更新程序！");
+			System.exit(0);
 		}
 	}
 	

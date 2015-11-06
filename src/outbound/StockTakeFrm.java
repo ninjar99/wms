@@ -78,12 +78,6 @@ public class StockTakeFrm extends InnerFrame {
 					 instance = new StockTakeFrm();
 				 }
 			 }
-	            try {
-					instance.setMaximum(true);
-				} catch (PropertyVetoException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} 
 	        }  
 	        return instance;
 		 
