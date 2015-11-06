@@ -178,6 +178,7 @@ public class InvMoveFrm extends InnerFrame {
 					txt_item_from.setEditable(true);
 					btn_item_from_query.setEnabled(true);
 					txt_inv_qty.setEditable(true);
+					txt_container_to.setEditable(true);
 				}else{
 					txt_warehouse_from.setText("");
 					txt_warehouse_from.setEditable(true);
