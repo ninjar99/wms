@@ -356,7 +356,7 @@ public class TrackingNoScanFrm extends InnerFrame {
 					String shipmentWaveNo = headerTable.getValueAt(i, headerTable.getColumnModel().getColumnIndex("波次号")).toString();
 					String shipmentNo = headerTable.getValueAt(i, headerTable.getColumnModel().getColumnIndex("出库单号")).toString();
 					if(!status.equals("新建") && !status.equals("库存分配中")){
-						sbuf.append("订单："+shipmentNo+" 已经分配库存，系统忽略改行\n");
+						sbuf.append("订单："+shipmentNo+" 已经分配库存，系统忽略此行数据\n");
 					}
 				}
 				if(!sbuf.toString().equals("")){
@@ -573,6 +573,9 @@ public class TrackingNoScanFrm extends InnerFrame {
 		}
 		sql = sql + " order by osh.shipment_no ";
 		DataManager dm = DBOperator.DoSelect2DM(sql);
+		if(dm.getCurrentCount()==0){
+			detailTable.removeRowAll();
+		}
 		if (headerTable.getColumnCount() == 0) {
 			headerTable.setColumn(dm.getCols());
 		}

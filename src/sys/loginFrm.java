@@ -12,6 +12,7 @@ import DBUtil.DBOperator;
 import comUtil.MD5;
 import comUtil.WMSCombobox;
 import dmdata.DataManager;
+import util.JFilterComboBox;
 import util.Math_SAM;
 
 import javax.swing.JLabel;
@@ -215,6 +216,7 @@ public class loginFrm extends JFrame {
 		panel.add(lbll_1);
 		
 	    cbWarehouse = new WMSCombobox("select distinct warehouse_code,warehouse_name from bas_warehouse",true);
+	    cbWarehouse.setEditable(true);
 	    cbWarehouse.setForeground(Color.BLUE);
 	    cbWarehouse.setSelectedDisplayName(saveCf.getValue("wms.userwarehouse"));
 		cbWarehouse.setBounds(129, 37, 155, 21);

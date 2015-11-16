@@ -13,7 +13,9 @@ import java.util.Vector;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.border.EmptyBorder;
@@ -21,7 +23,12 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 import DBUtil.DBConnectionManager;
+import DBUtil.DBOperator;
 import sys.JTableUtil;
+import sys.Message;
+
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class UserRoleDialog  extends JDialog{
 	
@@ -61,6 +68,39 @@ public class UserRoleDialog  extends JDialog{
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPanel.setLayout(new BorderLayout(0, 0));
 		table_user_role = new JTable(UR_TableModel);
+		table_user_role.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON3) {
+					JPopupMenu popupmenu = new JPopupMenu();
+					JMenuItem menuItem1 = new JMenuItem();
+					menuItem1.setLabel("全选");
+					menuItem1.addActionListener(new java.awt.event.ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							for(int i=0;i<table_user_role.getRowCount();i++){
+								table_user_role.setValueAt(new Boolean(true), i, 0);
+							}
+						}
+						});
+					JMenuItem menuItem2 = new JMenuItem();
+					menuItem2.setLabel("反选");
+					menuItem2.addActionListener(new java.awt.event.ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							for(int i=0;i<table_user_role.getRowCount();i++){
+								if(table_user_role.getValueAt(i, 0).toString().equals("true")){
+									table_user_role.setValueAt(new Boolean(false), i, 0);
+								}else{
+									table_user_role.setValueAt(new Boolean(true), i, 0);
+								}
+							}
+						}
+						});
+					popupmenu.add(menuItem1);
+					popupmenu.add(menuItem2);
+					popupmenu.show(e.getComponent(), e.getX(), e.getY());
+				}
+			}
+		});
 		table_user_role.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		JTableUtil.fitTableColumns(table_user_role);
 		JScrollPane scrollPane = new JScrollPane();

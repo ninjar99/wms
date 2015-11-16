@@ -36,16 +36,18 @@ public class LogInfo {
         Scanner sc = null;
         PrintWriter pw = null;
         Calendar c = new GregorianCalendar();
-        File log = new File("log\\loginfo" + String.valueOf(c.get(c.YEAR))
-                + strRight("00" + String.valueOf(c.get(c.MONTH)+1)) + strRight("00" + String.valueOf(c.get(c.DAY_OF_MONTH))) + ".log");
+        File log = new File("log\\loginfo" + String.valueOf(c.get(Calendar.YEAR))
+                + strRight("00" + String.valueOf(c.get(Calendar.MONTH)+1)) + strRight("00" + String.valueOf(c.get(Calendar.DAY_OF_MONTH))) + ".log");
         try {
             if (!log.exists())//如果文件不存在,则新建.
             {
-                File parentDir = new File(log.getParent());
-                if (!parentDir.exists())//如果所在目录不存在,则新建.
-                {
-                    parentDir.mkdirs();
-                }
+				if (log.getParent() != null) {
+					File parentDir = new File(log.getParent());
+					if (!parentDir.exists()) // 如果所在目录不存在,则新建.
+					{
+						parentDir.mkdirs();
+					}
+				}
                 log.createNewFile();
             }
             sc = new Scanner(log);

@@ -572,5 +572,25 @@ public class comData {
 //			DBOperator.DoUpdate(sql);
 //		}
 		
+		//嘉定库位导入
+//		for (int i = 1; i <= 24; i++) {
+//			String sql = "";
+//			String pai = "00" + String.valueOf(i);
+//			pai = pai.substring(pai.length() - 2);
+//			for (int j = 1; j <= 12; j++) {
+//				String lie = "00" + String.valueOf(j);
+//				lie = lie.substring(lie.length() - 2);
+//				for (int k = 1; k <= 4; k++) {
+//					String ceng = "00" + String.valueOf(k);
+//					ceng = ceng.substring(ceng.length() - 2);
+//					String loc = "J1-" + pai + "-" + ceng + "-" + lie;
+//					System.out.println(loc);
+//					sql = "insert into bas_location(warehouse_code,location_code,logical_location_code,location_type_code,status,created_by_user,created_dtm_loc) "
+//							+ "select 'shjd','" + loc + "','" + loc + "','Normal','empty','sys',now() ";
+//					DBOperator.DoUpdate(sql);
+//				}
+//			}
+//		}
+		
 	}
 }

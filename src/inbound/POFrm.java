@@ -23,6 +23,7 @@ import java.util.Vector;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -63,6 +64,7 @@ import DBUtil.DBOperator;
 import DBUtil.LogInfo;
 
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import java.awt.event.ActionListener;
@@ -248,7 +250,7 @@ public class POFrm extends InnerFrame {
 //				makeFace(detailTable);
 				detailTable.requestFocus();
 				detailTable.changeSelection(detailTable.getRowCount()-1,5,false,false);
-				JTableUtil.fitTableColumns(detailTable);
+				JTableUtil.fitTableColumnsDoubleWidth(detailTable);
 				
 			}
 		});
@@ -506,7 +508,7 @@ public class POFrm extends InnerFrame {
 		editPanel.add(txt_status);
 		txt_status.setColumns(4);
 		
-		JLabel lblNewLabel_6 = new JLabel("ERP_PO\uFF1A");
+		JLabel lblNewLabel_6 = new JLabel("ERP_PO(\u63D0\u5355\u53F7)\uFF1A");
 		editPanel.add(lblNewLabel_6);
 		
 		txt_erp_po_no = new JTextField();
@@ -745,8 +747,24 @@ public class POFrm extends InnerFrame {
 		detailTable.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if(e.getClickCount()>=2){
+				if (e.getClickCount() >= 2) {
 					detailTable.setColumnSelectionAllowed(true);
+				}
+				if (e.getButton() == MouseEvent.BUTTON3 && btnSave.isEnabled()) {
+					JPopupMenu popupmenu = new JPopupMenu();
+					JMenuItem menuItem1 = new JMenuItem();
+					menuItem1.setLabel("添加行");
+					menuItem1.addActionListener(new java.awt.event.ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							// 增加一行空行
+							Object[] addRowValues = new Object[19];
+							addRowValues[0] = detailTable.getRowCount() + 1;
+							detailTable.addRow(addRowValues);
+							detailTable.editCellAt(detailTable.getRowCount() - 1, 1);
+						}
+					});
+					popupmenu.add(menuItem1);
+					popupmenu.show(e.getComponent(), e.getX(), e.getY());
 				}
 			}
 		});
@@ -890,6 +908,9 @@ public class POFrm extends InnerFrame {
 						JTableUtil.fitTableColumns(detailTable);
 					}else{
 						detailTable.setValueAt("",selectRow, column);
+						detailTable.setValueAt("", selectRow, 2);
+						detailTable.setValueAt("", selectRow, 3);
+						detailTable.setValueAt("", selectRow, 4);
 					}
 					
 				}

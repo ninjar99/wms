@@ -28,6 +28,7 @@ import javax.swing.table.DefaultTableModel;
 
 import DBUtil.DBConnectionManager;
 import DBUtil.DBOperator;
+import comUtil.JTableExportExcel;
 import comUtil.WMSCombobox;
 import comUtil.comData;
 import dmdata.DataManager;
@@ -37,7 +38,6 @@ import sys.JTableUtil;
 import sys.Message;
 import sys.QueryDialog;
 import sys.ToolBarItem;
-
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -85,7 +85,7 @@ public class BasItemFrm extends InnerFrame{
 	
 	BasItemFrm(){
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 717, 459);
+		setBounds(100, 100, 777, 459);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -131,6 +131,15 @@ public class BasItemFrm extends InnerFrame{
 		});
 		topPanel.add(btnClose);
 		
+		btnExcel = new JButton("\u5BFC\u51FAExcel");
+		btnExcel.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JTableExportExcel exportExcel = new JTableExportExcel(table_item); 
+				exportExcel.export();
+			}
+		});
+		topPanel.add(btnExcel);
+		
 		centerPanel = new JPanel();
 		contentPane.add(centerPanel, BorderLayout.CENTER);
 		centerPanel.setLayout(new BorderLayout(0, 0));
@@ -151,6 +160,7 @@ public class BasItemFrm extends InnerFrame{
 		panel.add(label);
 		label.setAlignmentX(Component.CENTER_ALIGNMENT);
 		comboBox_STORER_CODE = new WMSCombobox(storeSql, true);
+		comboBox_STORER_CODE.setEditable(true);
 		panel.add(comboBox_STORER_CODE);
 		
 		String brandSql = "SELECT DISTINCT BRAND_CODE,BRAND_SHORT_NAME FROM bas_brand order by BRAND_SHORT_NAME";
@@ -158,9 +168,10 @@ public class BasItemFrm extends InnerFrame{
 		JLabel lblNewLabel = new JLabel("\u54C1\u724C:");
 		panel.add(lblNewLabel);
 		comboBox_BRAND_CODE = new WMSCombobox(brandSql, true);
+		comboBox_BRAND_CODE.setEditable(true);
 		panel.add(comboBox_BRAND_CODE);
 		
-		JLabel lblNewLabel_1 = new JLabel("*\u8D27\u54C1\u7F16\u7801:");
+		JLabel lblNewLabel_1 = new JLabel("*\u8D27\u54C1\u7269\u6599\u53F7:");
 		panel.add(lblNewLabel_1);
 		
 		textField_itemCode = new JTextField();
@@ -195,11 +206,13 @@ public class BasItemFrm extends InnerFrame{
 		JLabel lblNewLabel_5 = new JLabel("*\u53E3\u5CB8:");
 		panel_2.add(lblNewLabel_5);
 		comboBox_port_no = new WMSCombobox(portNoSql, true);
+		comboBox_port_no.setEditable(true);
 		panel_2.add(comboBox_port_no);
 		
 		JLabel lblNewLabel_6 = new JLabel("*\u8BA1\u91CF\u5355\u4F4D:");
 		panel_2.add(lblNewLabel_6);
 		comboBox_unit_code = new WMSCombobox(unitCodeSql, true);
+		comboBox_unit_code.setEditable(true);
 		panel_2.add(comboBox_unit_code);
 		
 		JLabel lblNewLabel_7 = new JLabel("*\u8D27\u54C1\u89C4\u683C:");
@@ -213,6 +226,7 @@ public class BasItemFrm extends InnerFrame{
 		JLabel lblNewLabel_8 = new JLabel("*\u56FD\u5BB6:");
 		panel_2.add(lblNewLabel_8);
 		comboBox_country_code = new WMSCombobox(countryCodeSql, true);
+		comboBox_country_code.setEditable(true);
 		panel_2.add(comboBox_country_code);
 		
 		JPanel panel_3 = new JPanel();
@@ -528,6 +542,7 @@ public class BasItemFrm extends InnerFrame{
 				textArea_DESCRIPTION.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("ªı∆∑√Ë ˆ"))));
 			}
 		};
+	private JButton btnExcel;
 	
 	
 	private void initTableData(String strWhere){

@@ -77,7 +77,7 @@ public class JAutoCompleteComboBox
   public static void main(String[] args) {
     JFrame frame = new JFrame();
     Object[] items = new Object[] {
-        "zzz","zba","aab","abc", "aab","dfg","aba", "hpp", "pp", "hlp"};
+        "zzz","zba","aab","abc", "日本","韩国","aba", "hpp", "pp", "hlp","bbb","bed","ced","cet"};
     //排序内容
     //java.util.ArrayList list = new java.util.ArrayList(Arrays.asList(items));
     //Collections.sort(list);
