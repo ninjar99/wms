@@ -49,6 +49,7 @@ import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.Color;
+import javax.swing.JCheckBox;
 
 public class StockTakeFrm extends InnerFrame {
 
@@ -70,6 +71,7 @@ public class StockTakeFrm extends InnerFrame {
 	private JButton btn_finish;
 	private JTextField txt_stocktake_status;
 	private JButton btn_stocktake_query;
+	JCheckBox cb_by_storer;
 	
 	public static StockTakeFrm getInstance() {
 		if(instance == null) { 
@@ -132,7 +134,7 @@ public class StockTakeFrm extends InnerFrame {
 				isOpen = true;
 			}
 		});
-		setBounds(100, 100, 612, 320);
+		setBounds(100, 100, 662, 320);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -174,16 +176,26 @@ public class StockTakeFrm extends InnerFrame {
 					Message.showWarningMessage("请选择仓库和货主信息！");
 					return;
 				}else{
+					String STOCKTAKE_TYPE = "100";
+					if(cb_by_storer.isSelected()){
+						STOCKTAKE_TYPE = "400";
+					}
 					stockTakeNo = comData.getValueFromBasNumRule("inv_stocktake_header", "STOCKTAKE_NO");
 					sql = "insert into inv_stocktake_header(STOCKTAKE_NO,STOCKTAKE_NAME,STORER_CODE,WAREHOUSE_CODE,STOCKTAKE_TYPE,IS_DARK_STOCK_TAKE,CREATED_BY_USER,CREATED_DTM_LOC) "
-							+"select '"+stockTakeNo+"','计划盘点','"+storerCode+"','"+warehouseCode+"','100','1','"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now() ";
+							+"select '"+stockTakeNo+"','计划盘点','"+storerCode+"','"+warehouseCode+"','"+STOCKTAKE_TYPE+"','1','"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now() ";
 					int t = DBOperator.DoUpdate(sql);
 					if(t!=1){
 						Message.showErrorMessage("生成盘点单表头失败，请联系系统管理员");
 						LogInfo.appendLog(sql);
 						return;
 					}else{
-						getStockTakeDetail(" and 1<>1 ");
+						txt_stocktake_no.setText(stockTakeNo);
+						if(cb_by_storer.isSelected()){
+							saveStockDetailByStorer();
+							getStockTakeDetail(" and isd.STOCKTAKE_NO ='"+stockTakeNo+"' ");
+						}else{
+							getStockTakeDetail(" and 1<>1 ");
+						}
 						txt_stocktake_no.setText(stockTakeNo);
 						txt_location_code.selectAll();
 						txt_location_code.requestFocus();
@@ -311,6 +323,9 @@ public class StockTakeFrm extends InnerFrame {
 						dmProcess.AddNewRow(list);
 						boolean bool = comData.addSysProcessHistory("sys_process_history", dmProcess);
 						System.out.println("写入操作日志：" + bool);
+						btn_generate_stocktake_no.setEnabled(true);
+						btn_stocktake_query.setEnabled(true);
+						btn_finish.setEnabled(false);
 					}
 				}else{
 					Message.showErrorMessage("盘点单更新失败");
@@ -362,6 +377,9 @@ public class StockTakeFrm extends InnerFrame {
 		});
 		panel.add(btn_finish);
 		panel.add(btnClose);
+		
+		cb_by_storer = new JCheckBox("\u6309\u8D27\u4E3B\u5168\u76D8");
+		panel.add(cb_by_storer);
 		
 		JPanel panel_1 = new JPanel();
 		FlowLayout flowLayout_1 = (FlowLayout) panel_1.getLayout();
@@ -623,6 +641,7 @@ public class StockTakeFrm extends InnerFrame {
 		if(!strWhere.equals("")){
 			sql = sql + strWhere;
 		}
+		sql = sql + " order by isd.LOCATION_CODE,isd.ITEM_CODE";
 		DataManager dm = DBOperator.DoSelect2DM(sql);
 		if (table.getColumnCount() == 0) {
 			table.setColumn(dm.getCols());
@@ -633,6 +652,31 @@ public class StockTakeFrm extends InnerFrame {
 		table.setColumnEditableAll(false);
 		JTableUtil.fitTableColumns(table);
 //		table.setSortEnable();
+	}
+	
+	private boolean saveStockDetailByStorer(){
+		String sql = null;
+		if(cb_by_storer.isSelected()){
+			String storerCode = cb_storer.getSelectedOID();
+			String warehouseCode = cb_warehouse.getSelectedOID();
+			String stockTakeNo = txt_stocktake_no.getText().trim();
+			sql = "insert into inv_stocktake_detail(STOCKTAKE_NO,STORER_CODE,WAREHOUSE_CODE,LOCATION_CODE,CONTAINER_CODE,"
+					+"ITEM_CODE,GUIDE_QTY,GUIDE_UOM,CONF_QTY,CONF_UOM,FIRST_STOCKTAKE_QTY,FIRST_STOCKTAKE_UOM,CREATED_BY_USER,CREATED_DTM_LOC) "
+					+"select '"+stockTakeNo+"','"+storerCode+"','"+warehouseCode+"',ii.LOCATION_CODE,ii.CONTAINER_CODE, "
+					+"ii.ITEM_CODE,"
+					+"ifnull(sum(ii.ON_HAND_QTY+IN_TRANSIT_QTY-(ALLOCATED_QTY)-(PICKED_QTY)-(INACTIVE_QTY)),0) qty "
+					+",item.UNIT_CODE,0,item.UNIT_CODE,0,item.UNIT_CODE,'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now() "
+					+"from inv_inventory ii "
+					+"left JOIN bas_item item on ii.STORER_CODE=item.STORER_CODE and ii.ITEM_CODE=item.ITEM_CODE "
+					+"where ii.STORER_CODE='"+storerCode+"' and ii.WAREHOUSE_CODE='"+warehouseCode+"' and ii.ON_HAND_QTY+IN_TRANSIT_QTY-(ALLOCATED_QTY)-(PICKED_QTY)-(INACTIVE_QTY)>0 "
+					+"group by ii.WAREHOUSE_CODE,ii.STORER_CODE,ii.LOCATION_CODE,ii.CONTAINER_CODE ";
+		}
+		int t = DBOperator.DoUpdate(sql);
+		if(t>0){
+			return true;
+		}else{
+			return false;
+		}
 	}
 
 	private void setExtendedState(int maximizedBoth) {

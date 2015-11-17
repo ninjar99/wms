@@ -26,6 +26,7 @@ import javax.swing.table.DefaultTableModel;
 
 import DBUtil.DBConnectionManager;
 import DBUtil.DBOperator;
+import comUtil.WMSCombobox;
 import dmdata.DataManager;
 import inbound.poImportFrm;
 import sys.InnerFrame;
@@ -50,6 +51,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.JCheckBox;
 import javax.swing.JTable;
 import javax.swing.JScrollPane;
+import javax.swing.JComboBox;
 
 public class storerMasterFrm extends InnerFrame {
 
@@ -71,6 +73,8 @@ public class storerMasterFrm extends InnerFrame {
 	private JButton btnCancel;
 	private JButton btnClose;
 	static JCheckBox storer_is_active;
+	private JLabel lblNewLabel_3;
+	private WMSCombobox cb_parent_storer;
 	
 	public static storerMasterFrm getInstance() {
 		if(instance == null) { 
@@ -156,6 +160,7 @@ public class storerMasterFrm extends InnerFrame {
 				btnCancel.setEnabled(true);
 				storer_is_active.setEnabled(true);
 				storer_table.setEnabled(false);
+				cb_parent_storer.setEnabled(true);
 			}
 		});
 		topPanel.add(btnAdd);
@@ -175,7 +180,7 @@ public class storerMasterFrm extends InnerFrame {
 					btnQuery.setEnabled(false);
 					btnSave.setEnabled(true);
 					btnCancel.setEnabled(true);
-					
+					cb_parent_storer.setEnabled(true);
 					storer_table.setEnabled(false);
 				}
 			}
@@ -285,9 +290,9 @@ public class storerMasterFrm extends InnerFrame {
 						ResultSet rs = stmt.executeQuery(sql);
 						if (rs.next()) {
 							sql = "update bas_storer set storer_name='" + storer_name_txt.getText().trim()
-									+ "',UPDATED_DTM_LOC=now(),UPDATED_BY_USER='sys' " + "where storer_code='"
+									+ "',PARENT_STORER_CODE='"+cb_parent_storer.getSelectedOID()+"',UPDATED_DTM_LOC=now(),UPDATED_BY_USER='sys' " + "where storer_code='"
 									+ storer_code_txt.getText().trim() + "'";
-							int rst = stmt.executeUpdate(sql);
+							int rst = stmt.executeUpdate(sql.replaceAll("e\'s","e\''''s"));
 							if (rst == 1) {
 								JOptionPane.showMessageDialog(null, "更新【" + storer_code_txt.getText() + "】成功！");
 								initFormData("");
@@ -304,11 +309,12 @@ public class storerMasterFrm extends InnerFrame {
 								btnCancel.setEnabled(false);
 								storer_is_active.setEnabled(false);
 								storer_table.setEnabled(true);
+								cb_parent_storer.setEnabled(false);
 							}
 						} else {
-							sql = "insert into bas_storer(STORER_CODE,STORER_SHORT_NAME,STORER_NAME,IS_ACTIVE,CREATED_DTM_LOC,CREATED_BY_USER,UPDATED_DTM_LOC,UPDATED_BY_USER) "
+							sql = "insert into bas_storer(STORER_CODE,STORER_SHORT_NAME,STORER_NAME,PARENT_STORER_CODE,IS_ACTIVE,CREATED_DTM_LOC,CREATED_BY_USER,UPDATED_DTM_LOC,UPDATED_BY_USER) "
 									+ "select '" + storer_code_txt.getText().trim() + "','"
-									+ storer_name_txt.getText().trim() + "'," + "'" + storer_name_txt.getText().trim() + "',"+is_active+",now(),'sys',now(),'sys' ";
+									+ storer_name_txt.getText().trim() + "'," + "'" + storer_name_txt.getText().trim() + "','"+cb_parent_storer.getSelectedOID()+"',"+is_active+",now(),'sys',now(),'sys' ";
 							int rst = stmt.executeUpdate(sql);
 							if (rst == 1) {
 								JOptionPane.showMessageDialog(null, "新增【" + storer_code_txt.getText() + "】成功！");
@@ -326,6 +332,7 @@ public class storerMasterFrm extends InnerFrame {
 								btnCancel.setEnabled(false);
 								storer_is_active.setEnabled(false);
 								storer_table.setEnabled(true);
+								cb_parent_storer.setEnabled(false);
 							}
 						}
 						stmt.close();
@@ -353,6 +360,7 @@ public class storerMasterFrm extends InnerFrame {
 				btnCancel.setEnabled(false);
 				storer_is_active.setEnabled(false);
 				storer_table.setEnabled(true);
+				cb_parent_storer.setEnabled(false);
 			}
 		});
 		topPanel.add(btnCancel);
@@ -398,6 +406,15 @@ public class storerMasterFrm extends InnerFrame {
 		editPanel.add(storer_name_txt);
 		storer_name_txt.setColumns(10);
 		
+		lblNewLabel_3 = new JLabel("\u4E0A\u7EA7\u8D27\u4E3B\uFF1A");
+		editPanel.add(lblNewLabel_3);
+		
+		String sql = "SELECT DISTINCT storer_code,storer_short_name FROM bas_storer where storer_code<>'"+storer_code_txt.getText().trim()+"' ORDER BY storer_short_name";
+		cb_parent_storer = new WMSCombobox(sql,true);
+		cb_parent_storer.setEnabled(false);
+		cb_parent_storer.setEditable(true);
+		editPanel.add(cb_parent_storer);
+		
 		JLabel lblNewLabel_2 = new JLabel("\u662F\u5426\u542F\u7528\uFF1A");
 		editPanel.add(lblNewLabel_2);
 		
@@ -423,6 +440,7 @@ public class storerMasterFrm extends InnerFrame {
         dtm.addColumn("序号");
         dtm.addColumn("货主编码");
         dtm.addColumn("货主名称");
+        dtm.addColumn("上级货主");
         dtm.addColumn("是否启用");
         //单选
         DefaultListSelectionModel tableSelectionModel8 = (DefaultListSelectionModel) storer_table.getSelectionModel();
@@ -449,6 +467,7 @@ public class storerMasterFrm extends InnerFrame {
 		storer_code_txt.setEditable(false);
 		storer_name_txt.setEditable(false);
 		storer_table.addMouseListener(new java.awt.event.MouseAdapter(){
+			@SuppressWarnings("unused")
 			public void mouseClicked(MouseEvent e) {
 				if(e.getClickCount()>=2){
 					storer_table.setColumnSelectionAllowed(true);
@@ -457,9 +476,11 @@ public class storerMasterFrm extends InnerFrame {
 	               int c= storer_table.getSelectedColumn();
 	               String storer_code = storer_table.getValueAt(r, 1).toString();
 	               String storer_name = storer_table.getValueAt(r, 2).toString();
-	               String storer_is_active_txt = storer_table.getValueAt(r, 3).toString();
+	               String parent_storer_name = storer_table.getValueAt(r, 3).toString();
+	               String storer_is_active_txt = storer_table.getValueAt(r, 4).toString();
 	               storer_code_txt.setText(storer_code);
 	               storer_name_txt.setText(storer_name);
+	               cb_parent_storer.setSelectedItem(parent_storer_name);
 	               storer_is_active.setSelected(storer_is_active_txt.equals("1")?true:false);
 			}
 		});
@@ -468,7 +489,7 @@ public class storerMasterFrm extends InnerFrame {
 		DefaultTableModel dtm = (DefaultTableModel) storer_table.getModel();
         dtm.getDataVector().removeAllElements();
         dtm.setRowCount(0);
-		String sql = "select STORER_CODE,STORER_NAME,IS_ACTIVE from bas_storer where 1=1 ";
+		String sql = "select STORER_CODE,STORER_NAME,ifnull((select bs.STORER_NAME from bas_storer bs where bs.STORER_CODE=bas_storer.PARENT_STORER_CODE),'') PARENT_STORER_CODE,IS_ACTIVE from bas_storer where 1=1 ";
 		if(!strWhere.equals("")){
 			sql = sql + strWhere;
 		}
@@ -484,6 +505,7 @@ public class storerMasterFrm extends InnerFrame {
 				rowdata.add(String.valueOf(seq));
 				rowdata.add(rs.getString("STORER_CODE"));
 				rowdata.add(rs.getString("STORER_NAME"));
+				rowdata.add(rs.getString("PARENT_STORER_CODE"));
 				rowdata.add(rs.getString("IS_ACTIVE"));
 				dtm.addRow(rowdata);
 			}
