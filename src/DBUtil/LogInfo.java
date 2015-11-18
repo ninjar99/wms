@@ -50,7 +50,7 @@ public class LogInfo {
                 }
                 log.createNewFile();
             }
-            fileAppend(log.getAbsolutePath(),newLog);
+            fileAppend(log.getAbsolutePath(),newLog+" ["+getCurrentDate()+"]\r\n\r\n");
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -70,7 +70,7 @@ public class LogInfo {
                 }
                 log.createNewFile();
             }
-            fileAppend(log.getAbsolutePath(),newLog);
+            fileAppend(log.getAbsolutePath(),newLog+" ["+getCurrentDate()+"]\r\n\r\n");
         } catch (IOException ex) {
             ex.printStackTrace();
         }
