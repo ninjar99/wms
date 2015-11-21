@@ -31,18 +31,27 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.beans.PropertyVetoException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.SpringLayout;
@@ -68,13 +77,19 @@ import inbound.putawayFrm;
 import inventory.InvMoveFrm;
 import inventory.InvQueryFrm;
 import inventory.InvTransferFrm;
+import main.PBSUIBaseGrid;
 import outbound.ShipmentOubCheck;
 import outbound.ShipmentOubScan;
 import outbound.ShipmentQueryFrm;
 import outbound.StockTakeFrm;
 import outbound.StockTakeQueryFrm;
 import outbound.TrackingNoScanFrm;
+import util.WaitingSplash;
+
 import javax.swing.SwingConstants;
+import javax.swing.SwingWorker;
+import javax.swing.JToolBar;
+import java.awt.SystemColor;
 
 /** */
 /**
@@ -108,6 +123,12 @@ public class MainFrm extends JPanel {
 	private static DataManager versionInfo = new DataManager();
 	public static String wmsVersion = "1.0";
 	private final JLabel lblNewLabel = new JLabel("");
+	private final JToolBar toolBar = new JToolBar();
+	private final JLabel lblNewLabel_1 = new JLabel("\u767B\u5F55\u8D26\u6237\uFF1A");
+	private final JLabel lbl_user_id = new JLabel("");
+	private final JLabel lbl_systime = new JLabel("");
+	private final JLabel lblNewLabel_2 = new JLabel(" | \u5F53\u524D\u65F6\u95F4\uFF1A");
+	private final static JLabel lbl_mouse = new JLabel("New label");
 	
 	public static DataManager getVersionInfo() {
 		return versionInfo;
@@ -129,6 +150,27 @@ public class MainFrm extends JPanel {
 	public void paintComponent(Graphics g){
 	     g.drawImage(ico.getImage(),0,0,this);
 	  }
+	
+	public static String getCurrentDate() {
+        SimpleDateFormat sm = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        return sm.format(new Date());
+    }
+	
+	public void refreshCurrentTime(){
+		new SwingWorker<String, Void>() {
+            @Override
+            protected String doInBackground() throws Exception {
+            	while(true){
+            		lbl_systime.setText(getCurrentDate());
+            		Thread.sleep(1000);
+            	}
+            }
+
+            @Override
+            protected void done() {
+            }
+        }.execute();
+	}
 
 	// 折叠效果
 	public MainFrm() {
@@ -172,8 +214,23 @@ public class MainFrm extends JPanel {
 		Image image=new ImageIcon("images/bg.gif").getImage();
 		lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		lblNewLabel.setIcon(new ImageIcon(MainFrm.class.getResource("/images/aggwms.png")));
-		
+		lbl_user_id.setText(MainFrm.getUserInfo().getString("USER_NAME", 0));
 		desktopPane.add(lblNewLabel, BorderLayout.CENTER);
+		setContainerMouseListener(desktopPane);
+		
+		add(toolBar, BorderLayout.SOUTH);
+		
+		toolBar.add(lblNewLabel_1);
+		
+		toolBar.add(lbl_user_id);
+		
+		toolBar.add(lblNewLabel_2);
+		lbl_systime.setForeground(SystemColor.textHighlight);
+		
+		toolBar.add(lbl_systime);
+		
+		toolBar.add(lbl_mouse);
+		refreshCurrentTime();
 	}
 
 	public void initComponent() {
@@ -490,6 +547,7 @@ public class MainFrm extends JPanel {
 			}
 			frame.setTitle(menuTitle);
 		}
+		setContainerMouseListener(innerframe);
 	}
 
 	public static void main(String[] args) {
@@ -503,7 +561,16 @@ public class MainFrm extends JPanel {
 	public static void createUI() {
 		frame = new JFrame("AGG WMS");
 //		loadFrameFont();
-		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+//		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+		frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		frame.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				int t = JOptionPane.showConfirmDialog(null, "是否退出系统");
+				if(t==0){
+					System.exit(0);
+				}
+			}
+		});
 		frame.getContentPane().add(new MainFrm());
 		frame.pack();
 		frame.setLocationRelativeTo(null);
@@ -519,6 +586,65 @@ public class MainFrm extends JPanel {
 		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 		frame.setIconImage(Toolkit.getDefaultToolkit().getImage(loginFrm.class.getResource("/images/logo.png")));
 	}
+	
+	public static void setContainerMouseListener(Container container){
+		// --------设置组建事件--------
+        setMouseListener(container);
+		// 获取当前面板
+//        Container contentPanel = frame.getContentPane();
+        // 获取当前面板中的所有组件
+        Component[] comps = container.getComponents();
+        for (Component c : comps) {
+        	System.out.println(c.toString());
+            setMouseListener(c);
+            // 如果当前面板中含有JPanel组件
+            if (c instanceof JPanel) {
+                Component[] compsInPanel = ((JPanel) c).getComponents();
+                for (Component cc : compsInPanel) {
+                    setMouseListener(cc);
+                }
+            }else if(c instanceof JInternalFrame) {
+                Component[] compsInPanel = ((JInternalFrame) c).getComponents();
+                for (Component cc : compsInPanel) {
+                    setMouseListener(cc);
+                }
+            }else if(c instanceof JDesktopPane) {
+                Component[] compsInPanel = ((JDesktopPane) c).getComponents();
+                for (Component cc : compsInPanel) {
+                    setMouseListener(cc);
+                }
+            }else if(c instanceof JRootPane) {
+                Component[] compsInPanel = ((JRootPane) c).getComponents();
+                for (Component cc : compsInPanel) {
+                    setMouseListener(cc);
+                }
+            }
+        }
+	}
+	
+	/**
+     * 设置组件事件
+     * 
+     * @param c
+     */
+    public static void setMouseListener(Component c) {
+    	c.addMouseMotionListener(new MouseMotionListener(){
+    		int x=100,y=100;
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				// TODO Auto-generated method stub
+			}
+
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				// TODO Auto-generated method stub
+				x=e.getX();
+				y=e.getY();
+				lbl_mouse.setText(x+"/"+y);
+			}
+    		
+    	});
+    }
 	
 	private static void loadFrameFont(){
 		try {

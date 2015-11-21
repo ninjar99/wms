@@ -24,6 +24,7 @@ import inbound.GenerateINVFromStockTakeDetail;
 import main.PBSUIBaseGrid;
 import sys.InnerFrame;
 import sys.JTableUtil;
+import sys.MainFrm;
 import sys.Message;
 import sys.QueryDialog;
 import util.Math_SAM;
@@ -275,7 +276,7 @@ public class StockTakeQueryFrm extends InnerFrame {
 				+"from inv_stocktake_header ish "
 				+"inner join bas_storer bs on ish.STORER_CODE=bs.STORER_CODE "
 				+"inner join bas_warehouse bw on ish.WAREHOUSE_CODE=bw.WAREHOUSE_CODE "
-				+" where 1=1 ";
+				+" where ish.WAREHOUSE_CODE='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' ";
 		if(!strWhere.equals("")){
 			sql = sql +strWhere;
 		}
@@ -434,7 +435,7 @@ public class StockTakeQueryFrm extends InnerFrame {
 //								+"";
 					}else{
 						String INV_INVENTORY_ID = dmInv.getString("INV_INVENTORY_ID", 0);
-						sql = "update inv_inventory set ON_HAND_QTY=ON_HAND_QTY - "+diff+" where INV_INVENTORY_ID='"+INV_INVENTORY_ID+"' " ;
+						sql = "update inv_inventory set ON_HAND_QTY="+CONF_QTY+" where INV_INVENTORY_ID='"+INV_INVENTORY_ID+"' " ;
 						int t = DBOperator.DoUpdate(sql);
 						if(t!=1){
 							return "ERR-库存更新失败，无法处理盘点差异\n"+"STORER_CODE="+STORER_CODE+" WAREHOUSE_CODE="+WAREHOUSE_CODE
@@ -466,7 +467,7 @@ public class StockTakeQueryFrm extends InnerFrame {
 //								+"";
 					}else{
 						String INV_INVENTORY_ID = dmInv.getString("INV_INVENTORY_ID", 0);
-						sql = "update inv_inventory set ON_HAND_QTY=ON_HAND_QTY + "+(-1*diff)+" where INV_INVENTORY_ID='"+INV_INVENTORY_ID+"' " ;
+						sql = "update inv_inventory set ON_HAND_QTY="+CONF_QTY+" where INV_INVENTORY_ID='"+INV_INVENTORY_ID+"' " ;
 						int t = DBOperator.DoUpdate(sql);
 						if(t!=1){
 							return "ERR-库存更新失败，无法处理盘点差异\n"+"STORER_CODE="+STORER_CODE+" WAREHOUSE_CODE="+WAREHOUSE_CODE
