@@ -216,7 +216,7 @@ public class MainFrm extends JPanel {
 		lblNewLabel.setIcon(new ImageIcon(MainFrm.class.getResource("/images/aggwms.png")));
 		lbl_user_id.setText(MainFrm.getUserInfo().getString("USER_NAME", 0));
 		desktopPane.add(lblNewLabel, BorderLayout.CENTER);
-		setContainerMouseListener(desktopPane);
+//		setContainerMouseListener(desktopPane);
 		
 		add(toolBar, BorderLayout.SOUTH);
 		
@@ -547,7 +547,7 @@ public class MainFrm extends JPanel {
 			}
 			frame.setTitle(menuTitle);
 		}
-		setContainerMouseListener(innerframe);
+//		setContainerMouseListener(innerframe);
 	}
 
 	public static void main(String[] args) {

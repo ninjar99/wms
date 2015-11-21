@@ -402,7 +402,8 @@ public class InvQueryFrm extends InnerFrame {
 				+"inner join inv_lot il on ii.LOT_NO=il.LOT_NO "
 				+"inner join bas_storer bs on ii.STORER_CODE=bs.STORER_CODE "
 				+"inner join bas_warehouse bw on ii.WAREHOUSE_CODE=bw.WAREHOUSE_CODE "
-				+"where 1=1 and ii.warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' ";
+				+"where 1=1 and ii.warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' "
+				+"and ii.ON_HAND_QTY+(ii.IN_TRANSIT_QTY)-(ii.ALLOCATED_QTY)-(PICKED_QTY)>0 ";
 		if(!retWhere.equals("")){
 			sql = sql + retWhere;
 		}
