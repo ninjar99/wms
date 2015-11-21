@@ -668,8 +668,10 @@ public class StockTakeFrm extends InnerFrame {
 					+",item.UNIT_CODE,0,item.UNIT_CODE,0,item.UNIT_CODE,'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now() "
 					+"from inv_inventory ii "
 					+"left JOIN bas_item item on ii.STORER_CODE=item.STORER_CODE and ii.ITEM_CODE=item.ITEM_CODE "
+					+"inner join bas_location bl on ii.WAREHOUSE_CODE=bl.WAREHOUSE_CODE and ii.LOCATION_CODE=bl.LOCATION_CODE "
 					+"where ii.STORER_CODE='"+storerCode+"' and ii.WAREHOUSE_CODE='"+warehouseCode+"' and ii.ON_HAND_QTY+IN_TRANSIT_QTY-(ALLOCATED_QTY)-(PICKED_QTY)-(INACTIVE_QTY)>0 "
-					+"group by ii.WAREHOUSE_CODE,ii.STORER_CODE,ii.LOCATION_CODE,ii.CONTAINER_CODE ";
+					+" and bl.LOCATION_TYPE_CODE not in ('Dock') "
+					+"group by ii.WAREHOUSE_CODE,ii.STORER_CODE,ii.LOCATION_CODE,ii.CONTAINER_CODE,ii.ITEM_CODE ";
 		}
 		int t = DBOperator.DoUpdate(sql);
 		if(t>0){
