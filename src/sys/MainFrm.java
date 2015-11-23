@@ -65,6 +65,7 @@ import javax.swing.JDialog;
 import bas.BasBrandFrm;
 import bas.BasContainerFrm;
 import bas.BasItemFrm;
+import bas.BasItemMaterialFrm;
 import bas.BasLocationFrm;
 import bas.UserFrm;
 import bas.storerMasterFrm;
@@ -309,6 +310,7 @@ public class MainFrm extends JPanel {
 				JButton btnBrand = new JButton("品牌信息");
 				JButton btnUser = new JButton("用户信息");
 				JButton btnBasItem = new JButton("货品信息");
+				JButton btnBasItemMaterial = new JButton("货品辅料信息");
 				JButton btnBasLocation = new JButton("库位信息");
 				JButton btnContainer = new JButton("容器管理");
 
@@ -336,6 +338,12 @@ public class MainFrm extends JPanel {
 						initButtonMenu(BasItemFrm.getInstance(),"AGG WMS 【货品信息】");
 					}
 				});
+				//货品辅料信息
+				btnBasItemMaterial.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent arg0) {
+						initButtonMenu(BasItemMaterialFrm.getInstance(),"AGG WMS 【货品辅料信息】");
+					}
+				});
 				//库位信息
 				btnBasLocation.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
@@ -352,6 +360,7 @@ public class MainFrm extends JPanel {
 				btnStorer.setOpaque(false);
 				btnUser.setOpaque(false);
 				btnBasItem.setOpaque(false);
+				btnBasItemMaterial.setOpaque(false);
 				btnBasLocation.setOpaque(false);
 				btnBrand.setOpaque(false);
 				btnContainer.setOpaque(false);
@@ -359,6 +368,7 @@ public class MainFrm extends JPanel {
 				pnl.add(btnBrand);
 				pnl.add(btnUser);
 				pnl.add(btnBasItem);
+				pnl.add(btnBasItemMaterial);
 				pnl.add(btnBasLocation);
 				pnl.add(btnContainer);
 				pnl.setSize(new Dimension(0, 250));

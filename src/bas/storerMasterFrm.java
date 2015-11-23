@@ -289,8 +289,8 @@ public class storerMasterFrm extends InnerFrame {
 						String sql = "select storer_code from bas_storer where storer_code='"+storer_code_txt.getText().trim()+"'";
 						ResultSet rs = stmt.executeQuery(sql);
 						if (rs.next()) {
-							sql = "update bas_storer set storer_name='" + storer_name_txt.getText().trim()
-									+ "',PARENT_STORER_CODE='"+cb_parent_storer.getSelectedOID()+"',UPDATED_DTM_LOC=now(),UPDATED_BY_USER='sys' " + "where storer_code='"
+							sql = "update bas_storer set storer_name='" + storer_name_txt.getText().trim()+"',STORER_SHORT_NAME='"+storer_name_txt.getText().trim()+"'"
+									+ ",PARENT_STORER_CODE='"+cb_parent_storer.getSelectedOID()+"',UPDATED_DTM_LOC=now(),UPDATED_BY_USER='sys' " + "where storer_code='"
 									+ storer_code_txt.getText().trim() + "'";
 							int rst = stmt.executeUpdate(sql.replaceAll("e\'s","e\''''s"));
 							if (rst == 1) {

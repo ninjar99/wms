@@ -82,6 +82,9 @@ public class BasItemFrm extends InnerFrame{
 	private JTextField textField_TAX_NUMBER;
 	private JTextField textField_HSCODE;
 	private JTextField textField_HSCODE_DESC;
+	private JButton btnExcel;
+	private JLabel lblNewLabel_12;
+	private WMSCombobox cb_item_class;
 	
 	BasItemFrm(){
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -229,6 +232,13 @@ public class BasItemFrm extends InnerFrame{
 		comboBox_country_code.setEditable(true);
 		panel_2.add(comboBox_country_code);
 		
+		lblNewLabel_12 = new JLabel("\u8D27\u54C1\u7C7B\u578B:");
+		panel_2.add(lblNewLabel_12);
+		
+		cb_item_class = new WMSCombobox("select CODE_VALUE,DISPLAY_VALUE_CN from bas_code_dict where type_code='ITEM_CLASS_CODE' ",true);
+		cb_item_class.setEnabled(false);
+		panel_2.add(cb_item_class);
+		
 		JPanel panel_3 = new JPanel();
 		editPanel.add(panel_3, BorderLayout.SOUTH);
 		panel_3.setLayout(new BorderLayout(0, 0));
@@ -284,7 +294,8 @@ public class BasItemFrm extends InnerFrame{
 		table_item.setColumnEditableAll(false);
 		scrollPane.setViewportView(table_item);
 
-		String[] RHColumnNames ={"序号","货主","品牌","货品编码","货品名称","货品条码","口岸","税号","海关编码","申报要素","最小计量单位","货品规格","国家","货品描述"};
+		String[] RHColumnNames = { "序号", "货主", "品牌", "货品编码", "货品名称", "货品条码", "口岸", "税号", "海关编码", "申报要素", "最小计量单位",
+				"货品规格", "国家", "货品描述","货品类型" };
 		table_item.setColumn(RHColumnNames);
 		table_item.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		JTableUtil.fitTableColumns(table_item);
@@ -343,6 +354,7 @@ public class BasItemFrm extends InnerFrame{
 			String TAX_NUMBER = textField_TAX_NUMBER.getText().trim();
 			String HSCODE = textField_HSCODE.getText().trim();
 			String HSCODE_DESC = textField_HSCODE_DESC.getText().trim();
+			String ITEM_CLASS_CODE =  cb_item_class.getSelectedOID();
 			if(comboBox_STORER_CODE.getSelectedItem().toString().trim().equals("")||
 					itemCode.equals("")||
 					itemName.equals("")||
@@ -363,11 +375,11 @@ public class BasItemFrm extends InnerFrame{
 					return;
 				}else{
 					String sql = " insert into bas_item(STORER_CODE,BRAND_CODE,ITEM_CODE,ITEM_NAME,ITEM_BAR_CODE,"
-							+ " PORT_CODE,UNIT_CODE,ITEM_SPEC,COUNTRY_CODE,DESCRIPTION,CREATED_BY_USER,CREATED_DTM_LOC,TAX_NUMBER,HSCODE,HSCODE_DESC) "
+							+ " PORT_CODE,UNIT_CODE,ITEM_SPEC,COUNTRY_CODE,DESCRIPTION,CREATED_BY_USER,CREATED_DTM_LOC,TAX_NUMBER,HSCODE,HSCODE_DESC,ITEM_CLASS_CODE) "
 							+ " value('"+store_code+"','"+brandCode+"','"
 							+ itemCode+"','"+itemName+"','"+barCode+"','"+portCode+"','"+unitCode+"','"
 							+ itemSpec+"','"+countryCode+"','"+description
-									+ "','sys',now(),'"+TAX_NUMBER+"','"+HSCODE+"','"+HSCODE_DESC+"' )";
+									+ "','sys',now(),'"+TAX_NUMBER+"','"+HSCODE+"','"+HSCODE_DESC+"','"+ITEM_CLASS_CODE+"' )";
 //					System.out.println("sql = "+sql);
 					comData.sqlValidate(sql);
 					int t = DBOperator.DoUpdate(sql);
@@ -387,6 +399,7 @@ public class BasItemFrm extends InnerFrame{
 										"',COUNTRY_CODE='"+countryCode+"',DESCRIPTION='"+description+
 										"',UPDATED_BY_USER='sys',UPDATED_DTM_LOC=now() "+
 										",TAX_NUMBER='"+TAX_NUMBER+"',HSCODE='"+HSCODE+"',HSCODE_DESC='"+HSCODE_DESC+"'"+
+										",ITEM_CLASS_CODE='"+ITEM_CLASS_CODE+"' "+
 										" where STORER_CODE='"+store_code+"' and ITEM_CODE='"+itemCode+"'";
 //				System.out.println("sql_update  = "+sql_update);
 				int t = DBOperator.DoUpdate(sql_update);
@@ -540,11 +553,10 @@ public class BasItemFrm extends InnerFrame{
 				textField_item_spec.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品规格"))));
 				comboBox_country_code.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("国家"))));
 				textArea_DESCRIPTION.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品描述"))));
+				cb_item_class.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品类型"))));
 			}
 		};
-	private JButton btnExcel;
-	
-	
+		
 	private void initTableData(String strWhere){
        
        String sql = "SELECT"
@@ -561,7 +573,8 @@ public class BasItemFrm extends InnerFrame{
     		   +", `bas_item`.`ITEM_SPEC`"
     		   +", `bas_country`.`country_name`"
     		   +", `bas_item`.`DESCRIPTION`"
-    		   +"FROM"
+    		   +", bcd.DISPLAY_VALUE_CN ITEM_CLASS_CODE "
+    		   +" FROM"
     		   +".`bas_item`"
     		   +"INNER JOIN .`bas_storer` "
     		   +"ON (`bas_item`.`STORER_CODE` = `bas_storer`.`STORER_CODE`)"
@@ -573,6 +586,7 @@ public class BasItemFrm extends InnerFrame{
     		   +"ON (`bas_item`.`UNIT_CODE` = `bas_item_unit`.`unit_code`)"
     		   +"LEFT JOIN .`bas_country` "
     		   +"ON (`bas_item`.`COUNTRY_CODE` = `bas_country`.`country_code`) "
+    		   +"LEFT JOIN bas_code_dict bcd on bcd.CODE_VALUE=bas_item.ITEM_CLASS_CODE and bcd.TYPE_CODE='ITEM_CLASS_CODE' "
     		   +" where 1=1 ";
         if(!strWhere.equals("")){
 			sql = sql + strWhere;
@@ -623,6 +637,7 @@ public class BasItemFrm extends InnerFrame{
 		textField_TAX_NUMBER.setEditable(b);
 		textField_HSCODE.setEditable(b);
 		textField_HSCODE_DESC.setEditable(b);
+		cb_item_class.setEnabled(b);
 	}
 	private void clearEditUI(){
 		textField_itemCode.setText("");
