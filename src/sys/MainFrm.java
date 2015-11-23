@@ -129,7 +129,9 @@ public class MainFrm extends JPanel {
 	private final JLabel lbl_user_id = new JLabel("");
 	private final JLabel lbl_systime = new JLabel("");
 	private final JLabel lblNewLabel_2 = new JLabel(" | \u5F53\u524D\u65F6\u95F4\uFF1A");
-	private final static JLabel lbl_mouse = new JLabel("New label");
+	private final static JLabel lbl_mouse = new JLabel("");
+	private final JLabel lblNewLabel_3 = new JLabel(" | \u4ED3\u5E93\uFF1A");
+	private final JLabel lbl_warehouse = new JLabel("");
 	
 	public static DataManager getVersionInfo() {
 		return versionInfo;
@@ -163,6 +165,7 @@ public class MainFrm extends JPanel {
             protected String doInBackground() throws Exception {
             	while(true){
             		lbl_systime.setText(getCurrentDate());
+            		lbl_warehouse.setText(MainFrm.getUserInfo().getString("CUR_WAREHOUSE_NAME", 0));
             		Thread.sleep(1000);
             	}
             }
@@ -231,6 +234,10 @@ public class MainFrm extends JPanel {
 		toolBar.add(lbl_systime);
 		
 		toolBar.add(lbl_mouse);
+		
+		toolBar.add(lblNewLabel_3);
+		
+		toolBar.add(lbl_warehouse);
 		refreshCurrentTime();
 	}
 

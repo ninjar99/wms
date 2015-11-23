@@ -157,7 +157,7 @@ public class loginFrm extends JFrame {
 		        saveCf.saveFile(System.getProperty("user.dir")+"/logon.properties","");
 		        MD5 getMD5 = new MD5();
 				String password = getMD5.GetMD5Code(userPwd);
-				String sql = "select '"+warehouseCode+"' CUR_WAREHOUSE_CODE,WAREHOUSE_CODE,USER_CODE,USER_NAME,ROLE_NAME,ACTIVE from sys_user "
+				String sql = "select '"+warehouseCode+"' CUR_WAREHOUSE_CODE,'"+warehouseName+"' CUR_WAREHOUSE_NAME,WAREHOUSE_CODE,USER_CODE,USER_NAME,ROLE_NAME,ACTIVE from sys_user "
 				+"where (user_code= '"+userCode+"' or login_code = '"+userCode+"') and password='"+password+"' ";
 				if(sqlValidate(sql)){
 					DataManager dm = DBOperator.DoSelect2DM(sql);

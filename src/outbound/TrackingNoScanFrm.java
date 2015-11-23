@@ -23,6 +23,7 @@ import sys.InnerFrame;
 import sys.JTableUtil;
 import sys.MainFrm;
 import sys.Message;
+import sys.tableQueryDialog;
 import util.Math_SAM;
 import util.WaitingSplash;
 
@@ -545,6 +546,88 @@ public class TrackingNoScanFrm extends InnerFrame {
 			public void mouseClicked(MouseEvent e) {
 				if(e.getClickCount()>=2){
 					detailTable.setColumnSelectionAllowed(true);
+				}
+			}
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON3) {
+					String barcode = (String) detailTable.getValueAt(detailTable.getSelectedRow(), detailTable.getColumnModel().getColumnIndex("条码"));
+					if(!barcode.equals("")){
+						return;
+					}
+					JPopupMenu popupmenu = new JPopupMenu();
+					JMenuItem menuItem1 = new JMenuItem();
+					menuItem1.setLabel("修改订单商品编码");
+					menuItem1.addActionListener(new java.awt.event.ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							boolean b_confirm = Message.showOKorCancelMessage("是否确认修改订单商品编码?\n");
+							if(b_confirm){
+								String storerName = (String) detailTable.getValueAt(detailTable.getSelectedRow(), detailTable.getColumnModel().getColumnIndex("货主"));
+								String sql = "select item.STORER_CODE 货主编码,bs.STORER_NAME 货主名称,item.ITEM_CODE 货品编码,item.ITEM_NAME 货品名称,item.ITEM_BAR_CODE 货品条码,biu.unit_name 单位  "
+										+ "from bas_item item " + "inner join bas_storer bs on item.STORER_CODE=bs.STORER_CODE "
+										+ "inner join bas_item_unit biu on biu.unit_code=item.UNIT_CODE " 
+										+ "where bs.STORER_NAME ='"+storerName+"' ";
+								tableQueryDialog tableQuery = new tableQueryDialog(sql, false);
+								Toolkit toolkit = Toolkit.getDefaultToolkit();
+								int x = (int) (toolkit.getScreenSize().getWidth() - tableQuery.getWidth()) / 2;
+								int y = (int) (toolkit.getScreenSize().getHeight() - tableQuery.getHeight()) / 2;
+								tableQuery.setLocation(x, y);
+								tableQuery.setModal(true);
+								tableQuery.setVisible(true);
+								DataManager dm = tableQueryDialog.resultDM;
+								if (dm == null) {
+									return;
+								}
+								Object obj = dm.getObject("货品编码", 0);
+								if (obj == null || obj.equals("")) {
+									return;
+								} else {
+									String lineNo = (String) detailTable.getValueAt(detailTable.getSelectedRow(), detailTable.getColumnModel().getColumnIndex("行号"));
+									String oldItemCode = (String) detailTable.getValueAt(detailTable.getSelectedRow(), detailTable.getColumnModel().getColumnIndex("商品编码"));
+									String shipmentNo = (String) headerTable.getValueAt(headerTable.getSelectedRow(), headerTable.getColumnModel().getColumnIndex("出库单号"));
+									sql = "update oub_shipment_detail set ITEM_CODE='"+dm.getString("货品编码", 0)+"',UPDATED_DTM_LOC=now(),UPDATED_BY_USER='"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' "
+											+ "where SHIPMENT_NO = '"+shipmentNo+"' and SHIPMENT_LINE_NO="+lineNo +" and ITEM_CODE='"+oldItemCode+"'";
+									int t = DBOperator.DoUpdate(sql);
+									if(t==1){
+										detailTable.setValueAt(dm.getString("货品编码", 0), detailTable.getSelectedRow(), detailTable.getColumnModel().getColumnIndex("商品编码"));
+										detailTable.setValueAt(dm.getString("货品条码", 0), detailTable.getSelectedRow(), detailTable.getColumnModel().getColumnIndex("条码"));
+										detailTable.setValueAt(dm.getString("货品名称", 0), detailTable.getSelectedRow(), detailTable.getColumnModel().getColumnIndex("商品名称"));
+										detailTable.setValueAt(dm.getString("单位", 0), detailTable.getSelectedRow(), detailTable.getColumnModel().getColumnIndex("单位"));
+										Message.showInfomationMessage("操作成功!");
+										//记录操作日志
+										DataManager dmProcess = comData.getSysProcessHistoryDataModel("sys_process_history");
+										if (dmProcess!=null) {
+											dmdata.xArrayList list = (xArrayList) dmProcess.getRow(0);
+											list.set(dmProcess.getCol("SYS_PROCESS_HISTORY_ID"), "null");
+											list.set(dmProcess.getCol("PROCESS_CODE"), "SHIPMENT_UPDATE");
+											list.set(dmProcess.getCol("PROCESS_NAME"), "订单明细修改_商品编码");
+											list.set(dmProcess.getCol("STORER_CODE"), "");
+											list.set(dmProcess.getCol("WAREHOUSE_CODE"), MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0));
+											list.set(dmProcess.getCol("FROM_LOCATION_CODE"), "");
+											list.set(dmProcess.getCol("FROM_CONTAINER_CODE"), "");
+											list.set(dmProcess.getCol("QTY"), "");
+											list.set(dmProcess.getCol("REFERENCE_NO"), shipmentNo);
+											list.set(dmProcess.getCol("REFERENCE_LINE_NO"), lineNo);
+											list.set(dmProcess.getCol("REFERENCE_TYPE"), "");
+											list.set(dmProcess.getCol("LOT_NO"), "");
+											list.set(dmProcess.getCol("PROCESS_TIME"), "now()");
+											list.set(dmProcess.getCol("CREATED_BY_USER"),MainFrm.getUserInfo().getString("USER_CODE", 0) );
+											list.set(dmProcess.getCol("CREATED_DTM_LOC"), "now()");
+											list.set(dmProcess.getCol("UPDATED_DTM_LOC"), "now()");
+											dmProcess.RemoveRow(0);
+											dmProcess.AddNewRow(list);
+											boolean bool = comData.addSysProcessHistory("sys_process_history", dmProcess);
+											System.out.println("写入操作日志："+bool);
+										}
+									}else{
+										Message.showErrorMessage("操作失败!");
+									}
+								}
+							}
+						}
+						});
+					popupmenu.add(menuItem1);
+					popupmenu.show(e.getComponent(), e.getX(), e.getY());
 				}
 			}
 		});
