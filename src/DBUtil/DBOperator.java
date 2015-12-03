@@ -10,6 +10,7 @@ import java.util.Vector;
 
 import dmdata.DataManager;
 import dmdata.ListData;
+import dmdata.xArrayList;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -190,23 +191,150 @@ public class DBOperator {
 	}
 	
 	public static String refFormatNowDate() {
-		  Date nowTime = new Date(System.currentTimeMillis());
-		  SimpleDateFormat sdFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		  String retStrFormatNowDate = sdFormatter.format(nowTime);
-		  return retStrFormatNowDate;
+		Date nowTime = new Date(System.currentTimeMillis());
+		SimpleDateFormat sdFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String retStrFormatNowDate = sdFormatter.format(nowTime);
+		return retStrFormatNowDate;
+	}
+	
+	public static DataManager getTableHeader2DataManager(String table){
+		DataManager dm = new DataManager();
+		if(table.equals("")){
+			return dm;
 		}
+		try{
+		String sql = "select * from "+table+" where 1<>1";
+		dm = DBOperator.DoSelect2DM(sql);
+		String[] rowdata = new String[dm.getColCount()];
+		dm.AddNewRow(rowdata);
+		}catch(Exception e){
+			return dm;
+		}
+		return dm;
+	}
+	
+	public static boolean saveTableRow(String table,String keyName,DataManager dm){
+		StringBuffer sbf = new StringBuffer();
+		String sql = "select "+keyName+" from "+table+" where 1=1 ";
+		for(int k=0;k<dm.getCurrentCount();k++){
+			String keyValue = dm.getString(keyName, k);
+			sql = sql +" and "+keyName+" = '"+keyValue+"'";
+			Vector vec = DBOperator.DoSelect(sql);
+			if(vec.size()==0){
+				//insert into
+				sbf.append("insert into "+table+"(");
+				for(int i=0;i<dm.getColCount();i++){
+					if(dm.getString(i, 0).trim().equals("")) {
+						continue;
+					}
+					sbf.append(dm.getCol(i));
+					if(i<dm.getColCount()-1){
+						sbf.append(",");
+					}
+				}
+				//删除最后一个,字符
+				if(sbf.toString().endsWith(",")){
+					sbf.delete(sbf.lastIndexOf(","), sbf.length());
+				}
+				sbf.append(") ");
+
+				sbf.append("\n select ");
+				for(int i=0;i<dm.getColCount();i++){
+					if(dm.getString(i, 0).trim().equals("")) {
+						continue;
+					}
+					//如果是null或者日期函数，需要去掉 单引号
+					if (dm.getString(i, k).equalsIgnoreCase("null")
+							|| dm.getString(i, k).equalsIgnoreCase("now()")
+							|| dm.getString(i, k).equalsIgnoreCase("UNIX_TIMESTAMP()")) {
+						//主键ID插入NULL
+						if(dm.getCol(i).equalsIgnoreCase(keyName)){
+							sbf.append("null");
+						}else{
+							sbf.append(dm.getString(i, k).equals("")?"null":dm.getString(i, k));
+						}
+					} else {
+						//主键ID插入NULL
+						if(dm.getCol(i).equalsIgnoreCase(keyName)){
+							sbf.append("null");
+						}else{
+							sbf.append(dm.getString(i, k).equals("")?"null":"'"+dm.getString(i, k)+"'");
+						}
+					}
+					if(i<dm.getColCount()-1){
+						sbf.append(",");
+					}
+				}
+				//删除最后一个,字符
+				if(sbf.toString().endsWith(",")){
+					sbf.delete(sbf.lastIndexOf(","), sbf.length());
+				}
+				int t = DBOperator.DoUpdate(sbf.toString());
+				if(t>0){
+					continue;
+				}else{
+					return false;
+				}
+			}else{
+				//update
+				int cycle = 0;
+				sbf.append("update "+table+" set ");
+				for(int i=0;i<dm.getColCount();i++){
+					if(dm.getString(i, k).equals("")) continue;
+					if(dm.getCol(i).equalsIgnoreCase(keyName)) continue;
+					//如果是null或者日期函数，需要去掉 单引号
+					cycle++;
+					if(i<dm.getColCount() && cycle>1){
+						sbf.append(",");
+						cycle --;
+					}
+					if(dm.getString(i, k).equalsIgnoreCase("null") || dm.getString(i, k).equalsIgnoreCase("now()")){
+						sbf.append(dm.getCol(i)+" = "+dm.getString(i, k));
+					}else{
+						sbf.append(dm.getCol(i)+" = '"+dm.getString(i, k)+"'");
+					}
+					
+				}
+				sbf.append(" where "+keyName+" ='"+dm.getString(keyName, k)+"'");
+				int t = DBOperator.DoUpdate(sbf.toString());
+				if(t>0){
+					continue;
+				}else{
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	
+	public static boolean saveTableData(String tableName,String primaryColName,String[] colNames,String[] colValues){
+		DataManager dmSaveTable = DBOperator.getTableHeader2DataManager(tableName);
+		dmdata.xArrayList list = (xArrayList) dmSaveTable.getRow(0);
+		for(int i=0;i<colNames.length;i++){
+			list.set(dmSaveTable.getCol(colNames[i]), colValues[i]);
+		}
+		dmSaveTable.RemoveRow(0);
+		dmSaveTable.AddNewRow(list);
+		boolean bool = DBOperator.saveTableRow(tableName,primaryColName, dmSaveTable);
+		return bool;
+	}
 	
 	public static void main(String[] args){
-		for (int k = 0; k < 1000; k++) {
-			DataManager dm = new DataManager();
-			dm = DoSelect2DM("select * from inb_receipt_header limit 10 ");
-			for (int i = 0; i < dm.getCurrentCount(); i++) {
-				Object[] row = new Object[dm.getColCount()];
-				row[0] = dm.getString("receipt_no", i);
-				row[0] = dm.getString("po_no", i);
-			}
-			System.out.println(refFormatNowDate());
-		}
+		
+//		saveTableData("bas_item_bak","STORER_CODE",
+//				new String[]{"STORER_CODE","MATRRIAL_NUM","OLD_MATRRIAL_NUM"},
+//				new String[]{"11","22","33"});
+		
+//		for (int k = 0; k < 1000; k++) {
+//			DataManager dm = new DataManager();
+//			dm = DoSelect2DM("select * from inb_receipt_header limit 10 ");
+//			for (int i = 0; i < dm.getCurrentCount(); i++) {
+//				Object[] row = new Object[dm.getColCount()];
+//				row[0] = dm.getString("receipt_no", i);
+//				row[0] = dm.getString("po_no", i);
+//			}
+//			System.out.println(refFormatNowDate());
+//		}
 		
 //		DataManager dm = new DataManager();
 //	    dm.addCols(new String[] {

@@ -38,6 +38,7 @@ import sys.JTableUtil;
 import sys.Message;
 import sys.QueryDialog;
 import sys.ToolBarItem;
+import util.JTNumEdit;
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -48,8 +49,11 @@ import java.awt.Toolkit;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
+
 import javax.swing.JTextField;
 import javax.swing.JTextArea;
+import javax.swing.BoxLayout;
 
 public class BasItemFrm extends InnerFrame{
 
@@ -85,6 +89,13 @@ public class BasItemFrm extends InnerFrame{
 	private JButton btnExcel;
 	private JLabel lblNewLabel_12;
 	private WMSCombobox cb_item_class;
+	private JPanel panel_5;
+	private JLabel lblNewLabel_13;
+	private JTNumEdit txt_length;
+	private JLabel lblNewLabel_14;
+	private JTNumEdit txt_width;
+	private JLabel lblcm;
+	private JTNumEdit txt_height;
 	
 	BasItemFrm(){
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -241,12 +252,13 @@ public class BasItemFrm extends InnerFrame{
 		
 		JPanel panel_3 = new JPanel();
 		editPanel.add(panel_3, BorderLayout.SOUTH);
-		panel_3.setLayout(new BorderLayout(0, 0));
+		panel_3.setLayout(new GridLayout(3, 1, 0, 0));
 		
 		JPanel panel_4 = new JPanel();
+		panel_4.setPreferredSize(new Dimension(50,40));
 		FlowLayout fl_panel_4 = (FlowLayout) panel_4.getLayout();
 		fl_panel_4.setAlignment(FlowLayout.LEFT);
-		panel_3.add(panel_4, BorderLayout.NORTH);
+		panel_3.add(panel_4);
 		
 		JLabel lblNewLabel_9 = new JLabel("\u7A0E\u53F7:");
 		panel_4.add(lblNewLabel_9);
@@ -268,6 +280,32 @@ public class BasItemFrm extends InnerFrame{
 		textField_HSCODE_DESC = new JTextField();
 		panel_4.add(textField_HSCODE_DESC);
 		textField_HSCODE_DESC.setColumns(55);
+		panel_5 = new JPanel();
+		panel_5.setPreferredSize(new Dimension(50,40));
+		FlowLayout flowLayout_1 = (FlowLayout) panel_5.getLayout();
+		flowLayout_1.setAlignment(FlowLayout.LEFT);
+		panel_3.add(panel_5);
+		
+		lblNewLabel_13 = new JLabel("\u957F\u5EA6(CM)\uFF1A");
+		panel_5.add(lblNewLabel_13);
+		
+		txt_length = new JTNumEdit(10, "#,##0.00",true);
+		panel_5.add(txt_length);
+		txt_length.setColumns(10);
+		
+		lblNewLabel_14 = new JLabel("\u5BBD\u5EA6(CM)\uFF1A");
+		panel_5.add(lblNewLabel_14);
+		
+		txt_width = new JTNumEdit(10, "#,##0.00",true);
+		panel_5.add(txt_width);
+		txt_width.setColumns(10);
+		
+		lblcm = new JLabel("\u9AD8\u5EA6(CM)\uFF1A");
+		panel_5.add(lblcm);
+		
+		txt_height = new JTNumEdit(10, "#,##0.00",true);
+		panel_5.add(txt_height);
+		txt_height.setColumns(10);
 		
 		JPanel panel_1 = new JPanel();
 		panel_3.add(panel_1);
@@ -278,12 +316,11 @@ public class BasItemFrm extends InnerFrame{
 		panel_1.add(lblNewLabel_3);
 		
 		textArea_DESCRIPTION = new JTextArea();
+		textArea_DESCRIPTION.setColumns(80);
 		textArea_DESCRIPTION.setWrapStyleWord(true);
 		textArea_DESCRIPTION.setLineWrap(true);
-		textArea_DESCRIPTION.setColumns(80);
 		textArea_DESCRIPTION.setRows(2);
 		panel_1.add(textArea_DESCRIPTION);
-		
 		
 		JScrollPane scrollPane = new JScrollPane();
 		centerPanel.add(scrollPane, BorderLayout.CENTER);
@@ -295,7 +332,7 @@ public class BasItemFrm extends InnerFrame{
 		scrollPane.setViewportView(table_item);
 
 		String[] RHColumnNames = { "序号", "货主", "品牌", "货品编码", "货品名称", "货品条码", "口岸", "税号", "海关编码", "申报要素", "最小计量单位",
-				"货品规格", "国家", "货品描述","货品类型" };
+				"货品规格", "国家", "货品描述","货品类型","长度","宽度","高度" };
 		table_item.setColumn(RHColumnNames);
 		table_item.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		JTableUtil.fitTableColumns(table_item);
@@ -355,6 +392,9 @@ public class BasItemFrm extends InnerFrame{
 			String HSCODE = textField_HSCODE.getText().trim();
 			String HSCODE_DESC = textField_HSCODE_DESC.getText().trim();
 			String ITEM_CLASS_CODE =  cb_item_class.getSelectedOID();
+			String length = txt_length.getText();
+			String width = txt_width.getText();
+			String height = txt_height.getText();
 			if(comboBox_STORER_CODE.getSelectedItem().toString().trim().equals("")||
 					itemCode.equals("")||
 					itemName.equals("")||
@@ -375,11 +415,13 @@ public class BasItemFrm extends InnerFrame{
 					return;
 				}else{
 					String sql = " insert into bas_item(STORER_CODE,BRAND_CODE,ITEM_CODE,ITEM_NAME,ITEM_BAR_CODE,"
-							+ " PORT_CODE,UNIT_CODE,ITEM_SPEC,COUNTRY_CODE,DESCRIPTION,CREATED_BY_USER,CREATED_DTM_LOC,TAX_NUMBER,HSCODE,HSCODE_DESC,ITEM_CLASS_CODE) "
+							+ " PORT_CODE,UNIT_CODE,ITEM_SPEC,COUNTRY_CODE,DESCRIPTION,CREATED_BY_USER,CREATED_DTM_LOC,"
+							+ "TAX_NUMBER,HSCODE,HSCODE_DESC,ITEM_CLASS_CODE,LENGTH,WIDTH,HEIGHT) "
 							+ " value('"+store_code+"','"+brandCode+"','"
 							+ itemCode+"','"+itemName+"','"+barCode+"','"+portCode+"','"+unitCode+"','"
 							+ itemSpec+"','"+countryCode+"','"+description
-									+ "','sys',now(),'"+TAX_NUMBER+"','"+HSCODE+"','"+HSCODE_DESC+"','"+ITEM_CLASS_CODE+"' )";
+									+ "','sys',now(),'"+TAX_NUMBER+"','"+HSCODE+"','"+HSCODE_DESC+"','"+ITEM_CLASS_CODE+"',"
+									+ ""+length+","+width+","+height+" )";
 //					System.out.println("sql = "+sql);
 					comData.sqlValidate(sql);
 					int t = DBOperator.DoUpdate(sql);
@@ -399,7 +441,10 @@ public class BasItemFrm extends InnerFrame{
 										"',COUNTRY_CODE='"+countryCode+"',DESCRIPTION='"+description+
 										"',UPDATED_BY_USER='sys',UPDATED_DTM_LOC=now() "+
 										",TAX_NUMBER='"+TAX_NUMBER+"',HSCODE='"+HSCODE+"',HSCODE_DESC='"+HSCODE_DESC+"'"+
-										",ITEM_CLASS_CODE='"+ITEM_CLASS_CODE+"' "+
+										",ITEM_CLASS_CODE='"+ITEM_CLASS_CODE+"'"
+										+ ",LENGTH="+length+""
+										+ ",WIDTH="+width+""
+										+ ",HEIGHT="+height+" "+
 										" where STORER_CODE='"+store_code+"' and ITEM_CODE='"+itemCode+"'";
 //				System.out.println("sql_update  = "+sql_update);
 				int t = DBOperator.DoUpdate(sql_update);
@@ -554,6 +599,9 @@ public class BasItemFrm extends InnerFrame{
 				comboBox_country_code.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("国家"))));
 				textArea_DESCRIPTION.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品描述"))));
 				cb_item_class.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品类型"))));
+				txt_length.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("长度"))));
+				txt_width.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("宽度"))));
+				txt_height.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("高度"))));
 			}
 		};
 		
@@ -574,6 +622,7 @@ public class BasItemFrm extends InnerFrame{
     		   +", `bas_country`.`country_name`"
     		   +", `bas_item`.`DESCRIPTION`"
     		   +", bcd.DISPLAY_VALUE_CN ITEM_CLASS_CODE "
+    		   +",bas_item.LENGTH,bas_item.WIDTH,bas_item.HEIGHT "
     		   +" FROM"
     		   +".`bas_item`"
     		   +"INNER JOIN .`bas_storer` "
@@ -638,6 +687,9 @@ public class BasItemFrm extends InnerFrame{
 		textField_HSCODE.setEditable(b);
 		textField_HSCODE_DESC.setEditable(b);
 		cb_item_class.setEnabled(b);
+		txt_length.setEditable(b);
+		txt_width.setEditable(b);
+		txt_height.setEditable(b);
 	}
 	private void clearEditUI(){
 		textField_itemCode.setText("");
@@ -654,6 +706,9 @@ public class BasItemFrm extends InnerFrame{
 		textField_HSCODE.setText("");
 		textField_HSCODE_DESC.setText("");
 		table_item.clearSelection();
+		txt_length.setText("0");
+		txt_width.setText("0");
+		txt_height.setText("0");
 	}
 	public static BasItemFrm getInstance() {
 		if(instance == null) { 
