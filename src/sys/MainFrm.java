@@ -122,7 +122,7 @@ public class MainFrm extends JPanel {
 	private final static JDesktopPane desktopPane = new JDesktopPane();
 	private static DataManager userInfo = new DataManager();
 	private static DataManager versionInfo = new DataManager();
-	public static String wmsVersion = "1.0";
+	public static String wmsVersion = "1.2";
 	private final JLabel lblNewLabel = new JLabel("");
 	private final JToolBar toolBar = new JToolBar();
 	private final JLabel lblNewLabel_1 = new JLabel("\u767B\u5F55\u8D26\u6237\uFF1A");

@@ -14,6 +14,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import DBUtil.DBOperator;
 import comUtil.comData;
 import dmdata.DataManager;
@@ -242,10 +244,19 @@ public class ShipmentOubCheck extends InnerFrame {
 				for(int i=0;i<table.getRowCount();i++){
 					String status = table.getValueAt(i, table.getColumnModel().getColumnIndex("状态")).toString();
 					String trackingNo = table.getValueAt(i, table.getColumnModel().getColumnIndex("运单号")).toString();
+					String shipmentNo = table.getValueAt(i, table.getColumnModel().getColumnIndex("出库单号")).toString();
 					if(status.equals("出库复核完成")){
 						txt_tracking_no.setText("");
 						txt_tracking_no.requestFocus();
 						sb.append("运单号："+trackingNo+" 已经完成出库复核，此行数据忽略\n");
+						continue;
+					}
+					if(status.equals("出库复核中") || status.equals("包装中") || status.equals("包装完成")){
+						//...
+					}else{
+						txt_tracking_no.setText("");
+						txt_tracking_no.requestFocus();
+						sb.append("运单号："+trackingNo+" 未完成拣货复核，此行数据忽略\n");
 						continue;
 					}
 					//更新订单表头状态 status=800
@@ -284,6 +295,53 @@ public class ShipmentOubCheck extends InnerFrame {
 									+" where TRANSFER_ORDER_NO='"+trackingNo+"' ";
 							t = DBOperator.DoUpdate(sql);
 							continue;
+						}else{
+							sql = "select CONFIG_VALUE1,CONFIG_VALUE2 from sys_config_detail where CONFIG_CODE='IS_REDUCE_MATERIAL' and CONFIG_VALUE1='1' ";
+							DataManager dm = DBOperator.DoSelect2DM(sql);
+							if(dm==null || dm.getCurrentCount()==0){
+								
+							}else{
+								//扣减包材库存数量
+								sql = "update inv_inventory ii "
+										+ "inner join ( "
+										+ "select osd.STORER_CODE,osd.ITEM_CODE,osd.OQC_QTY,bim.ITEM_CODE_MATERIAL,bim.MATCH_QTY,(bim.MATCH_QTY*osd.OQC_QTY) MATERIAL_QTY "
+										+ "from oub_shipment_detail osd "
+										+ "left join bas_item_material bim on osd.STORER_CODE=bim.STORER_CODE and osd.ITEM_CODE=bim.ITEM_CODE "
+										+ "where osd.SHIPMENT_NO='"+shipmentNo+"') tmp on tmp.ITEM_CODE_MATERIAL=ii.ITEM_CODE "
+										+ "set ii.ON_HAND_QTY=ii.ON_HAND_QTY-(tmp.MATERIAL_QTY),ii.OUB_TOTAL_QTY=ii.OUB_TOTAL_QTY+(tmp.MATERIAL_QTY) "
+										+ "";
+								t = DBOperator.DoUpdate(sql);
+								if(t==0){
+//									Message.showWarningMessage("扣除包材库存数量失败！");
+									//记录操作日志
+									DataManager dmProcess = comData.getSysProcessHistoryDataModel("sys_process_history");
+									if (dmProcess != null) {
+										dmdata.xArrayList list = (xArrayList) dmProcess.getRow(0);
+										list.set(dmProcess.getCol("SYS_PROCESS_HISTORY_ID"), "null");
+										list.set(dmProcess.getCol("PROCESS_CODE"), "OutboundCheck");
+										list.set(dmProcess.getCol("PROCESS_NAME"), "出库复核");
+										list.set(dmProcess.getCol("STORER_CODE"), "");
+										list.set(dmProcess.getCol("WAREHOUSE_CODE"),MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0));
+										list.set(dmProcess.getCol("FROM_LOCATION_CODE"), "");
+										list.set(dmProcess.getCol("FROM_CONTAINER_CODE"), "");
+										list.set(dmProcess.getCol("QTY"), "");
+										list.set(dmProcess.getCol("REFERENCE_NO"), txt_tracking_no.getText());
+										list.set(dmProcess.getCol("REFERENCE_LINE_NO"), "");
+										list.set(dmProcess.getCol("REFERENCE_TYPE"), "");
+										list.set(dmProcess.getCol("LOT_NO"), "");
+										list.set(dmProcess.getCol("MESSAGE"), "扣除包材库存数量失败:"+StringEscapeUtils.escapeSql(sql));
+										list.set(dmProcess.getCol("PROCESS_TIME"), "now()");
+										list.set(dmProcess.getCol("CREATED_BY_USER"),MainFrm.getUserInfo().getString("USER_CODE", 0));
+										list.set(dmProcess.getCol("CREATED_DTM_LOC"), "now()");
+										list.set(dmProcess.getCol("UPDATED_DTM_LOC"), "now()");
+										dmProcess.RemoveRow(0);
+										dmProcess.AddNewRow(list);
+										boolean bool = comData.addSysProcessHistory("sys_process_history", dmProcess);
+										System.out.println("写入操作日志：" + bool);
+									}
+								}
+							}
+							
 						}
 					}
 				}

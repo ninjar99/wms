@@ -552,7 +552,11 @@ public class TrackingNoScanFrm extends InnerFrame {
 			public void mouseReleased(MouseEvent e) {
 				if (e.getButton() == MouseEvent.BUTTON3) {
 					String barcode = (String) detailTable.getValueAt(detailTable.getSelectedRow(), detailTable.getColumnModel().getColumnIndex("ÌõÂë"));
-					if(!barcode.equals("")){
+					String status = (String) detailTable.getValueAt(detailTable.getSelectedRow(), detailTable.getColumnModel().getColumnIndex("¶©µ¥×´Ì¬"));
+//					if(!barcode.equals("")){
+//						return;
+//					}
+					if(!status.equals("100")){
 						return;
 					}
 					JPopupMenu popupmenu = new JPopupMenu();
