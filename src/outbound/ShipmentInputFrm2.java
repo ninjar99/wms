@@ -17,8 +17,11 @@ import dmdata.DataManager;
 import main.PBSUIBaseGrid;
 import sys.InnerFrame;
 import sys.JTableUtil;
+import sys.MainFrm;
 import sys.Message;
 import sys.QueryDialog;
+import sys.tableEditDialog;
+import sys.tableQueryDialog;
 import util.Math_SAM;
 import util.WaitingSplash;
 
@@ -37,23 +40,23 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class ShipmentQueryFrm extends InnerFrame {
+public class ShipmentInputFrm2 extends InnerFrame {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -5982618691142416937L;
 	private JPanel contentPane;
-	private static volatile ShipmentQueryFrm instance;
+	private static volatile ShipmentInputFrm2 instance;
 	private static boolean isOpen = false;
 	private PBSUIBaseGrid headerTable;
 	private PBSUIBaseGrid detailTable;
 	
-	public static ShipmentQueryFrm getInstance() {
+	public static ShipmentInputFrm2 getInstance() {
 		 if(instance == null) { 
-			 synchronized(ShipmentQueryFrm.class){
+			 synchronized(ShipmentInputFrm2.class){
 				 if(instance == null) {
-					 instance = new ShipmentQueryFrm();
+					 instance = new ShipmentInputFrm2();
 				 }
 			 }
 	        }  
@@ -63,7 +66,7 @@ public class ShipmentQueryFrm extends InnerFrame {
 	
 	public static synchronized boolean getOpenStatus() {
 		 if(instance == null) {    
-	            instance = new ShipmentQueryFrm();  
+	            instance = new ShipmentInputFrm2();  
 	        }  
 	        return isOpen;
 		 
@@ -76,7 +79,7 @@ public class ShipmentQueryFrm extends InnerFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					ShipmentQueryFrm frame = new ShipmentQueryFrm();
+					ShipmentInputFrm2 frame = new ShipmentInputFrm2();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -88,7 +91,7 @@ public class ShipmentQueryFrm extends InnerFrame {
 	/**
 	 * Create the frame.
 	 */
-	public ShipmentQueryFrm() {
+	public ShipmentInputFrm2() {
 //		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		// 向侦听器列表添加一个 VetoableChangeListener。为所有属性注册该侦听器
 		this.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -125,6 +128,56 @@ public class ShipmentQueryFrm extends InnerFrame {
 		flowLayout.setAlignment(FlowLayout.LEFT);
 		contentPane.add(topPanel, BorderLayout.NORTH);
 		
+		JButton btnClose = new JButton("\u5173\u95ED");
+		btnClose.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					instance.setClosed(true);
+				} catch (PropertyVetoException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}
+		});
+		
+		JButton btnAdd = new JButton("\u589E\u52A0");
+		btnAdd.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String sql = "select bw.warehouse_name 仓库,bs.storer_name 货主,osh.TRANSFER_ORDER_NO 运单号,osh.shipment_no 出库单号,osh.external_order_no 外部订单号,"
+						+ "case osh.status when '100' then '新建' when '200' then '库存分配完成' when '300' then '拣货中' when '400' then '分拣中' when '500' then '包装中' when '600' then '包装完成' when '700' then '出库复核中' when '800' then '出库复核完成' when '900' then '已出库交接' else osh.status end 状态,"
+						+ "osh.create_order_date 订单创建时间,osh.wave_no 波次号,osh.ship_to_name 收货人,osh.ship_to_contact 收货联系人,osh.ship_to_contact_idcard 收货人身份证号,"
+						+ "osh.ship_to_country 国家,osh.ship_to_province_code 省,osh.ship_to_city_code 市,osh.ship_to_region_code 区,osh.ship_to_street_code 街道,osh.ship_to_address1 详细地址,osh.ship_to_cell 电话1,"
+						+ "osh.ship_to_tel 电话2,osh.ship_to_email 电子邮箱,osh.created_dtm_loc WMS创建时间,osh.created_by_user WMS创建用户 "
+						+ " from oub_shipment_header osh "
+						+" inner join bas_storer bs on osh.storer_code=bs.storer_code "
+						+" inner join bas_warehouse bw on osh.warehouse_code=bw.warehouse_code "
+						+" where 1<>1 ";
+				tableEditDialog tableQuery = new tableEditDialog(sql);
+				Toolkit toolkit = Toolkit.getDefaultToolkit();
+				int x = (int)(toolkit.getScreenSize().getWidth()-tableQuery.getWidth())/2;
+				int y = (int)(toolkit.getScreenSize().getHeight()-tableQuery.getHeight())/2;
+				tableQuery.setLocation(x, y);
+				tableQuery.setModal(true);
+				tableQuery.setVisible(true);
+				DataManager dm = tableQueryDialog.resultDM;
+				if(dm==null){
+					return;
+				}
+				Object obj = dm.getObject("仓库编码", 0);
+				if(obj==null || obj.equals("")){
+					return;
+				}else{
+				}
+			}
+		});
+		topPanel.add(btnAdd);
+		
+		JButton btnModify = new JButton("\u4FEE\u6539");
+		topPanel.add(btnModify);
+		
+		JButton btnDelete = new JButton("\u5220\u9664");
+		topPanel.add(btnDelete);
+		
 		JButton btnQuery = new JButton("\u67E5\u8BE2");
 		btnQuery.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
@@ -150,88 +203,8 @@ public class ShipmentQueryFrm extends InnerFrame {
 		});
 		topPanel.add(btnQuery);
 		
-		JButton btnClose = new JButton("\u5173\u95ED");
-		btnClose.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				try {
-					instance.setClosed(true);
-				} catch (PropertyVetoException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-			}
-		});
-		
-		JButton btnWaiting = new JButton("\u5F85\u62E3\u8D27\u8BA2\u5355\u67E5\u8BE2");
-		btnWaiting.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				new SwingWorker<String, Void>() {
-					WaitingSplash splash = new WaitingSplash();
-
-		            @Override
-		            protected String doInBackground() throws Exception {
-		            	//出现
-		            	headerTable.setEnabled(false);
-		            	headerTable.setColumnEditableAll(false);
-		            	splash.start(); // 运行启动界面
-		            	try{
-		            		String strWhere = " and osh.status='100' ";
-		    				if(!getHeaderTableData(strWhere)){
-		    					splash.stop();
-		    					headerTable.setEnabled(true);
-		    				}
-		            	}catch(Exception e){
-		            		Message.showWarningMessage(e.getMessage());
-		            	}
-		                return "";
-		            }
-
-		            @Override
-		            protected void done() {
-		            	splash.stop(); // 运行启动界面
-		                System.out.println("数据查询结束");
-						headerTable.setEnabled(true);
-		            }
-		        }.execute();
-			}
-		});
-		topPanel.add(btnWaiting);
-		
-		JButton btnPacked = new JButton("\u5DF2\u6253\u5305\u8BA2\u5355\u67E5\u8BE2");
-		btnPacked.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				new SwingWorker<String, Void>() {
-					WaitingSplash splash = new WaitingSplash();
-
-		            @Override
-		            protected String doInBackground() throws Exception {
-		            	//出现
-		            	headerTable.setEnabled(false);
-		            	headerTable.setColumnEditableAll(false);
-		            	splash.start(); // 运行启动界面
-		            	try{
-		            		String strWhere = " and osh.status='500' ";
-		            		if(!getHeaderTableData(strWhere)){
-		    					splash.stop();
-		    					headerTable.setEnabled(true);
-		    				}
-		            	}catch(Exception e){
-		            		Message.showWarningMessage(e.getMessage());
-		            	}
-		                return "";
-		            }
-
-		            @Override
-		            protected void done() {
-		            	splash.stop(); // 运行启动界面
-		                System.out.println("数据查询结束");
-						headerTable.setEnabled(true);
-		            }
-		        }.execute();
-				
-			}
-		});
-		topPanel.add(btnPacked);
+		JButton btnExcel = new JButton("Excel\u5BFC\u5165");
+		topPanel.add(btnExcel);
 		topPanel.add(btnClose);
 		
 		JPanel centerpanel = new JPanel();

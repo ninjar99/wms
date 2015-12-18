@@ -244,6 +244,7 @@ public class poImportFrm extends InnerFrame {
 								continue;
 							}
 							sql = "select po_no,status from inb_po_header where storer_code='"+STORER_CODE+"' and erp_po_no='" + row[3] + "'";
+							LogInfo.appendLog("sql", sql);
 							rs = stmt.executeQuery(sql);
 							if (!rs.next()) {
 								PO_NO = comData.getValueFromBasNumRule("inb_po_header", "po_no");
@@ -252,6 +253,7 @@ public class poImportFrm extends InnerFrame {
 										+ " select '" + PO_NO + "','" + WAREHOUSE_CODE + "','" + STORER_CODE + "','" + VENDOR_CODE
 										+ "','" + ERP_PO_NO + "',now(),'sys',now(),'sys' ";
 								System.out.println(sql);
+								LogInfo.appendLog("sql", sql);
 								int t = stmt.executeUpdate(sql);
 								if (t != 1) {
 									JOptionPane.showMessageDialog(null, "插入PO表头报错\n" + sql, "错误",
@@ -270,6 +272,7 @@ public class poImportFrm extends InnerFrame {
 										+ "'"+LOTTABLE06+"','"+LOTTABLE07+"','"+LOTTABLE08+"','"+LOTTABLE09+"','"+LOTTABLE10+"'"  
 										+ ",now(),'sys',now(),'sys'" ;
 								System.out.println(sql);
+								LogInfo.appendLog("sql", sql);
 								t = stmt.executeUpdate(sql);
 								if (t != 1) {
 									JOptionPane.showMessageDialog(null, "插入PO表明细报错\n" + sql, "错误",
@@ -284,6 +287,7 @@ public class poImportFrm extends InnerFrame {
 									continue;
 								}
 								sql = "select po_no from inb_po_detail where po_no='"+PO_NO+"' and line_number = "+LINE_NUMBER+" ";
+								LogInfo.appendLog("sql", sql);
 								java.sql.Statement stmt2 = con.createStatement();
 								ResultSet rs2 = stmt2.executeQuery(sql);
 								if(rs2.next()){
@@ -301,6 +305,7 @@ public class poImportFrm extends InnerFrame {
 										+ "'"+LOTTABLE06+"','"+LOTTABLE07+"','"+LOTTABLE08+"','"+LOTTABLE09+"','"+LOTTABLE10+"'"  
 										+ ",now(),'sys',now(),'sys'" ;
 								System.out.println(sql);
+								LogInfo.appendLog("sql", sql);
 								int t = stmt.executeUpdate(sql);
 								if (t != 1) {
 									JOptionPane.showMessageDialog(null, "插入PO表明细报错\n" + sql, "错误",

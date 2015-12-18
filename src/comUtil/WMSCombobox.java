@@ -1,34 +1,35 @@
 package comUtil;
 
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.sql.ResultSet;
-import java.util.Arrays;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.swing.ComboBoxModel;
-import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
-import javax.swing.JTextField;
+import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
 
 import DBUtil.DBConnectionManager;
-import util.JAutoCompleteComboBox;
 
+@SuppressWarnings("rawtypes")
 public class WMSCombobox extends JComboBox {
 
 	private static final long serialVersionUID = -4691802828891246384L;
 
 	private boolean flag;
-	private ConcurrentHashMap<String, String> hm_name_OID;
-	private ConcurrentHashMap<String, String> hm_OID_name;
+	public ConcurrentHashMap<String, String> hm_name_OID;
+	public ConcurrentHashMap<String, String> hm_OID_name;
 	private Vector<String> items;
-	WMSCombobox self;
+	public WMSCombobox self;
 	private String sql;
+	private static WMSCombobox cmb;
 
 	public WMSCombobox(String sql, boolean flag) {
 		super();
@@ -37,14 +38,24 @@ public class WMSCombobox extends JComboBox {
 		hm_name_OID = new ConcurrentHashMap<String, String>();
 		hm_OID_name = new ConcurrentHashMap<String, String>();
 		items = new Vector<String>();
+		self = new WMSCombobox();
 		init();
 	}
 
+	public WMSCombobox() {
+		super();
+	}
+
+	@SuppressWarnings("unchecked")
 	void init() {
 		if (flag) {
 			this.addItem("");
 		}
 		try {
+			System.out.println(sql);
+			this.removeAllItems();
+			self.removeAllItems();
+			
 			java.sql.Connection con = DBConnectionManager.getInstance().getConnection("wms");
 			java.sql.Statement stmt = con.createStatement();
 			ResultSet rs = stmt.executeQuery(sql);
@@ -53,6 +64,7 @@ public class WMSCombobox extends JComboBox {
 				hm_name_OID.put(NulltoSpace(rs.getString(2)), NulltoSpace(rs.getString(1)));
 				hm_OID_name.put(NulltoSpace(rs.getString(1)), NulltoSpace(rs.getString(2)));
 				this.addItem(NulltoSpace(rs.getString(2)));
+				self.addItem(NulltoSpace(rs.getString(2)));
 			}
 			self = this;
 			DBConnectionManager.getInstance().freeConnection("wms", con);
@@ -103,6 +115,7 @@ public class WMSCombobox extends JComboBox {
 		}); 
 	}
 
+	@SuppressWarnings("unchecked")
 	public void refresh() {
 		self.removeAllItems();
 		hm_name_OID.clear();
@@ -111,6 +124,7 @@ public class WMSCombobox extends JComboBox {
 			self.addItem("");
 		}
 		try {
+			System.out.println(sql);
 			java.sql.Connection con = DBConnectionManager.getInstance().getConnection("wms");
 			java.sql.Statement stmt = con.createStatement();
 			ResultSet rs = stmt.executeQuery(sql);
@@ -125,6 +139,8 @@ public class WMSCombobox extends JComboBox {
 			e.printStackTrace();
 		}
 		this.updateUI();
+		self.updateUI();
+		cmb.updateUI();
 	}
 
 	public String getSelectedOID() {
@@ -160,14 +176,42 @@ public class WMSCombobox extends JComboBox {
 	
 	public static void main(String[] args) {
 	    JFrame frame = new JFrame();
-	    WMSCombobox cmb = new WMSCombobox("SELECT COUNTRY_CODE,country_name FROM bas_country",true);
+	    JPanel contentPane;
+	    cmb = new WMSCombobox("SELECT COUNTRY_CODE,country_name FROM bas_country ",true);
 	    cmb.setEditable(true);
 	    cmb.setSelectedIndex(-1);
-	    JTextField text = new JTextField();
-	    frame.getContentPane().add(cmb);
-	    frame.getContentPane().add(text);
-	    frame.setSize(400, 80);
-	    frame.setVisible(true);
+	    Object[] obj = cmb.getAllItems();
+		System.out.println(obj.length);
 	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    frame.setBounds(100, 100, 450, 300);
+		contentPane = new JPanel();
+		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+		contentPane.setLayout(new BorderLayout(0, 0));
+		frame.setContentPane(contentPane);
+		
+		JButton btnNewButton = new JButton("New button");
+		contentPane.add(btnNewButton, BorderLayout.NORTH);
+		btnNewButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				cmb.removeAllItems();
+				cmb = new WMSCombobox("SELECT COUNTRY_CODE,country_name FROM bas_country where country_name like '%жа%' ",true);
+				Object[] obj = cmb.getAllItems();
+				System.out.println(obj.length);
+				cmb.updateUI();
+				cmb.repaint();
+				contentPane.remove(cmb);
+//				contentPane.updateUI();
+//				contentPane.repaint();
+				frame.repaint();
+				frame.pack();
+
+				contentPane.add(cmb.self, BorderLayout.SOUTH);
+//				contentPane.updateUI();
+//				contentPane.repaint();
+				frame.pack();
+			}
+		});
+		contentPane.add(cmb, BorderLayout.SOUTH);
+		frame.show();
 	  }
 }

@@ -79,6 +79,7 @@ import inventory.InvMoveFrm;
 import inventory.InvQueryFrm;
 import inventory.InvTransferFrm;
 import main.PBSUIBaseGrid;
+import outbound.ShipmentInputFrm;
 import outbound.ShipmentOubCheck;
 import outbound.ShipmentOubScan;
 import outbound.ShipmentQueryFrm;
@@ -435,6 +436,16 @@ public class MainFrm extends JPanel {
 
 			public JPanel makePanel() {
 				JPanel pnl = new JPanel(new GridLayout(0, 1));
+				
+				JButton btnShipmentInput = new JButton("订单管理");
+				btnShipmentInput.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						initButtonMenu(ShipmentInputFrm.getInstance(),"AGG WMS 【订单管理】");
+					}
+				});
+				btnShipmentInput.setOpaque(false);
+				pnl.add(btnShipmentInput);
+				
 				JButton btnTrackingScan = new JButton("运单扫描");
 				btnTrackingScan.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
@@ -471,7 +482,7 @@ public class MainFrm extends JPanel {
 				btnShipmentQuery.setOpaque(false);
 				pnl.add(btnShipmentQuery);
 				
-				pnl.setSize(new Dimension(0, 200));
+				pnl.setSize(new Dimension(0, 250));
 				pnl.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
 				return pnl;
 				
