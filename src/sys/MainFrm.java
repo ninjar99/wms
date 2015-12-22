@@ -379,7 +379,7 @@ public class MainFrm extends JPanel {
 				pnl.add(btnBasItemMaterial);
 				pnl.add(btnBasLocation);
 				pnl.add(btnContainer);
-				pnl.setSize(new Dimension(0, 250));
+				pnl.setSize(new Dimension(0, 350));
 				pnl.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
 				return pnl;
 			}

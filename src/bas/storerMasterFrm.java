@@ -31,6 +31,7 @@ import dmdata.DataManager;
 import inbound.poImportFrm;
 import sys.InnerFrame;
 import sys.JTableUtil;
+import sys.MainFrm;
 import sys.Message;
 import sys.QueryDialog;
 import sys.QueryFrm;
@@ -290,7 +291,7 @@ public class storerMasterFrm extends InnerFrame {
 						ResultSet rs = stmt.executeQuery(sql);
 						if (rs.next()) {
 							sql = "update bas_storer set storer_name='" + storer_name_txt.getText().trim()+"',STORER_SHORT_NAME='"+storer_name_txt.getText().trim()+"'"
-									+ ",PARENT_STORER_CODE='"+cb_parent_storer.getSelectedOID()+"',UPDATED_DTM_LOC=now(),UPDATED_BY_USER='sys' " + "where storer_code='"
+									+ ",PARENT_STORER_CODE='"+cb_parent_storer.getSelectedOID()+"',UPDATED_DTM_LOC=now(),UPDATED_BY_USER='"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' " + "where storer_code='"
 									+ storer_code_txt.getText().trim() + "'";
 							int rst = stmt.executeUpdate(sql.replaceAll("e\'s","e\''''s"));
 							if (rst == 1) {
@@ -314,7 +315,7 @@ public class storerMasterFrm extends InnerFrame {
 						} else {
 							sql = "insert into bas_storer(STORER_CODE,STORER_SHORT_NAME,STORER_NAME,PARENT_STORER_CODE,IS_ACTIVE,CREATED_DTM_LOC,CREATED_BY_USER,UPDATED_DTM_LOC,UPDATED_BY_USER) "
 									+ "select '" + storer_code_txt.getText().trim() + "','"
-									+ storer_name_txt.getText().trim() + "'," + "'" + storer_name_txt.getText().trim() + "','"+cb_parent_storer.getSelectedOID()+"',"+is_active+",now(),'sys',now(),'sys' ";
+									+ storer_name_txt.getText().trim() + "'," + "'" + storer_name_txt.getText().trim() + "','"+cb_parent_storer.getSelectedOID()+"',"+is_active+",now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' ";
 							int rst = stmt.executeUpdate(sql);
 							if (rst == 1) {
 								JOptionPane.showMessageDialog(null, "新增【" + storer_code_txt.getText() + "】成功！");

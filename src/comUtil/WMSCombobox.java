@@ -53,9 +53,6 @@ public class WMSCombobox extends JComboBox {
 		}
 		try {
 			System.out.println(sql);
-			this.removeAllItems();
-			self.removeAllItems();
-			
 			java.sql.Connection con = DBConnectionManager.getInstance().getConnection("wms");
 			java.sql.Statement stmt = con.createStatement();
 			ResultSet rs = stmt.executeQuery(sql);

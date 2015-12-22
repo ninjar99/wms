@@ -25,7 +25,7 @@ public class ShipmentOutboundCheckAgain {
 				+"inner join oub_pick_detail opd on ii.INV_INVENTORY_ID=opd.INV_INVENTORY_ID  "
 				+"inner join oub_shipment_header osh on osh.WAREHOUSE_CODE=opd.WAREHOUSE_CODE and osh.SHIPMENT_NO=opd.SHIPMENT_NO "
 				+" set ii.ON_HAND_QTY=ii.ON_HAND_QTY-(opd.PICKED_QTY),ii.PICKED_QTY=ii.PICKED_QTY-(opd.PICKED_QTY),ii.OUB_TOTAL_QTY=ii.OUB_TOTAL_QTY+opd.PICKED_QTY "
-				+",ii.UPDATED_DTM_LOC=now(),ii.UPDATED_BY_USER='sys' "
+				+",ii.UPDATED_DTM_LOC=now(),ii.UPDATED_BY_USER='"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' "
 				+"where osh.TRANSFER_ORDER_NO='"+TRANSFER_ORDER_NO+"' "
 				+"";
 			t = DBOperator.DoUpdate(sql);

@@ -251,7 +251,7 @@ public class poImportFrm extends InnerFrame {
 								//≤Â»Î±ÌÕ∑
 								sql = "insert into inb_po_header(po_no,warehouse_code,storer_code,vendor_code,erp_po_no,created_dtm_loc,created_by_user,updated_dtm_loc,updated_by_user)"
 										+ " select '" + PO_NO + "','" + WAREHOUSE_CODE + "','" + STORER_CODE + "','" + VENDOR_CODE
-										+ "','" + ERP_PO_NO + "',now(),'sys',now(),'sys' ";
+										+ "','" + ERP_PO_NO + "',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' ";
 								System.out.println(sql);
 								LogInfo.appendLog("sql", sql);
 								int t = stmt.executeUpdate(sql);
@@ -270,7 +270,7 @@ public class poImportFrm extends InnerFrame {
 										+ WAREHOUSE_CODE +"','"+STORER_CODE+"','"+ITEM_CODE+"','"+TOTAL_QTY+"','"+UOM+"'," 
 										+ "'"+LOTTABLE01+"','"+LOTTABLE02+"','"+LOTTABLE03+"','"+LOTTABLE04+"','"+LOTTABLE05+"'," 
 										+ "'"+LOTTABLE06+"','"+LOTTABLE07+"','"+LOTTABLE08+"','"+LOTTABLE09+"','"+LOTTABLE10+"'"  
-										+ ",now(),'sys',now(),'sys'" ;
+										+ ",now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"'" ;
 								System.out.println(sql);
 								LogInfo.appendLog("sql", sql);
 								t = stmt.executeUpdate(sql);
@@ -303,7 +303,7 @@ public class poImportFrm extends InnerFrame {
 										+ WAREHOUSE_CODE +"','"+STORER_CODE+"','"+ITEM_CODE+"','"+TOTAL_QTY+"','"+UOM+"'," 
 										+ "'"+LOTTABLE01+"','"+LOTTABLE02+"','"+LOTTABLE03+"','"+LOTTABLE04+"','"+LOTTABLE05+"'," 
 										+ "'"+LOTTABLE06+"','"+LOTTABLE07+"','"+LOTTABLE08+"','"+LOTTABLE09+"','"+LOTTABLE10+"'"  
-										+ ",now(),'sys',now(),'sys'" ;
+										+ ",now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"'" ;
 								System.out.println(sql);
 								LogInfo.appendLog("sql", sql);
 								int t = stmt.executeUpdate(sql);

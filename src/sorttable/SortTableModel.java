@@ -21,6 +21,7 @@ import java.util.Hashtable;
  * @version 1.0
  */
 
+@SuppressWarnings("serial")
 public class SortTableModel extends javax.swing.table.DefaultTableModel {
 	int[] indexes;
 	TableSorter sorter;
@@ -29,8 +30,8 @@ public class SortTableModel extends javax.swing.table.DefaultTableModel {
 	private boolean canEdit = false;
 	private boolean edit[];
 	private String[] columnTypeForSort;
-	private Vector cellEdit;
-	private Hashtable spSort = new Hashtable();// 用于指定列按特别内容排序，不一定对实际列内容排序
+	private Vector<?> cellEdit;
+	private Hashtable<?, ?> spSort = new Hashtable<Object, Object>();// 用于指定列按特别内容排序，不一定对实际列内容排序
 
 	public final static String sortStringType = "String";
 	public final static String sortDateType = "Date";
@@ -41,11 +42,11 @@ public class SortTableModel extends javax.swing.table.DefaultTableModel {
 		this.columnTypeForSort = types;
 	}
 
-	public void setSpecialSort(Hashtable spSort) {
+	public void setSpecialSort(Hashtable<?, ?> spSort) {
 		this.spSort = spSort;
 	}
 
-	public Hashtable getSpecialSort() {
+	public Hashtable<?, ?> getSpecialSort() {
 		return spSort;
 	}
 
@@ -60,7 +61,8 @@ public class SortTableModel extends javax.swing.table.DefaultTableModel {
 	public SortTableModel() {
 	}
 
-	public Class getColumnClass(int col) {
+	@SuppressWarnings({ "rawtypes" })
+	public Class<?> getColumnClass(int col) {
 		new PrintDebugInfo("getColumnClass");
 		java.util.Vector v = (java.util.Vector) dataVector.elementAt(0);
 		try {
@@ -180,7 +182,7 @@ public class SortTableModel extends javax.swing.table.DefaultTableModel {
 		this.edit = edit;
 	}
 
-	public void setEditStatusCell(Vector editCell) {
+	public void setEditStatusCell(Vector<?> editCell) {
 		this.cellEdit = editCell;
 	}
 

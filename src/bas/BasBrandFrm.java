@@ -32,6 +32,7 @@ import dmdata.DataManager;
 import main.PBSUIBaseGrid;
 import sys.InnerFrame;
 import sys.JTableUtil;
+import sys.MainFrm;
 import sys.Message;
 import sys.QueryDialog;
 import sys.ToolBarItem;
@@ -215,7 +216,7 @@ public class BasBrandFrm extends InnerFrame{
 					Message.showInfomationMessage("品牌编码: "+brand_code+" 已经存在不能添加!");
 				}else{
 					String sql = "insert into bas_brand(BRAND_CODE,BRAND_SHORT_NAME,BRAND_NAME,CREATED_BY_USER,CREATED_DTM_LOC)"+
-									"value('"+brand_code+"','"+brand_name+"','"+brand_name+"' , 'sys',now())";
+									"value('"+brand_code+"','"+brand_name+"','"+brand_name+"' , '"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now())";
 					System.out.println("sql = "+sql);
 					int t = DBOperator.DoUpdate(sql);
 					if(t>0){
@@ -228,7 +229,7 @@ public class BasBrandFrm extends InnerFrame{
 				}
 			}else if(lastStatus == ToolBarItem.Modify){
 				String sql = "update bas_brand set BRAND_NAME = '"+brand_name+"',BRAND_SHORT_NAME='"+brand_name+
-						"',UPDATED_BY_USER ='sys',UPDATED_DTM_LOC = now() where BRAND_CODE = '"+brand_code+"'";
+						"',UPDATED_BY_USER ='"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',UPDATED_DTM_LOC = now() where BRAND_CODE = '"+brand_code+"'";
 				System.out.println("update sql = "+sql);
 				int t = DBOperator.DoUpdate(sql);
 				if(t>0){

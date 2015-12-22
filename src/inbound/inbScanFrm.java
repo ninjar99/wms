@@ -492,7 +492,7 @@ public class inbScanFrm extends InnerFrame {
 			if(dm2==null || dm2.getCurrentCount()<=0){
 				String receiptNo = comData.getValueFromBasNumRule("inb_receipt_header", "RECEIPT_NO");
 				sql = "insert into inb_receipt_header(RECEIPT_NO,INB_PO_HEADER_ID,PO_NO,ERP_PO_NO,WAREHOUSE_CODE,VENDOR_CODE,STORER_CODE,CREATED_DTM_LOC,CREATED_BY_USER )"
-						+" select '"+receiptNo+"',INB_PO_HEADER_ID,PO_NO,ERP_PO_NO,WAREHOUSE_CODE,VENDOR_CODE,STORER_CODE,now(),'sys' "
+						+" select '"+receiptNo+"',INB_PO_HEADER_ID,PO_NO,ERP_PO_NO,WAREHOUSE_CODE,VENDOR_CODE,STORER_CODE,now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' "
 						+"from inb_po_header where po_no='"+po_no+"' ";
 				int t = DBOperator.DoUpdate(sql);
 				if(t>0){
@@ -549,7 +549,7 @@ public class inbScanFrm extends InnerFrame {
 						+"iph.WAREHOUSE_CODE,iph.STORER_CODE,iph.PO_NO,ipd.LINE_NUMBER,ifnull((select count(1) from inb_receipt_detail where RECEIPT_NO='"+receiptNo+"'),0)+1,ipd.ITEM_CODE,'"+txt_container_code.getText().trim()+"',"
 						+"(select location_code from bas_location where warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' and location_type_code='Dock' order by location_code limit 1 )"
 						+",ipd.LOTTABLE01,ipd.LOTTABLE02,ipd.LOTTABLE03,ipd.LOTTABLE04,ipd.LOTTABLE05,ipd.LOTTABLE06,ipd.LOTTABLE07,ipd.LOTTABLE08,ipd.LOTTABLE09,ipd.LOTTABLE10"
-						+",ipd.TOTAL_QTY,ipd.UOM,"+txt_scan_qty.getText()+",biu.unit_name,now(),'sys' "
+						+",ipd.TOTAL_QTY,ipd.UOM,"+txt_scan_qty.getText()+",biu.unit_name,now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' "
 						+"from inb_po_header iph "
 						+"inner join inb_po_detail ipd on iph.PO_NO=ipd.PO_NO and iph.INB_PO_HEADER_ID=ipd.INB_PO_HEADER_ID "
 						+"inner join bas_item bi on ipd.ITEM_CODE=bi.ITEM_CODE "
@@ -802,7 +802,7 @@ public class inbScanFrm extends InnerFrame {
 					+ ",CONTAINER_CODE,ON_HAND_QTY,CREATED_BY_USER,CREATED_DTM_LOC) " 
 					+ "select '"+warehouseCode+"','"+storerCode+"','"+itemCode+"',(select ITEM_NAME from bas_item where storer_code='"+storerCode+"' and item_code='"+itemCode+"') "
 					+",(select INV_LOT_ID from inv_lot where LOT_NO='"+lotNo+"' and STORER_CODE='"+storerCode+"' and ITEM_CODE='"+itemCode+"'),"
-					+"'"+lotNo+"','"+locationCode+"','"+containerCode+"',"+onHandQty+",'sys',now() ";
+					+"'"+lotNo+"','"+locationCode+"','"+containerCode+"',"+onHandQty+",'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now() ";
 			int t = DBOperator.DoUpdate(sql);
 			if(t==1){
 				sql = "select INV_INVENTORY_ID from inv_inventory "

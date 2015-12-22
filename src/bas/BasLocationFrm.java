@@ -304,7 +304,7 @@ public class BasLocationFrm extends InnerFrame{
 							+"TEMPLATE_FIELD2,TEMPLATE_FIELD3,TEMPLATE_FIELD4,TEMPLATE_FIELD5,CREATED_BY_USER,CREATED_DTM_LOC)"
 							+" value('"+warehouseCode+"','"+LOCATION_CODE+"','"+LOGICAL_LOCATION_CODE+"','"+location_type+"','"+TEMPLATE1
 							+"','"+TEMPLATE2+"','"+TEMPLATE3+"','"+TEMPLATE4+"','"+TEMPLATE5
-							+"','sys',now())";
+							+"','"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now())";
 					System.out.println("sql = "+sql);
 					int t = DBOperator.DoUpdate(sql);
 					if(t>0){
@@ -323,7 +323,7 @@ public class BasLocationFrm extends InnerFrame{
 						+"',TEMPLATE_FIELD3='"+TEMPLATE3
 						+"',TEMPLATE_FIELD4='"+TEMPLATE4
 						+"',TEMPLATE_FIELD5='"+TEMPLATE5
-						+"',UPDATED_BY_USER ='sys',UPDATED_DTM_LOC = now() "
+						+"',UPDATED_BY_USER ='"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',UPDATED_DTM_LOC = now() "
 						+" where WAREHOUSE_CODE = '"+warehouseCode+"' and LOCATION_CODE ='"+LOCATION_CODE+"'";
 				System.out.println("sql update = "+sql_update);
 				int t = DBOperator.DoUpdate(sql_update);

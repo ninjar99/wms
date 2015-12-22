@@ -35,6 +35,7 @@ import dmdata.DataManager;
 import main.PBSUIBaseGrid;
 import sys.InnerFrame;
 import sys.JTableUtil;
+import sys.MainFrm;
 import sys.Message;
 import sys.QueryDialog;
 import sys.ToolBarItem;
@@ -420,7 +421,7 @@ public class BasItemFrm extends InnerFrame{
 							+ " value('"+store_code+"','"+brandCode+"','"
 							+ itemCode+"','"+itemName+"','"+barCode+"','"+portCode+"','"+unitCode+"','"
 							+ itemSpec+"','"+countryCode+"','"+description
-									+ "','sys',now(),'"+TAX_NUMBER+"','"+HSCODE+"','"+HSCODE_DESC+"','"+ITEM_CLASS_CODE+"',"
+									+ "','"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+TAX_NUMBER+"','"+HSCODE+"','"+HSCODE_DESC+"','"+ITEM_CLASS_CODE+"',"
 									+ ""+length+","+width+","+height+" )";
 //					System.out.println("sql = "+sql);
 					comData.sqlValidate(sql);
@@ -439,7 +440,7 @@ public class BasItemFrm extends InnerFrame{
 										"',ITEM_BAR_CODE='"+barCode+"',PORT_CODE='"+portCode+
 										"',UNIT_CODE='"+unitCode+"',ITEM_SPEC='"+itemSpec+
 										"',COUNTRY_CODE='"+countryCode+"',DESCRIPTION='"+description+
-										"',UPDATED_BY_USER='sys',UPDATED_DTM_LOC=now() "+
+										"',UPDATED_BY_USER='"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',UPDATED_DTM_LOC=now() "+
 										",TAX_NUMBER='"+TAX_NUMBER+"',HSCODE='"+HSCODE+"',HSCODE_DESC='"+HSCODE_DESC+"'"+
 										",ITEM_CLASS_CODE='"+ITEM_CLASS_CODE+"'"
 										+ ",LENGTH="+length+""

@@ -402,7 +402,7 @@ public class UserFrm extends InnerFrame {
 					
 					String sql_insert = "insert into sys_user(SYS_USER_ID,WAREHOUSE_CODE,USER_CODE,LOGIN_CODE,USER_NAME,PASSWORD,ACTIVE,CREATED_DTM_LOC,CREATED_BY_USER,ROLE_NAME) "
 							+ " value("+UserCode+",'"+cb_warehouse.getSelectedItem().toString().split("-")[0]+"',"+UserCode+",'"+txt_login_code.getText().trim()+"','"+txt_user_name.getText().trim()+"','"+
-							password+"'," +is_active+ ", now(),'sys' ,'"+ set_role_name +"' ) ";
+							password+"'," +is_active+ ", now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' ,'"+ set_role_name +"' ) ";
 					System.out.println(sql_insert);
 					stmt = con.createStatement();
 					int rst = stmt.executeUpdate(sql_insert);
@@ -426,7 +426,7 @@ public class UserFrm extends InnerFrame {
 										"', PASSWORD = '"+password+
 										"', ACTIVE = "+is_active +
 										", ROLE_NAME = '"+set_role_name+
-										"', UPDATED_BY_USER ='sys' ,UPDATED_DTM_LOC=now() where USER_CODE = '"+ txt_user_code.getText().trim()+"'";
+										"', UPDATED_BY_USER ='"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' ,UPDATED_DTM_LOC=now() where USER_CODE = '"+ txt_user_code.getText().trim()+"'";
 					int rst = DBOperator.DoUpdate(sql_update);
 					if(rst==1){
 						Message.showInfomationMessage("更新成功!");
