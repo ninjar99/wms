@@ -21,10 +21,13 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingWorker;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicInternalFrameUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+
+import org.apache.commons.lang.StringEscapeUtils;
 
 import DBUtil.DBConnectionManager;
 import DBUtil.DBOperator;
@@ -40,6 +43,7 @@ import sys.Message;
 import sys.QueryDialog;
 import sys.ToolBarItem;
 import util.JTNumEdit;
+import util.WaitingSplash;
 
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -308,6 +312,15 @@ public class BasItemFrm extends InnerFrame{
 		panel_5.add(txt_height);
 		txt_height.setColumns(10);
 		
+		label_1 = new JLabel("\u5E93\u5B58\u6570\u91CF\uFF1A");
+		panel_5.add(label_1);
+		
+		txt_inv = new JTextField();
+		txt_inv.setForeground(Color.RED);
+		txt_inv.setEditable(false);
+		panel_5.add(txt_inv);
+		txt_inv.setColumns(10);
+		
 		JPanel panel_1 = new JPanel();
 		panel_3.add(panel_1);
 		FlowLayout fl_panel_1 = (FlowLayout) panel_1.getLayout();
@@ -333,7 +346,7 @@ public class BasItemFrm extends InnerFrame{
 		scrollPane.setViewportView(table_item);
 
 		String[] RHColumnNames = { "序号", "货主", "品牌", "货品编码", "货品名称", "货品条码", "口岸", "税号", "海关编码", "申报要素", "最小计量单位",
-				"货品规格", "国家", "货品描述","货品类型","长度","宽度","高度" };
+				"货品规格", "国家", "货品描述","货品类型","长度","宽度","高度","库存数量" };
 		table_item.setColumn(RHColumnNames);
 		table_item.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		JTableUtil.fitTableColumns(table_item);
@@ -382,13 +395,13 @@ public class BasItemFrm extends InnerFrame{
 			String store_code = comboBox_STORER_CODE.getSelectedOID();
 			String brandCode = comboBox_BRAND_CODE.getSelectedOID();
 			String itemCode = textField_itemCode.getText().trim();
-			String itemName =textField_itemName.getText().trim(); 
+			String itemName =StringEscapeUtils.escapeSql(textField_itemName.getText().trim()); 
 			String barCode = textField_BAR_CODE.getText().trim(); //货品条码
 			String portCode = comboBox_port_no.getSelectedOID();
 			String unitCode = comboBox_unit_code.getSelectedOID();
-			String itemSpec = textField_item_spec.getText().trim();
+			String itemSpec = StringEscapeUtils.escapeSql(textField_item_spec.getText().trim());
 			String countryCode = comboBox_country_code.getSelectedOID();
-			String description = textArea_DESCRIPTION.getText().trim();
+			String description = StringEscapeUtils.escapeSql(textArea_DESCRIPTION.getText().trim());
 			String TAX_NUMBER = textField_TAX_NUMBER.getText().trim();
 			String HSCODE = textField_HSCODE.getText().trim();
 			String HSCODE_DESC = textField_HSCODE_DESC.getText().trim();
@@ -603,52 +616,81 @@ public class BasItemFrm extends InnerFrame{
 				txt_length.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("长度"))));
 				txt_width.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("宽度"))));
 				txt_height.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("高度"))));
+				txt_inv.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("库存数量"))));
 			}
 		};
+	private JLabel label_1;
+	private JTextField txt_inv;
 		
 	private void initTableData(String strWhere){
+		new SwingWorker<String, Void>() {
+			WaitingSplash splash = new WaitingSplash();
+
+            @Override
+            protected String doInBackground() throws Exception {
+            	
+            	try{
+    				//出现
+    				table_item.setEnabled(false);
+    				table_item.setColumnEditableAll(false);
+	            	splash.start(); // 运行启动界面
+	            	String sql = "SELECT"
+	             		   +" `bas_storer`.`STORER_SHORT_NAME`"
+	             		   +", `bas_brand`.`BRAND_SHORT_NAME`"
+	             		   +", `bas_item`.`ITEM_CODE`"
+	             		   +", `bas_item`.`ITEM_NAME`"
+	             		   +", `bas_item`.`ITEM_BAR_CODE`"
+	             		   +", `bas_port`.`port_name`"
+	             		   +",  bas_item.TAX_NUMBER"
+	             		   +",  bas_item.HSCODE"
+	             		   +",  bas_item.HSCODE_DESC"
+	             		   +", `bas_item_unit`.`unit_name`"
+	             		   +", `bas_item`.`ITEM_SPEC`"
+	             		   +", `bas_country`.`country_name`"
+	             		   +", `bas_item`.`DESCRIPTION`"
+	             		   +", bcd.DISPLAY_VALUE_CN ITEM_CLASS_CODE "
+	             		   +",bas_item.LENGTH,bas_item.WIDTH,bas_item.HEIGHT,round(ifnull(inv.qty,0),2) qty "
+	             		   +" FROM"
+	             		   +".`bas_item`"
+	             		   +"INNER JOIN .`bas_storer` "
+	             		   +"ON (`bas_item`.`STORER_CODE` = `bas_storer`.`STORER_CODE`)"
+	             		   +"LEFT JOIN .`bas_brand` "
+	             		   +"ON (`bas_item`.`BRAND_CODE` = `bas_brand`.`BRAND_CODE`)"
+	             		   +"INNER JOIN .`bas_port` "
+	             		   +"ON (`bas_item`.`PORT_CODE` = `bas_port`.`port_code`)"
+	             		   +"LEFT JOIN .`bas_item_unit` "
+	             		   +"ON (`bas_item`.`UNIT_CODE` = `bas_item_unit`.`unit_code`)"
+	             		   +"LEFT JOIN .`bas_country` "
+	             		   +"ON (`bas_item`.`COUNTRY_CODE` = `bas_country`.`country_code`) "
+	             		   +"LEFT JOIN bas_code_dict bcd on bcd.CODE_VALUE=bas_item.ITEM_CLASS_CODE and bcd.TYPE_CODE='ITEM_CLASS_CODE' "
+	             		   +"LEFT JOIN (select storer_code,item_code,sum(ON_HAND_QTY-ALLOCATED_QTY-PICKED_QTY) qty from inv_inventory where WAREHOUSE_CODE='hz' group by storer_code,item_code having sum(ON_HAND_QTY-ALLOCATED_QTY-PICKED_QTY)>0) inv "
+	             		   + "on inv.storer_code=`bas_item`.`STORER_CODE` and inv.item_code=`bas_item`.`ITEM_CODE` "
+	             		   +" where 1=1 ";
+	                 if(!strWhere.equals("")){
+	         			sql = sql + strWhere;
+	         		}
+	                 sql = sql + " order by `bas_storer`.`STORER_CODE` ";
+	                 table_item.removeRowAll();
+	                 Vector tableData = DBOperator.DoSelectAddSequenceRow(sql);
+	                 table_item.setData(tableData);
+	                 makeFace(table_item);
+	                 JTableUtil.fitTableColumns(table_item);
+	                 table_item.setColumnEditableAll(false);
+            	}catch(Exception e){
+            		Message.showWarningMessage(e.getMessage());
+            	}
+                return "";
+            }
+
+            @Override
+            protected void done() {
+            	splash.stop(); // 运行启动界面
+                System.out.println("数据查询结束");
+                table_item.setEnabled(true);
+            }
+        }.execute();
        
-       String sql = "SELECT"
-    		   +" `bas_storer`.`STORER_SHORT_NAME`"
-    		   +", `bas_brand`.`BRAND_SHORT_NAME`"
-    		   +", `bas_item`.`ITEM_CODE`"
-    		   +", `bas_item`.`ITEM_NAME`"
-    		   +", `bas_item`.`ITEM_BAR_CODE`"
-    		   +", `bas_port`.`port_name`"
-    		   +",  bas_item.TAX_NUMBER"
-    		   +",  bas_item.HSCODE"
-    		   +",  bas_item.HSCODE_DESC"
-    		   +", `bas_item_unit`.`unit_name`"
-    		   +", `bas_item`.`ITEM_SPEC`"
-    		   +", `bas_country`.`country_name`"
-    		   +", `bas_item`.`DESCRIPTION`"
-    		   +", bcd.DISPLAY_VALUE_CN ITEM_CLASS_CODE "
-    		   +",bas_item.LENGTH,bas_item.WIDTH,bas_item.HEIGHT "
-    		   +" FROM"
-    		   +".`bas_item`"
-    		   +"INNER JOIN .`bas_storer` "
-    		   +"ON (`bas_item`.`STORER_CODE` = `bas_storer`.`STORER_CODE`)"
-    		   +"LEFT JOIN .`bas_brand` "
-    		   +"ON (`bas_item`.`BRAND_CODE` = `bas_brand`.`BRAND_CODE`)"
-    		   +"INNER JOIN .`bas_port` "
-    		   +"ON (`bas_item`.`PORT_CODE` = `bas_port`.`port_code`)"
-    		   +"LEFT JOIN .`bas_item_unit` "
-    		   +"ON (`bas_item`.`UNIT_CODE` = `bas_item_unit`.`unit_code`)"
-    		   +"LEFT JOIN .`bas_country` "
-    		   +"ON (`bas_item`.`COUNTRY_CODE` = `bas_country`.`country_code`) "
-    		   +"LEFT JOIN bas_code_dict bcd on bcd.CODE_VALUE=bas_item.ITEM_CLASS_CODE and bcd.TYPE_CODE='ITEM_CLASS_CODE' "
-    		   +" where 1=1 ";
-        if(!strWhere.equals("")){
-			sql = sql + strWhere;
-		}
-        sql = sql + " order by `bas_storer`.`STORER_CODE` ";
-//        System.out.println("sql = "+sql);
-        table_item.removeRowAll();
-        Vector tableData = DBOperator.DoSelectAddSequenceRow(sql);
-        table_item.setData(tableData);
-        makeFace(table_item);
-        JTableUtil.fitTableColumns(table_item);
-        table_item.setColumnEditableAll(false);
+       
 	}
 	
 	private void enableAll(boolean b){
@@ -710,6 +752,7 @@ public class BasItemFrm extends InnerFrame{
 		txt_length.setText("0");
 		txt_width.setText("0");
 		txt_height.setText("0");
+		txt_inv.setText("0");
 	}
 	public static BasItemFrm getInstance() {
 		if(instance == null) { 

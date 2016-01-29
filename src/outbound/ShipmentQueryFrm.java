@@ -28,6 +28,7 @@ import java.awt.Toolkit;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingWorker;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
@@ -36,6 +37,9 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import javax.swing.JComboBox;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 
 public class ShipmentQueryFrm extends InnerFrame {
 
@@ -48,6 +52,10 @@ public class ShipmentQueryFrm extends InnerFrame {
 	private static boolean isOpen = false;
 	private PBSUIBaseGrid headerTable;
 	private PBSUIBaseGrid detailTable;
+	private static JComboBox cb_pageList;
+	private static int page = 0;
+	private static int onePage =100;
+	private static String strWhere = "";
 	
 	public static ShipmentQueryFrm getInstance() {
 		 if(instance == null) { 
@@ -128,24 +136,53 @@ public class ShipmentQueryFrm extends InnerFrame {
 		JButton btnQuery = new JButton("\u67E5\u8BE2");
 		btnQuery.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				ArrayList<String> fieldList = new ArrayList<String>();
-				fieldList.add("osh.wave_no:波次号");
-				fieldList.add("osh.TRANSFER_ORDER_NO:运单号");
-				fieldList.add("osh.warehouse_code:仓库编码");
-				fieldList.add("osh.storer_code:货主编码");
-				fieldList.add("osh.shipment_no:出库单号");
-				fieldList.add("osh.external_order_no:外部订单号");
-				QueryDialog query = QueryDialog.getInstance(fieldList);
-				Toolkit toolkit = Toolkit.getDefaultToolkit();
-				int x = (int)(toolkit.getScreenSize().getWidth()-query.getWidth())/2;
-				int y = (int)(toolkit.getScreenSize().getHeight()-query.getHeight())/2;
-				query.setLocation(x, y);
-				query.setVisible(true);
-				String retWhere = QueryDialog.queryValueResult;
-				if(retWhere.length()>0){
-					retWhere = " and "+retWhere;
-				}
-				getHeaderTableData(retWhere);
+				
+				new SwingWorker<String, Void>() {
+					WaitingSplash splash = new WaitingSplash();
+
+		            @Override
+		            protected String doInBackground() throws Exception {
+		            	
+		            	try{
+		            		ArrayList<String> fieldList = new ArrayList<String>();
+		    				fieldList.add("osh.wave_no:波次号");
+		    				fieldList.add("osh.TRANSFER_ORDER_NO:运单号");
+		    				fieldList.add("osh.warehouse_code:仓库编码");
+		    				fieldList.add("osh.storer_code:货主编码");
+		    				fieldList.add("bs.storer_name:货主名称");
+		    				fieldList.add("osh.shipment_no:出库单号");
+		    				fieldList.add("osh.external_order_no:外部订单号");
+		    				QueryDialog query = QueryDialog.getInstance(fieldList);
+		    				Toolkit toolkit = Toolkit.getDefaultToolkit();
+		    				int x = (int)(toolkit.getScreenSize().getWidth()-query.getWidth())/2;
+		    				int y = (int)(toolkit.getScreenSize().getHeight()-query.getHeight())/2;
+		    				query.setLocation(x, y);
+		    				query.setVisible(true);
+		    				strWhere = QueryDialog.queryValueResult;
+		    				if(strWhere.length()>0){
+		    					strWhere = " and "+strWhere;
+		    				}
+		    				//出现
+			            	headerTable.setEnabled(false);
+			            	headerTable.setColumnEditableAll(false);
+			            	splash.start(); // 运行启动界面
+		    				if(!getHeaderTableData(strWhere)){
+		    					splash.stop();
+		    					headerTable.setEnabled(true);
+		    				}
+		            	}catch(Exception e){
+		            		Message.showWarningMessage(e.getMessage());
+		            	}
+		                return "";
+		            }
+
+		            @Override
+		            protected void done() {
+		            	splash.stop(); // 运行启动界面
+		                System.out.println("数据查询结束");
+						headerTable.setEnabled(true);
+		            }
+		        }.execute();
 			}
 		});
 		topPanel.add(btnQuery);
@@ -175,7 +212,7 @@ public class ShipmentQueryFrm extends InnerFrame {
 		            	headerTable.setColumnEditableAll(false);
 		            	splash.start(); // 运行启动界面
 		            	try{
-		            		String strWhere = " and osh.status='100' ";
+		            		strWhere = " and osh.status='100' ";
 		    				if(!getHeaderTableData(strWhere)){
 		    					splash.stop();
 		    					headerTable.setEnabled(true);
@@ -261,6 +298,141 @@ public class ShipmentQueryFrm extends InnerFrame {
 		});
 		scrollPane.setViewportView(headerTable);
 		
+		JPanel panel = new JPanel();
+		headerPanel.add(panel, BorderLayout.SOUTH);
+		
+		JButton preButton = new JButton("\u4E0A\u4E00\u9875");
+		preButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if(page==1) {
+					Message.showInfomationMessage("已经是第一页了");
+					return;
+				}
+				if(page - 1 >0){
+					page = page - 1;
+				}else{
+					page = 0;
+				}
+				new SwingWorker<String, Void>() {
+					WaitingSplash splash = new WaitingSplash();
+
+		            @Override
+		            protected String doInBackground() throws Exception {
+		            	//出现
+		            	preButton.setEnabled(false);
+		            	headerTable.setEnabled(false);
+		            	headerTable.setColumnEditableAll(false);
+		            	cb_pageList.setSelectedItem(String.valueOf(page));
+		            	splash.start(); // 运行启动界面
+		            	try{
+		    				if(!getHeaderTableData("page_go")){
+		    					splash.stop();
+		    					headerTable.setEnabled(true);
+		    				}
+		            	}catch(Exception e){
+		            		Message.showWarningMessage(e.getMessage());
+		            	}
+		                return "";
+		            }
+
+		            @Override
+		            protected void done() {
+		            	preButton.setEnabled(true);
+		            	splash.stop(); // 运行启动界面
+		                System.out.println("数据查询结束");
+						headerTable.setEnabled(true);
+		            }
+		        }.execute();
+			}
+		});
+		panel.add(preButton);
+		
+		JButton nextButton = new JButton("\u4E0B\u4E00\u9875");
+		nextButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(page>=cb_pageList.getItemCount()){
+					Message.showInfomationMessage("最后一页了");
+					return;
+				}
+				page = page + 1;
+				new SwingWorker<String, Void>() {
+					WaitingSplash splash = new WaitingSplash();
+
+		            @Override
+		            protected String doInBackground() throws Exception {
+		            	//出现
+		            	nextButton.setEnabled(false);
+		            	headerTable.setEnabled(false);
+		            	headerTable.setColumnEditableAll(false);
+		            	cb_pageList.setSelectedItem(String.valueOf(page));
+		            	splash.start(); // 运行启动界面
+		            	try{
+		    				if(!getHeaderTableData("page_go")){
+		    					splash.stop();
+		    					headerTable.setEnabled(true);
+		    				}
+		            	}catch(Exception e){
+		            		Message.showWarningMessage(e.getMessage());
+		            	}
+		                return "";
+		            }
+
+		            @Override
+		            protected void done() {
+		            	nextButton.setEnabled(true);
+		            	splash.stop(); // 运行启动界面
+		                System.out.println("数据查询结束");
+						headerTable.setEnabled(true);
+		            }
+		        }.execute();
+			}
+		});
+		panel.add(nextButton);
+		
+		//选择页面直接跳转
+		cb_pageList = new JComboBox(new DefaultComboBoxModel());
+		cb_pageList.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent e) {
+				if(e.getStateChange() == ItemEvent.SELECTED){
+					if(cb_pageList.getItemCount()==0) return;
+					page = Integer.parseInt(cb_pageList.getSelectedItem().toString());
+					System.out.println("当前页:"+cb_pageList.getSelectedItem().toString());
+					new SwingWorker<String, Void>() {
+						WaitingSplash splash = new WaitingSplash();
+
+			            @Override
+			            protected String doInBackground() throws Exception {
+			            	//出现
+			            	preButton.setEnabled(false);
+			            	nextButton.setEnabled(false);
+			            	headerTable.setEnabled(false);
+			            	headerTable.setColumnEditableAll(false);
+			            	splash.start(); // 运行启动界面
+			            	try{
+			    				if(!getHeaderTableData("page_go")){
+			    					splash.stop();
+			    					headerTable.setEnabled(true);
+			    				}
+			            	}catch(Exception e){
+			            		Message.showWarningMessage(e.getMessage());
+			            	}
+			                return "";
+			            }
+
+			            @Override
+			            protected void done() {
+			            	preButton.setEnabled(true);
+			            	nextButton.setEnabled(true);
+			            	splash.stop(); // 运行启动界面
+			                System.out.println("数据查询结束");
+							headerTable.setEnabled(true);
+			            }
+			        }.execute();
+				}
+			}
+		});
+		panel.add(cb_pageList);
+		
 		JPanel detailPanel = new JPanel();
 		centerpanel.add(detailPanel);
 		detailPanel.setLayout(new BorderLayout(0, 0));
@@ -281,10 +453,11 @@ public class ShipmentQueryFrm extends InnerFrame {
 		
 		JPanel bottomPanel = new JPanel();
 		contentPane.add(bottomPanel, BorderLayout.SOUTH);
-		getHeaderTableData(" and 1<>1 ");
+		strWhere = " and 1<>1 ";
+		getHeaderTableData(strWhere);
 	}
 	
-	private boolean getHeaderTableData(String strWhere){
+	private boolean getHeaderTableData(String param){
 		try{
 		String sql = "select bw.warehouse_name 仓库,bs.storer_name 货主,osh.TRANSFER_ORDER_NO 运单号,osh.shipment_no 出库单号,osh.external_order_no 外部订单号,"
 				+ "case osh.status when '100' then '新建' when '200' then '库存分配完成' when '300' then '拣货中' when '400' then '分拣中' when '500' then '包装中' when '600' then '包装完成' when '700' then '出库复核中' when '800' then '出库复核完成' when '900' then '已出库交接' else osh.status end 状态,"
@@ -298,7 +471,20 @@ public class ShipmentQueryFrm extends InnerFrame {
 		if(!strWhere.equals("")){
 			sql = sql +strWhere;
 		}
+		//系统判断  翻页的时候不需要再次初始化页面数量
+		if(!param.equals("page_go")){
+			//根据SQL 得到总记录数
+			DataManager counter = DBOperator.DoSelect2DM("select count(1) totalPage from ("+sql+") tab ");
+			String totalPage = counter.getString("totalPage", 0);
+			initTotalPage(totalPage);
+		}
 		sql = sql + " order by osh.shipment_no ";
+		int tmp = (page-1) * onePage;
+		if(tmp<0){
+			tmp = 0;
+			page = 1;
+		}
+		sql = sql + " limit "+tmp+","+onePage;
 		DataManager dm = DBOperator.DoSelect2DM(sql);
 		if (headerTable.getColumnCount() == 0) {
 			headerTable.setColumn(dm.getCols());
@@ -351,6 +537,23 @@ public class ShipmentQueryFrm extends InnerFrame {
 		tableRowColorSetup(detailTable);
 	}
 	
+	public static void initTotalPage(String pages){
+		System.out.println("总行数:"+pages);
+		double totalPage = 0;
+		try{
+			totalPage = Math.ceil(Integer.parseInt(pages)/(onePage*1.00));
+			System.out.println("总页数:"+totalPage);
+		}catch(Exception e){
+			totalPage = 0;
+		}
+		if(totalPage==0) return;
+		cb_pageList.removeAllItems();
+		for(int i=0;i<totalPage;i++){
+			cb_pageList.addItem(String.valueOf(i+1));
+		}
+		cb_pageList.updateUI();
+	}
+	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private void tableRowColorSetup(PBSUIBaseGrid tab){
 		Vector cellColor = new Vector();
@@ -368,7 +571,7 @@ public class ShipmentQueryFrm extends InnerFrame {
 //		        tab.setRowColor(rowColor, Color.lightGray);
 			}
 		}
-		tab.setCellColor(cellColor);
+		//tab.setCellColor(cellColor);
 		
 	}
 
@@ -376,5 +579,6 @@ public class ShipmentQueryFrm extends InnerFrame {
 		// TODO Auto-generated method stub
 		
 	}
+	
 
 }

@@ -249,11 +249,11 @@ public class DBConnectionManager {
                 }
                 String user = props.getProperty(poolName + ".user");
                 if(user.equals("namaxxx")){
-                	user = "namacity";
+                	user = "app";
                 }
                 String password = props.getProperty(poolName + ".password");
                 if(password.equals("namaxxx")){
-                	password = "namacity1524";
+                	password = "namac1tyi524";
                 }
                 String maxconn = props.getProperty(poolName + ".maxconn", "0");
                 int max;

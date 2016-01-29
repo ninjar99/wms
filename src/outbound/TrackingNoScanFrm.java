@@ -74,6 +74,7 @@ public class TrackingNoScanFrm extends InnerFrame {
 	private JButton btnPrint;
 	private JLabel lbl_total_qty;
 	private JScrollPane scrollPane;
+	private final static byte[] locks = new byte[0];
 	
 	public static synchronized TrackingNoScanFrm getInstance() {
 		 if(instance == null) {    
@@ -753,6 +754,7 @@ public class TrackingNoScanFrm extends InnerFrame {
 	}
 	
 	private void invAllocate(){
+		synchronized(locks){
 		try{
 		String waveNo = comData.getValueFromBasNumRule("oub_wave_header", "wave_no");
 		String sql = "insert into oub_wave_header(WAVE_NO,WAVE_NAME,WAREHOUSE_CODE,CREATED_BY_USER,CREATED_DTM_LOC) "
@@ -788,7 +790,8 @@ public class TrackingNoScanFrm extends InnerFrame {
 				String pickNo = comData.getValueFromBasNumRule("oub_pick_header", "pick_no");
 				sql = "insert into oub_pick_header(WAREHOUSE_CODE,STORER_CODE,WAVE_NO,PICK_NO,OUB_SHIPMENT_HEADER_ID,SHIPMENT_NO,CREATED_BY_USER,CREATED_DTM_LOC) "
 						+"select osh.WAREHOUSE_CODE,osh.STORER_CODE,'"+waveNo+"','"+pickNo+"',osh.OUB_SHIPMENT_HEADER_ID,osh.SHIPMENT_NO,'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now() "
-						+" from oub_shipment_header osh where osh.SHIPMENT_NO='"+shipmentNo+"' ";
+						+" from oub_shipment_header osh where osh.SHIPMENT_NO='"+shipmentNo+"' and not exists"
+						+ "(select PICK_NO from oub_pick_header where SHIPMENT_NO='"+shipmentNo+"' and STATUS='100') ";
 				t = DBOperator.DoUpdate(sql);
 				if(t==0){
 					Message.showWarningMessage("创建订单【"+shipmentNo+"】拣货表头失败,系统自动忽略此订单!");
@@ -852,12 +855,17 @@ public class TrackingNoScanFrm extends InnerFrame {
 										+"'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now() "
 										+" from oub_shipment_header osh "
 										+"inner join oub_shipment_detail osd on osh.SHIPMENT_NO=osd.SHIPMENT_NO "
-										+"where osh.SHIPMENT_NO='"+shipmentNo+"' and osd.SHIPMENT_LINE_NO= "+shipmentLineNo+" ";
+										+"where osh.SHIPMENT_NO='"+shipmentNo+"' and osd.SHIPMENT_LINE_NO= "+shipmentLineNo+" "
+										+ "and not exists(select PICK_NO from oub_pick_detail where SHIPMENT_NO='"+shipmentNo+"' "
+										+ "and SHIPMENT_LINE_NO="+shipmentLineNo+" and STATUS='100')";
 								t = DBOperator.DoUpdate(sql);
-								sql = "update oub_shipment_detail osd set status='200',osd.ALLOCATED_QTY=ifnull((select sum(PICKED_QTY) from oub_pick_detail opd "
-									 +"where opd.status<>'999' and opd.SHIPMENT_NO='"+shipmentNo+"' and opd.SHIPMENT_LINE_NO="+shipmentLineNo+" and opd.ITEM_CODE='"+shipmentItemCode+"'),0) "
-									 +" where osd.SHIPMENT_NO='"+shipmentNo+"' and osd.SHIPMENT_LINE_NO="+shipmentLineNo+" and osd.ITEM_CODE='"+shipmentItemCode+"' ";
-								t = DBOperator.DoUpdate(sql);
+								if(t>0){
+									sql = "update oub_shipment_detail osd set status='200',osd.ALLOCATED_QTY=ifnull((select sum(PICKED_QTY) from oub_pick_detail opd "
+											 +"where opd.status<>'999' and opd.SHIPMENT_NO='"+shipmentNo+"' and opd.SHIPMENT_LINE_NO="+shipmentLineNo+" and opd.ITEM_CODE='"+shipmentItemCode+"'),0) "
+											 +" where osd.SHIPMENT_NO='"+shipmentNo+"' and osd.SHIPMENT_LINE_NO="+shipmentLineNo+" and osd.ITEM_CODE='"+shipmentItemCode+"' ";
+									t = DBOperator.DoUpdate(sql);
+								}
+								
 							}
 						}
 					}
@@ -947,6 +955,7 @@ public class TrackingNoScanFrm extends InnerFrame {
 		}catch(Exception e){
 			Message.showWarningMessage(e.getMessage());
 		}
+		}//end synchronized locks
 	}
 	
 	@SuppressWarnings("unused")

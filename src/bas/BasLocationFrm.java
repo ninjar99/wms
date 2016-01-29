@@ -211,7 +211,7 @@ public class BasLocationFrm extends InnerFrame{
 		table_location.setColumnEditableAll(false);
 		scrollPane.setViewportView(table_location);
 
-		String[] RHColumnNames ={"序号","仓库号","库位条码","逻辑库位条码","库位类型","属性1","属性2","属性3","属性4","属性5"};
+		String[] RHColumnNames ={"序号","仓库号","库位条码","逻辑库位条码","库位类型","属性1","属性2","属性3","属性4","属性5","库存数量"};
 		table_location.setColumn(RHColumnNames);
 		table_location.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		JTableUtil.fitTableColumns(table_location);
@@ -502,10 +502,12 @@ public class BasLocationFrm extends InnerFrame{
 	    		   +", `bas_location`.`TEMPLATE_FIELD3`"
 	    		   +", `bas_location`.`TEMPLATE_FIELD4`"
 	    		   +", `bas_location`.`TEMPLATE_FIELD5`"
+	    		   +",round(inv.qty,2) qty "
 	    		   +"FROM"
 	    		   +".`bas_location`"
 	    		   +"INNER JOIN .`bas_warehouse` "
-	    		   +"ON (`bas_location`.`WAREHOUSE_CODE` = `bas_warehouse`.`WAREHOUSE_CODE`)"
+	    		   +"ON (`bas_location`.`WAREHOUSE_CODE` = `bas_warehouse`.`WAREHOUSE_CODE`) "
+	    		   +"LEFT JOIN (select WAREHOUSE_CODE,LOCATION_CODE,sum(ON_HAND_QTY-ALLOCATED_QTY-PICKED_QTY) qty from inv_inventory inv group by WAREHOUSE_CODE,LOCATION_CODE having sum(ON_HAND_QTY-ALLOCATED_QTY-PICKED_QTY)>0) inv on `bas_location`.WAREHOUSE_CODE=inv.WAREHOUSE_CODE and `bas_location`.LOCATION_CODE=inv.LOCATION_CODE "
 	    		   +" where 1=1 and bas_location.warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' ";
 	        if(!strWhere.equals("")){
 				sql = sql + strWhere;

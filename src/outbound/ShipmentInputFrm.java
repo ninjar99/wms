@@ -722,7 +722,7 @@ public class ShipmentInputFrm extends InnerFrame {
 		});
 		//detailTable
 		String[] SOColumnNames = {"行号","状态","商品条码","商品编码","商品名称","单位","订单数量","出库分拣数量","批次属性1","批次属性2","批次属性3","批次属性4","批次属性5","批次属性6"
-				,"批次属性7","批次属性8","批次属性9","批次属性10","创建时间","创建用户"};
+				,"批次属性7","批次属性8","批次属性9","批次属性10","创建时间","创建用户","最近更新时间","最近更新用户"};
 		detailTable.setColumn(SOColumnNames);
 		detailTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		
@@ -741,7 +741,7 @@ public class ShipmentInputFrm extends InnerFrame {
 		txt_shipment_no = new JTextField();
 		txt_shipment_no.setEditable(false);
 		editPanel1.add(txt_shipment_no);
-		txt_shipment_no.setColumns(8);
+		txt_shipment_no.setColumns(10);
 		
 		label = new JLabel("\u72B6\u6001:");
 		editPanel1.add(label);
@@ -757,7 +757,7 @@ public class ShipmentInputFrm extends InnerFrame {
 		txt_erp_order_no = new JTextField();
 		txt_erp_order_no.setEditable(false);
 		editPanel1.add(txt_erp_order_no);
-		txt_erp_order_no.setColumns(8);
+		txt_erp_order_no.setColumns(10);
 		
 		JLabel lblNewLabel_1 = new JLabel("\u8D27\u4E3B\u7F16\u7801\uFF1A");
 		editPanel1.add(lblNewLabel_1);
@@ -1404,7 +1404,8 @@ public class ShipmentInputFrm extends InnerFrame {
 		String sql = "select osd.SHIPMENT_NO,osd.SHIPMENT_LINE_NO,bi.ITEM_BAR_CODE,osd.ITEM_CODE,bi.ITEM_NAME,biu.UNIT_NAME,osd.REQ_QTY,osd.OQC_QTY,"
 				+ "case osd.status when '100' then '新建' when '150' then '产生波次号' when '190' then '库存分配短少' when '200' then '库存分配完成' when '300' then '拣货中' when '400' then '分拣中' when '500' then '包装中' when '600' then '包装完成' when '700' then '出库复核中' when '800' then '出库复核完成' when '900' then '已出库交接' else osd.status end status,"
 				+ "osd.LOTTABLE01,osd.LOTTABLE02,osd.LOTTABLE03,osd.LOTTABLE04,"
-				+ "osd.LOTTABLE05,osd.LOTTABLE06,osd.LOTTABLE07,osd.LOTTABLE08,osd.LOTTABLE09,osd.LOTTABLE10,osd.CREATED_BY_USER,osd.CREATED_DTM_LOC "
+				+ "osd.LOTTABLE05,osd.LOTTABLE06,osd.LOTTABLE07,osd.LOTTABLE08,osd.LOTTABLE09,osd.LOTTABLE10,osd.CREATED_DTM_LOC,osd.CREATED_BY_USER,"
+				+ "osd.UPDATED_DTM_LOC,osd.UPDATED_BY_USER "
 				+ " from oub_shipment_detail osd " 
 				+ "inner join bas_item bi on osd.storer_code=bi.storer_code and osd.ITEM_CODE=bi.ITEM_CODE" 
 				+" inner join bas_item_unit biu on bi.unit_code=biu.unit_code "
@@ -1438,8 +1439,10 @@ public class ShipmentInputFrm extends InnerFrame {
 				rowdata.add(rs.getString("LOTTABLE08"));
 				rowdata.add(rs.getString("LOTTABLE09"));
 				rowdata.add(rs.getString("LOTTABLE10"));
-				rowdata.add(rs.getString("CREATED_BY_USER"));
 				rowdata.add(rs.getString("CREATED_DTM_LOC"));
+				rowdata.add(rs.getString("CREATED_BY_USER"));
+				rowdata.add(rs.getString("UPDATED_DTM_LOC"));
+				rowdata.add(rs.getString("UPDATED_BY_USER"));
 				dtm.addRow(rowdata);
 			}
 			JTableUtil.fitTableColumns(detailTable);
