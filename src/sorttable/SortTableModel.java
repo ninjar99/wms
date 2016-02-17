@@ -66,10 +66,10 @@ public class SortTableModel extends javax.swing.table.DefaultTableModel {
 		new PrintDebugInfo("getColumnClass");
 		java.util.Vector v = (java.util.Vector) dataVector.elementAt(0);
 		try {
-			new PrintDebugInfo("return is :" + v.elementAt(col).getClass().toString());
+			//new PrintDebugInfo("return is :" + v.elementAt(col).getClass().toString());
 			return v.elementAt(col).getClass();
 		} catch (java.lang.NullPointerException e) {
-			new PrintDebugInfo("return is :" + "Null");
+			//new PrintDebugInfo("return is :" + "Null");
 			// System.out.println("Null class at " + col);
 			return new String().getClass();
 		}

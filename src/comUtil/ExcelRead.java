@@ -69,12 +69,16 @@ public class ExcelRead {
 					// 以下是判断数据的类型
 					switch (cell.getCellType()) {
 					case HSSFCell.CELL_TYPE_NUMERIC: // 数字
-						cellValue = cell.getNumericCellValue() + "";
 						// 时间格式
 						if (HSSFDateUtil.isCellDateFormatted(cell)) {
 							Date dd = cell.getDateCellValue();
 							DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 							cellValue = df.format(dd);
+						}else{
+							double cellValueDouble=cell.getNumericCellValue();
+							java.text.NumberFormat nf = java.text.NumberFormat.getInstance();   
+							nf.setGroupingUsed(false);//设为false则不使用分组方式显示数据   设为true则使用分组方式显示数据，即每三位数为一个分组，分组间以英文半角逗号分隔
+							cellValue = String.valueOf(nf.format(cellValueDouble));
 						}
 						break;
 					case HSSFCell.CELL_TYPE_STRING: // 字符串

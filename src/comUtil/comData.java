@@ -529,7 +529,19 @@ public class comData {
 		return true;
 	}
 	
+	public static String checkDouble(String value){
+		double d = 0;
+		try{
+			d = Double.parseDouble(value);
+		}catch(Exception e){
+			d= 0;
+		}
+		return String.valueOf(d);
+	}
+	
 	public static void main(String[] args){
+		System.out.println(checkDouble("≤‚ ‘"));
+		
 //		DataManager dmSaveTable = getTableHeader2DataManager("bas_warehouse");
 //		dmdata.xArrayList list = (xArrayList) dmSaveTable.getRow(0);
 //		list.set(dmSaveTable.getCol("BAS_WAREHOUSE_ID"), "4");
