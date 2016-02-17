@@ -368,8 +368,10 @@ public class poImportFrm extends InnerFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				JTableExportExcel exportExcel = new JTableExportExcel();
 				DataManager dm = new DataManager();
-				String sql = "select '仓库编码，例如杭州：HZ' WAREHOUSE_CODE,'货主编码，例如德云：1117' STORER_CODE,'供应商编码，默认001' VENDOR_CODE,'提单号' ERP_PO_NO,'行号' LINE_NUMBER,'料号/商品货号' ITEM_CODE,'数量' TOTAL_QTY,'单位' UOM,"
-						+ "'批次属性1' LOTTABLE01,'批次属性2' LOTTABLE02,'批次属性3' LOTTABLE03,'批次属性4' LOTTABLE04,'批次属性5' LOTTABLE05,'批次属性6' LOTTABLE06,'批次属性7' LOTTABLE07,'批次属性8' LOTTABLE08,'批次属性9' LOTTABLE09,'批次属10' LOTTABLE10 ";
+//				String sql = "select '仓库编码，例如杭州：HZ' WAREHOUSE_CODE,'货主编码，例如德云：1117' STORER_CODE,'供应商编码，默认001' VENDOR_CODE,'提单号' ERP_PO_NO,'行号' LINE_NUMBER,'料号/商品货号' ITEM_CODE,'数量' TOTAL_QTY,'单位' UOM,"
+//						+ "'批次属性1' LOTTABLE01,'批次属性2' LOTTABLE02,'批次属性3' LOTTABLE03,'批次属性4' LOTTABLE04,'批次属性5' LOTTABLE05,'批次属性6' LOTTABLE06,'批次属性7' LOTTABLE07,'批次属性8' LOTTABLE08,'批次属性9' LOTTABLE09,'批次属10' LOTTABLE10 ";
+				String sql = "select '' 序号,'' 仓库编码,'' 货主,'' 提运单号,'' 中文品名,'' 料号,'' 理论入库数据,	'' 单位,'' 合格品,'' 残次品,'' 报废品,'' 实际入库数量合计,"
+					+ "'' 差异数量,'' 差异原因,'' 备案商品条码,'' 实际到货商品条码,'' 保质期,'' 入仓时间,'' 理货时间,'' 理货公司,'' 理货人员,'' 报关公司 ";
 				dm = DBOperator.DoSelect2DM(sql);
 				exportExcel.exportExcelFromDataManagerByCols(dm);
 			}
