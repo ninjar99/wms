@@ -1,6 +1,7 @@
 package inventory;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.Toolkit;
@@ -19,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Vector;
 
 import javax.swing.JFrame;
 import javax.swing.JInternalFrame;
@@ -47,6 +49,7 @@ import sys.JTableUtil;
 import sys.MainFrm;
 import sys.Message;
 import sys.QueryDialog;
+import util.Math_SAM;
 import util.WaitingSplash;
 
 import javax.swing.JScrollPane;
@@ -389,7 +392,8 @@ public class InvQueryFrm extends InnerFrame {
 	}
 	
 	private void getInvTableData(String retWhere){
-		String sql = "select ii.WAREHOUSE_CODE 仓库编码,bw.WAREHOUSE_NAME 仓库名称,ii.STORER_CODE 货主编码,bs.STORER_NAME 货主名称,ii.LOCATION_CODE 库位编码,ii.CONTAINER_CODE 箱号,"
+		String sql = "select ii.WAREHOUSE_CODE 仓库编码,bw.WAREHOUSE_NAME 仓库名称,ii.STORER_CODE 货主编码,bs.STORER_NAME 货主名称,ii.LOCATION_CODE 库位编码,"
+				+ "case bl.LOCATION_TYPE_CODE when 'Normal' then '正常库位' when 'Dock' then '暂存库位' when 'Damage' then '残次库位' else bl.LOCATION_TYPE_CODE end 库位属性,ii.CONTAINER_CODE 箱号,"
 				+"ii.ITEM_CODE 商品编码,bi.ITEM_BAR_CODE 商品条码,bi.ITEM_NAME 商品名称,bi.ITEM_SPEC 商品规格,ii.ON_HAND_QTY 库存总数,ii.ALLOCATED_QTY 已分配数量,ii.PICKED_QTY 已拣货数量,"
 				+"ii.INACTIVE_QTY 冻结数量,biu.unit_name 单位,ii.lot_no 批次号"
 				+",il.LOTTABLE01 批次属性1,il.LOTTABLE02 批次属性2,il.LOTTABLE03 批次属性3,il.LOTTABLE04 批次属性4,il.LOTTABLE05 批次属性5,"
@@ -417,6 +421,34 @@ public class InvQueryFrm extends InnerFrame {
 		table.setColumnEditableAll(false);
 		JTableUtil.fitTableColumnsDoubleWidth(table);
 		table.setSortEnable();
+		tableRowColorSetup(table);
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private void tableRowColorSetup(PBSUIBaseGrid tab){
+		Vector cellColor = new Vector();
+		for(int i=0;i<tab.getRowCount();i++){
+//			Vector rowColor = new Vector();
+			String LOCATION_TYPE_CODE = (String) tab.getValueAt(i, tab.getColumnModel().getColumnIndex("库位属性"));
+			if(LOCATION_TYPE_CODE.equals("残次库位")){
+				Object[] rc1Cell = new Object[3];
+		        rc1Cell[0] = new Integer(i);
+		        rc1Cell[1] = new Integer(tab.getColumnModel().getColumnIndex("库位属性"));
+		        rc1Cell[2] = Color.RED;
+		        cellColor.addElement(rc1Cell);
+//		        rowColor.addElement(new Integer(i));
+//		        detailTable.setRowColor(rowColor, Color.lightGray);
+			}else if(LOCATION_TYPE_CODE.equals("暂存库位")){
+				Object[] rc1Cell = new Object[3];
+		        rc1Cell[0] = new Integer(i);
+		        rc1Cell[1] = new Integer(tab.getColumnModel().getColumnIndex("库位属性"));
+		        rc1Cell[2] = Color.ORANGE;
+		        cellColor.addElement(rc1Cell);
+//		        rowColor.addElement(new Integer(i));
+//		        detailTable.setRowColor(rowColor, Color.lightGray);
+			}
+		}
+		tab.setCellColor(cellColor);
 	}
 	
 	public void refreshTable2(DataManager dm){

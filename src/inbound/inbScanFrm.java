@@ -18,6 +18,7 @@ import javax.swing.JInternalFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import DBUtil.DBOperator;
+import DBUtil.LogInfo;
 import comUtil.comData;
 import dmdata.DataManager;
 import main.PBSUIBaseGrid;
@@ -665,10 +666,19 @@ public class inbScanFrm extends InnerFrame {
 		if(barCode.equals("")){
 			return false;
 		}
+		String scanQtyStr = txt_scan_qty.getText();
+		Double scanQty = 0.0;
+		try{
+			scanQty = Double.parseDouble(scanQtyStr);
+		}catch(Exception e){
+			scanQty = 1.0;
+			txt_scan_qty.setText("1");
+			scanQtyStr = "1";
+		}
 		String sql = "select ipd.item_code,bi.ITEM_BAR_CODE from inb_po_detail ipd "
 				+ " inner join bas_item bi on ipd.item_code=bi.item_code " + " where po_no='"
 				+ txt_po_no.getText().trim() + "' and bi.ITEM_BAR_CODE='" + barCode + "' "
-				+" and ifnull(ipd.TOTAL_QTY,0)-ifnull(ipd.RECEIVED_QTY,0)>0 ";
+				+" and ifnull(ipd.TOTAL_QTY,0)-ifnull(ipd.RECEIVED_QTY,0)-("+scanQtyStr+")>=0 ";
 		DataManager dm = DBOperator.DoSelect2DM(sql);
 		if(dm==null || dm.getString(0, 0).length()<=0){
 			txt_item_barcode.selectAll();
@@ -683,6 +693,7 @@ public class inbScanFrm extends InnerFrame {
 			try {
 				if (Double.parseDouble(qty) < 1) {
 					txt_scan_qty.setText("1");
+					return false;
 				}
 			} catch (Exception e) {
 				txt_scan_qty.setText("1");
@@ -721,7 +732,76 @@ public class inbScanFrm extends InnerFrame {
 		String containCode = "";
 		String receivedQty = "";
 		String receivedUOM = "";
-		String sql = "select RECEIPT_NO,WAREHOUSE_CODE,STORER_CODE,ITEM_CODE,CONTAINER_CODE,LOCATION_CODE,"
+		String DAMAGE_QTY = "";
+		String DAMAGE_UOM = "";
+		String SCRAP_QTY = "";
+		String SCRAP_UOM = "";
+		//根据receipt_no 获取PO号   
+		//如果该PO正常货品全部收货完成，需要把PO明细的 残次数量+报废数量 写入到库存表（库存存放在残次库位）
+		String PO_NO = "";
+		String sql = "select PO_NO,ifnull(sum(TOTAL_QTY-RECEIVED_QTY),0) diffQty from inb_po_detail "
+				+ "where WAREHOUSE_CODE='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' and PO_NO="
+				+ "(select PO_NO from inb_receipt_header where RECEIPT_NO='"+receiptNo+"' limit 1) ";
+		DataManager dmPO = DBOperator.DoSelect2DM(sql);
+		if(Double.parseDouble(dmPO.getString("diffQty", 0))<=0){
+			PO_NO = dmPO.getString("PO_NO", 0);
+			sql = "select PO_NO,WAREHOUSE_CODE,STORER_CODE,ITEM_CODE,'*' CONTAINER_CODE,"
+				+"(select LOCATION_CODE from bas_location where WAREHOUSE_CODE='SHJD' and LOCATION_TYPE_CODE='Damage' limit 1) LOCATION_CODE,"
+				+"LOTTABLE01,LOTTABLE02,LOTTABLE03,LOTTABLE04,LOTTABLE05,LOTTABLE06,LOTTABLE07,LOTTABLE08,LOTTABLE09,LOTTABLE10,"
+				+"DAMAGE_QTY,DAMAGE_UOM,SCRAP_QTY,SCRAP_UOM "
+				+"from inb_po_detail where PO_NO='"+PO_NO+"'";
+			dmPO = DBOperator.DoSelect2DM(sql);
+			for(int i=0;i<dmPO.getCurrentCount();i++){
+				warehouseCode = dmPO.getString("WAREHOUSE_CODE", i);
+				storerCode = dmPO.getString("STORER_CODE", i);
+				itemCode = dmPO.getString("ITEM_CODE", i);
+				locationCode = dmPO.getString("LOCATION_CODE", i);
+				containCode = dmPO.getString("CONTAINER_CODE", i);
+				DAMAGE_QTY = dmPO.getString("DAMAGE_QTY", i);
+				DAMAGE_UOM = dmPO.getString("DAMAGE_UOM", i);
+				SCRAP_QTY = dmPO.getString("SCRAP_QTY", i);
+				SCRAP_UOM = dmPO.getString("SCRAP_UOM", i);
+				lottable01 = dmPO.getString("LOTTABLE01", i);
+				lottable02 = dmPO.getString("LOTTABLE02", i);
+				lottable03 = dmPO.getString("LOTTABLE03", i);
+				lottable04 = dmPO.getString("LOTTABLE04", i);
+				lottable05 = dmPO.getString("LOTTABLE05", i);
+				lottable06 = dmPO.getString("LOTTABLE06", i);
+				lottable07 = dmPO.getString("LOTTABLE07", i);
+				lottable08 = dmPO.getString("LOTTABLE08", i);
+				lottable09 = dmPO.getString("LOTTABLE09", i);
+				lottable10 = dmPO.getString("LOTTABLE10", i);
+				//先生成库存批次号
+				lotNo = getInventoryLotNo(storerCode,itemCode,lottable01,lottable02,lottable03,lottable04,lottable05,lottable06,lottable07,lottable08,lottable09,lottable10);
+				if(!lotNo.equals("")){
+					//插入库存表  残次
+					if(Double.parseDouble(DAMAGE_QTY)>0){
+						inventoryID = getInventoryID(warehouseCode,storerCode,itemCode,lotNo,locationCode,containCode,DAMAGE_QTY);
+						if(!inventoryID.equals("")){
+							//库存表写入成功
+						}else{
+							//库存表写入失败
+							LogInfo.appendLog("残次库存保存到库存表失败,PO:"+PO_NO+" ITEM_CODE:"+itemCode);
+						}
+					}
+					//插入库存表  报废
+					if(Double.parseDouble(SCRAP_QTY)>0){
+						inventoryID = getInventoryID(warehouseCode,storerCode,itemCode,lotNo,locationCode,containCode,SCRAP_QTY);
+						if(!inventoryID.equals("")){
+							//库存表写入成功
+						}else{
+							//库存表写入失败
+							LogInfo.appendLog("报废库存保存到库存表失败,PO:"+PO_NO+" ITEM_CODE:"+itemCode);
+						}
+					}
+					
+					
+				}
+			}
+		}
+		
+		//正常收货数量写入库存表
+		sql = "select RECEIPT_NO,WAREHOUSE_CODE,STORER_CODE,ITEM_CODE,CONTAINER_CODE,LOCATION_CODE,"
 				+"LOTTABLE01,LOTTABLE02,LOTTABLE03,LOTTABLE04,LOTTABLE05,LOTTABLE06,LOTTABLE07,LOTTABLE08,LOTTABLE09,LOTTABLE10,"
 				+"RECEIVED_QTY,RECEIVED_UOM "
 		+"from inb_receipt_detail "
@@ -754,6 +834,7 @@ public class inbScanFrm extends InnerFrame {
 					//库存表写入成功
 					continue;
 				}else{
+					LogInfo.appendLog("库存保存到库存表失败,RECEIPT_NO:"+dm.getString("RECEIPT_NO", i)+" ITEM_CODE:"+itemCode);
 					return false;
 				}
 			}else{

@@ -289,7 +289,7 @@ public class poImportFrm extends InnerFrame {
 										+ WAREHOUSE_CODE +"','"+STORER_CODE+"','"+ITEM_CODE+"','"+TOTAL_QTY+"','"+UOM+"'," 
 										+"'"+DAMAGE_QTY+"','"+DAMAGE_UOM+"','"+SCRAP_QTY+"','"+SCRAP_UOM+"',"
 										+ "'"+LOTTABLE01+"','"+LOTTABLE02+"','"+LOTTABLE03+"','"+LOTTABLE04+"','"+LOTTABLE05+"'," 
-										+ "'"+LOTTABLE06+"','"+LOTTABLE07+"','"+LOTTABLE08+"','"+LOTTABLE09+"','"+LOTTABLE10+"'"  
+										+ "'"+LOTTABLE06+"','"+LOTTABLE07+"','"+LOTTABLE08+"','"+LOTTABLE09+"','"+LOTTABLE10+"',"  
 										+"'"+USER_DEF1+"','"+USER_DEF2+"','"+USER_DEF3+"','"+USER_DEF4+"','"+USER_DEF5+"','"+USER_DEF6+"','"+USER_DEF7+"'"
 										+ ",now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"'" ;
 								t = DBOperator.DoUpdate(sql);
@@ -578,7 +578,7 @@ public class poImportFrm extends InnerFrame {
 			}
 		}
 		
-		return false;
+		return true;
 	}
 	
 	private String checkERPPOStatus(String storerCode,String erppostr){
@@ -593,6 +593,7 @@ public class poImportFrm extends InnerFrame {
 	
 	
 	
+	@SuppressWarnings({ "rawtypes", "unused" })
 	private boolean checkExcelData(DataManager dm){
 		if(dm.getString(0, 0).equals("") || dm.getString(1, 0).equals("") || dm.getString(2, 0).equals("")){
 			JOptionPane.showMessageDialog(null, "Excel格式不正确","提示",JOptionPane.WARNING_MESSAGE);
