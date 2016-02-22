@@ -103,6 +103,8 @@ public class POFrm extends InnerFrame {
 	private JButton btnVendorQuery;
 	private JLabel label;
 	private JTextField txt_status;
+	private JLabel label_1;
+	private JTextField txt_remark;
 	
 	public static POFrm getInstance() {
 		if(instance == null) { 
@@ -190,6 +192,7 @@ public class POFrm extends InnerFrame {
 				txt_storer_code.setEditable(true);
 				txt_warehouse_code.setEditable(true);
 				txt_vendor_code.setEditable(true);
+				txt_remark.setEditable(true);
 				btnAdd.setEnabled(false);
 				btnModify.setEnabled(false);
 				btnDelete.setEnabled(false);
@@ -283,6 +286,7 @@ public class POFrm extends InnerFrame {
 				txt_storer_code.setEditable(true);
 				txt_warehouse_code.setEditable(true);
 				txt_vendor_code.setEditable(true);
+				txt_remark.setEditable(true);
 				btnAdd.setEnabled(false);
 				btnModify.setEnabled(false);
 				btnDelete.setEnabled(false);
@@ -384,8 +388,10 @@ public class POFrm extends InnerFrame {
 						txt_warehouse_name.setText("");
 						txt_vendor_code.setText("");
 						txt_vendor_code.setText("");
+						txt_remark.setText("");;
 						txt_erp_po_no.setEditable(false);
 						txt_storer_code.setEditable(false);
+						txt_remark.setEditable(false);
 						txt_warehouse_code.setEditable(false);
 						txt_vendor_code.setEditable(false);
 						btnAdd.setEnabled(true);
@@ -405,6 +411,7 @@ public class POFrm extends InnerFrame {
 				txt_storer_code.setEditable(false);
 				txt_warehouse_code.setEditable(false);
 				txt_vendor_code.setEditable(false);
+				txt_remark.setEditable(false);
 				btnAdd.setEnabled(true);
 				btnModify.setEnabled(true);
 				btnDelete.setEnabled(true);
@@ -429,11 +436,12 @@ public class POFrm extends InnerFrame {
 				txt_warehouse_code.setText("");
 				txt_warehouse_name.setText("");
 				txt_vendor_code.setText("");
-				txt_vendor_code.setText("");
+				txt_vendor_name.setText("");
 				txt_erp_po_no.setEditable(false);
 				txt_storer_code.setEditable(false);
 				txt_warehouse_code.setEditable(false);
 				txt_vendor_code.setEditable(false);
+				txt_remark.setEditable(false);
 				btnAdd.setEnabled(true);
 				btnModify.setEnabled(true);
 				btnDelete.setEnabled(true);
@@ -491,7 +499,7 @@ public class POFrm extends InnerFrame {
 		FlowLayout flowLayout = (FlowLayout) editPanel.getLayout();
 		flowLayout.setAlignment(FlowLayout.LEFT);
 		rightPanel.add(editPanel, BorderLayout.NORTH);
-		editPanel.setPreferredSize(new Dimension(100, 80));
+		editPanel.setPreferredSize(new Dimension(100, 95));
 		
 		JLabel lblNewLabel = new JLabel("PO:");
 		editPanel.add(lblNewLabel);
@@ -736,6 +744,15 @@ public class POFrm extends InnerFrame {
 		editPanel.add(txt_vendor_name);
 		txt_vendor_name.setColumns(20);
 		
+		label_1 = new JLabel("\u5907\u6CE8\uFF1A");
+		editPanel.add(label_1);
+		
+		txt_remark = new JTextField();
+		txt_remark.setForeground(Color.BLUE);
+		txt_remark.setEditable(false);
+		editPanel.add(txt_remark);
+		txt_remark.setColumns(20);
+		
 		JPanel showPanel = new JPanel();
 		rightPanel.add(showPanel, BorderLayout.CENTER);
 		showPanel.setLayout(new BorderLayout(0, 0));
@@ -933,14 +950,16 @@ public class POFrm extends InnerFrame {
 			String STORER_CODE = txt_storer_code.getText().trim();
 			String VENDOR_CODE = txt_vendor_code.getText().trim();
 			String ERP_PO_NO = txt_erp_po_no.getText().trim();
+			String REMARK = txt_remark.getText().trim();
 			sql = "select po_no from inb_po_header where storer_code='"+STORER_CODE+"' and erp_po_no='" + ERP_PO_NO + "'";
 			rs = stmt.executeQuery(sql);
 			if (!rs.next()) {
 				PO_NO = comData.getValueFromBasNumRule("inb_po_header", "po_no");
 				//插入表头
-				sql = "insert into inb_po_header(po_no,warehouse_code,storer_code,vendor_code,erp_po_no,created_dtm_loc,created_by_user,updated_dtm_loc,updated_by_user)"
+				sql = "insert into inb_po_header(po_no,warehouse_code,storer_code,vendor_code,erp_po_no,remark,"
+						+ "created_dtm_loc,created_by_user,updated_dtm_loc,updated_by_user)"
 						+ " select '" + PO_NO + "','" + WAREHOUSE_CODE + "','" + STORER_CODE + "','" + VENDOR_CODE
-						+ "','" + ERP_PO_NO + "',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' ";
+						+ "','" + ERP_PO_NO + "','"+REMARK+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' ";
 				System.out.println(sql);
 				int t = stmt.executeUpdate(sql);
 				if (t != 1) {
@@ -1029,7 +1048,7 @@ public class POFrm extends InnerFrame {
         if(headerTable.getRowCount()>0){
 	        String str_po_no = headerTable.getValueAt(r, headerTable.getColumnModel().getColumnIndex("PO号")).toString();
 	        String sql = "select iph.WAREHOUSE_CODE,bw.WAREHOUSE_NAME,iph.PO_NO,iph.ERP_PO_NO,iph.STORER_CODE,bs.STORER_NAME,iph.VENDOR_CODE,bv.VENDOR_NAME,iph.CREATED_DTM_LOC,iph.CREATED_BY_USER "
-	        		+",case iph.status when '100' then '新建' when '300' then '收货中' when '900' then '关闭' else iph.status end status "
+	        		+",case iph.status when '100' then '新建' when '300' then '收货中' when '900' then '关闭' else iph.status end status,iph.remark "
 					+ " from inb_po_header iph  " + " inner join bas_warehouse bw on iph.WAREHOUSE_CODE=bw.WAREHOUSE_CODE"
 					+ " inner join bas_storer bs on iph.STORER_CODE=bs.STORER_CODE"
 					+ " inner join bas_vendor bv on bv.VENDOR_CODE=iph.VENDOR_CODE" + " where iph.po_no='"+str_po_no+"' " + "";
@@ -1044,6 +1063,7 @@ public class POFrm extends InnerFrame {
 	        	txt_vendor_code.setText(object2String(dm.getString("VENDOR_CODE", 0)));
 	        	txt_vendor_name.setText(object2String(dm.getString("VENDOR_NAME", 0)));
 	        	txt_status.setText(object2String(dm.getString("status", 0)));
+	        	txt_remark.setText(object2String(dm.getString("remark", 0)));
 	        	getDetailTableData(" and ipd.po_no='"+str_po_no+"'");
 	        }
         }
@@ -1156,6 +1176,7 @@ public class POFrm extends InnerFrame {
 		txt_warehouse_name.setText("");
 		txt_vendor_code.setText("");
 		txt_vendor_name.setText("");
+		txt_remark.setText("");
 	}
 	
 	public void clearDetailTable(){
