@@ -41,11 +41,14 @@ import sys.Message;
 import sys.QueryDialog;
 import util.Math_SAM;
 import util.MyTableCellRenderrer;
+import util.WaitingSplash;
 
 import javax.swing.DefaultListSelectionModel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingWorker;
+
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -175,185 +178,209 @@ public class poImportFrm extends InnerFrame {
 				int y = (int)(toolkit.getScreenSize().getHeight()-chooseFile.getHeight())/2;
 				chooseFile.setLocation(x, y);
 				chooseFile.setVisible(true);
-				String fileDir = chooseFileList.ResultValue;
-				if(fileDir.equals("")) return;
-				ExcelRead excel = new ExcelRead(fileDir);
-				ArrayList<?> list = null;
-				DataManager excelDM = new DataManager();
-				try {
-					list = excel.getExcelData();
-					if(list==null) return;
-					excelDM = comData.list2DataManager(list);
-				} catch (Exception e) {
-					LogInfo.appendLog(e.getMessage());
-					e.printStackTrace();
-				}
-				if (list.size() > 1) {
-					String[] rowheader = (String[]) list.get(0);
-					if(!checkExcelData(excelDM)){
-						JOptionPane.showMessageDialog(null, "Excel格式不正确","提示",JOptionPane.WARNING_MESSAGE);
-						return;
-					}
-					
-					int line = 0;
-					boolean changeLine = false;
-					try {
-						String sql = "";
-						java.sql.Connection con = DBConnectionManager.getInstance().getConnection("wms");
-						java.sql.Statement stmt = con.createStatement();
-						ResultSet rs;
-						StringBuffer sbf = new StringBuffer();
-						for (int i = 0; i <excelDM.getCurrentCount() ; i++) {
-							int nextRow = (i==excelDM.getCurrentCount()?i:i+1);
-							//根据Excel的erp_po_no自动生成行号
-							if(excelDM.getString("提运单号", i).equals(excelDM.getString("提运单号", nextRow))){
-								if(changeLine){
-									line = 1;
-								}else{
-									line++;
-								}
-								changeLine = false;
-							}else{
-								line++;
-								changeLine = true;
+				
+				//
+				new SwingWorker<String, Void>() {
+					WaitingSplash splash = new WaitingSplash();
+		            @Override
+		            protected String doInBackground() throws Exception {
+		            	//获取嘉境通库存
+		            	splash.start(); // 运行启动界面
+		            	String fileDir = chooseFileList.ResultValue;
+						if(fileDir.equals("")) return "";
+						ExcelRead excel = new ExcelRead(fileDir);
+						ArrayList<?> list = null;
+						DataManager excelDM = new DataManager();
+						try {
+							list = excel.getExcelData();
+							if(list==null) return "";
+							excelDM = comData.list2DataManager(list);
+						} catch (Exception e) {
+							LogInfo.appendLog(e.getMessage());
+							e.printStackTrace();
+						}
+		            	if (list.size() > 1) {
+							String[] rowheader = (String[]) list.get(0);
+							if(!checkExcelData(excelDM)){
+								JOptionPane.showMessageDialog(null, "Excel格式不正确","提示",JOptionPane.WARNING_MESSAGE);
+								return "";
 							}
-							System.out.println(i+":"+line);
 							
-							String PO_NO = "";
-							String POStatus = "";
-							String WAREHOUSE_CODE = excelDM.getString("仓库编码", i);
-							String STORER_CODE = getStorerCodeByName(excelDM.getString("货主", i));
-							if(STORER_CODE.equals("")){
-								sbf.append("货主不正确:"+excelDM.getString("货主", i));
-							}
-							String VENDOR_CODE = "001";//默认001
-							String ERP_PO_NO = excelDM.getString("提运单号", i);
-							String LINE_NUMBER = String.valueOf(line);//row[4];
-							String ITEM_CODE = excelDM.getString("料号", i);
-							String ITEM_BAR_CODE = excelDM.getString("实际到货商品条码", i);
-							boolean bool = checkItemCode(STORER_CODE,ITEM_CODE,ITEM_BAR_CODE);//检查物料号是否存在，如果不存在，从AOS导入
-							if(!bool){
-								sbf.append("从AOS导入商品港口信息失败,物料号= 【"+ITEM_CODE+"】");
-							}
-							if(!ITEM_BAR_CODE.trim().equals("")){
-								String sqlUpdate = "update bas_item set ITEM_BAR_CODE='"+ITEM_BAR_CODE+"' "
-										+ "where STORER_CODE='"+STORER_CODE+"' and ITEM_CODE='"+ITEM_CODE+"'";
-								int t = DBOperator.DoUpdate(sqlUpdate);
-							}
-							String TOTAL_QTY = comData.checkDouble(excelDM.getString("实际入库数量合计", i));
-							String UOM = excelDM.getString("单位", i);
-							String DAMAGE_QTY = comData.checkDouble(excelDM.getString("残次品", i));
-							String DAMAGE_UOM =excelDM.getString("单位", i);
-							String SCRAP_QTY = comData.checkDouble(excelDM.getString("报废品", i));
-							String SCRAP_UOM = excelDM.getString("单位", i);
-							String LOTTABLE01 = excelDM.getString("保质期", i);
-							String LOTTABLE02 = "";
-							String LOTTABLE03 = "";
-							String LOTTABLE04 = "";
-							String LOTTABLE05 = "";
-							String LOTTABLE06 = "";
-							String LOTTABLE07 = "";
-							String LOTTABLE08 = "";
-							String LOTTABLE09 = "";
-							String LOTTABLE10 = "";
-							String USER_DEF1 = excelDM.getString("差异数量", i);
-							String USER_DEF2 = excelDM.getString("差异原因", i);
-							String USER_DEF3 = excelDM.getString("入仓时间", i);
-							String USER_DEF4 = excelDM.getString("理货时间", i);
-							String USER_DEF5 = excelDM.getString("理货公司", i);
-							String USER_DEF6 = excelDM.getString("理货人员", i);
-							String USER_DEF7 = excelDM.getString("报关公司", i);
-							String REMARK = excelDM.getString("备注", i);
-							String status = checkERPPOStatus(STORER_CODE,ERP_PO_NO);
-							if(!status.equals("100") && !status.equals("")){
-								sbf.append(excelDM.getRow(i).toString()+" 已经开始收货，忽略此行导入\n");
-								continue;
-							}
-							sql = "select po_no,status from inb_po_header where storer_code='"+STORER_CODE+"' and erp_po_no='" + ERP_PO_NO + "'";
-							LogInfo.appendLog("sql", sql);
-							rs = stmt.executeQuery(sql);
-							if (!rs.next()) {
-								PO_NO = comData.getValueFromBasNumRule("inb_po_header", "po_no");
-								//插入表头
-								sql = "insert into inb_po_header(po_no,warehouse_code,storer_code,vendor_code,erp_po_no,remark,created_dtm_loc,created_by_user,updated_dtm_loc,updated_by_user)"
-										+ " select '" + PO_NO + "','" + WAREHOUSE_CODE + "','" + STORER_CODE + "','" + VENDOR_CODE
-										+ "','" + ERP_PO_NO + "','"+REMARK+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' ";
-								int t = DBOperator.DoUpdate(sql);
-								if (t != 1) {
-									JOptionPane.showMessageDialog(null, "插入PO表头报错\n" + sql, "错误",
-											JOptionPane.ERROR_MESSAGE);
-									LogInfo.appendLog("插入PO表头报错\n" + sql, "错误");
+							int line = 0;
+							boolean changeLine = false;
+							try {
+								String sql = "";
+								java.sql.Connection con = DBConnectionManager.getInstance().getConnection("wms");
+								java.sql.Statement stmt = con.createStatement();
+								ResultSet rs;
+								StringBuffer sbf = new StringBuffer();
+								for (int i = 0; i <excelDM.getCurrentCount() ; i++) {
+									int nextRow = (i==excelDM.getCurrentCount()?i:i+1);
+									//根据Excel的erp_po_no自动生成行号
+									if(excelDM.getString("提运单号", i).equals(excelDM.getString("提运单号", nextRow))){
+										if(changeLine){
+											line = 1;
+										}else{
+											line++;
+										}
+										changeLine = false;
+									}else{
+										line++;
+										changeLine = true;
+									}
+									System.out.println(i+":"+line);
+									
+									String PO_NO = "";
+									String POStatus = "";
+									String WAREHOUSE_CODE = excelDM.getString("仓库编码", i);
+									String STORER_CODE = getStorerCodeByName(excelDM.getString("货主", i));
+									if(STORER_CODE.equals("")){
+										sbf.append("货主不正确:"+excelDM.getString("货主", i)+"\n");
+										continue;
+									}
+									String VENDOR_CODE = "001";//默认001
+									String ERP_PO_NO = excelDM.getString("提运单号", i);
+									String LINE_NUMBER = String.valueOf(line);//row[4];
+									String ITEM_CODE = excelDM.getString("料号", i);
+									String ITEM_BAR_CODE = excelDM.getString("实际到货商品条码", i);
+									boolean bool = checkItemCode(STORER_CODE,ITEM_CODE,ITEM_BAR_CODE);//检查物料号是否存在，如果不存在，从AOS导入
+									if(!bool){
+										sbf.append("从AOS导入商品港口信息失败,物料号= 【"+ITEM_CODE+"】");
+									}
+									if(!ITEM_BAR_CODE.trim().equals("")){
+										String sqlUpdate = "update bas_item set ITEM_BAR_CODE='"+ITEM_BAR_CODE+"' "
+												+ "where STORER_CODE='"+STORER_CODE+"' and ITEM_CODE='"+ITEM_CODE+"'";
+										int t = DBOperator.DoUpdate(sqlUpdate);
+									}
+									String TOTAL_QTY = comData.checkDouble(excelDM.getString("实际入库数量合计", i));
+									String UOM = excelDM.getString("单位", i);
+									String DAMAGE_QTY = comData.checkDouble(excelDM.getString("残次品", i));
+									String DAMAGE_UOM =excelDM.getString("单位", i);
+									String SCRAP_QTY = comData.checkDouble(excelDM.getString("报废品", i));
+									String SCRAP_UOM = excelDM.getString("单位", i);
+									String LOTTABLE01 = excelDM.getString("保质期", i);
+									String LOTTABLE02 = "";
+									String LOTTABLE03 = "";
+									String LOTTABLE04 = "";
+									String LOTTABLE05 = "";
+									String LOTTABLE06 = "";
+									String LOTTABLE07 = "";
+									String LOTTABLE08 = "";
+									String LOTTABLE09 = "";
+									String LOTTABLE10 = "";
+									String USER_DEF1 = excelDM.getString("差异数量", i);
+									String USER_DEF2 = excelDM.getString("差异原因", i);
+									String USER_DEF3 = excelDM.getString("入仓时间", i);
+									String USER_DEF4 = excelDM.getString("理货时间", i);
+									String USER_DEF5 = excelDM.getString("理货公司", i);
+									String USER_DEF6 = excelDM.getString("理货人员", i);
+									String USER_DEF7 = excelDM.getString("报关公司", i);
+									String REMARK = excelDM.getString("备注", i);
+									String status = checkERPPOStatus(STORER_CODE,ERP_PO_NO);
+									if(!status.equals("100") && !status.equals("")){
+										sbf.append(excelDM.getRow(i).toString()+" 已经开始收货，忽略此行导入\n");
+										continue;
+									}
+									sql = "select po_no,status from inb_po_header where storer_code='"+STORER_CODE+"' and erp_po_no='" + ERP_PO_NO + "'";
+									LogInfo.appendLog("sql", sql);
+									rs = stmt.executeQuery(sql);
+									if (!rs.next()) {
+										PO_NO = comData.getValueFromBasNumRule("inb_po_header", "po_no");
+										//插入表头
+										sql = "insert into inb_po_header(po_no,warehouse_code,storer_code,vendor_code,erp_po_no,remark,created_dtm_loc,created_by_user,updated_dtm_loc,updated_by_user)"
+												+ " select '" + PO_NO + "','" + WAREHOUSE_CODE + "','" + STORER_CODE + "','" + VENDOR_CODE
+												+ "','" + ERP_PO_NO + "','"+REMARK+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' ";
+										int t = DBOperator.DoUpdate(sql);
+										if (t != 1) {
+											JOptionPane.showMessageDialog(null, "插入PO表头报错\n" + sql, "错误",
+													JOptionPane.ERROR_MESSAGE);
+											LogInfo.appendLog("插入PO表头报错\n" + sql, "错误");
+										}
+										
+										//插入明细
+										sql = "insert into inb_po_detail(inb_po_header_id,line_number,po_no,erp_po_no,warehouse_code,storer_code,"
+												+ "item_code,total_qty,uom,DAMAGE_QTY,DAMAGE_UOM,SCRAP_QTY,SCRAP_UOM,"
+												+ "LOTTABLE01,LOTTABLE02,LOTTABLE03,LOTTABLE04,LOTTABLE05,LOTTABLE06,LOTTABLE07,LOTTABLE08,LOTTABLE09,LOTTABLE10,"
+												+ "USER_DEF1,USER_DEF2,USER_DEF3,USER_DEF4,USER_DEF5,USER_DEF6,USER_DEF7,"
+												+ "created_dtm_loc,created_by_user,updated_dtm_loc,updated_by_user) "
+												+ "select (select inb_po_header_id from inb_po_header where ERP_PO_NO='"
+												+ ERP_PO_NO + "' and WAREHOUSE_CODE='"+WAREHOUSE_CODE+"' order by inb_po_header_id desc limit 1)," + "'"+LINE_NUMBER+"','" + PO_NO + "','" + ERP_PO_NO + "','"
+												+ WAREHOUSE_CODE +"','"+STORER_CODE+"','"+ITEM_CODE+"','"+TOTAL_QTY+"','"+UOM+"'," 
+												+"'"+DAMAGE_QTY+"','"+DAMAGE_UOM+"','"+SCRAP_QTY+"','"+SCRAP_UOM+"',"
+												+ "'"+LOTTABLE01+"','"+LOTTABLE02+"','"+LOTTABLE03+"','"+LOTTABLE04+"','"+LOTTABLE05+"'," 
+												+ "'"+LOTTABLE06+"','"+LOTTABLE07+"','"+LOTTABLE08+"','"+LOTTABLE09+"','"+LOTTABLE10+"',"  
+												+"'"+USER_DEF1+"','"+USER_DEF2+"','"+USER_DEF3+"','"+USER_DEF4+"','"+USER_DEF5+"','"+USER_DEF6+"','"+USER_DEF7+"'"
+												+ ",now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"'" ;
+										t = DBOperator.DoUpdate(sql);
+										if (t != 1) {
+											JOptionPane.showMessageDialog(null, "插入PO表明细报错\n" + sql, "错误",
+													JOptionPane.ERROR_MESSAGE);
+											LogInfo.appendLog("插入PO表明细报错\n" + sql, "错误");
+										}
+									}else{
+										PO_NO = rs.getString("po_no");
+										POStatus = rs.getString("status");
+										if(!POStatus.equals("100")){
+											sbf.append("PO:"+PO_NO+" ERP_PO_NO:"+ERP_PO_NO+" 商品编码:"+ITEM_CODE+" 记录存在，并且订单状态非初始状态，忽略此行导入\n");
+											continue;
+										}
+										sql = "select po_no from inb_po_detail where po_no='"+PO_NO+"' and line_number = "+LINE_NUMBER+" ";
+										LogInfo.appendLog("sql", sql);
+										java.sql.Statement stmt2 = con.createStatement();
+										ResultSet rs2 = stmt2.executeQuery(sql);
+										if(rs2.next()){
+											System.out.println("PO明细重复，忽略改行数据:"+PO_NO+" "+LINE_NUMBER);
+											continue;
+										}
+										//插入明细
+										sql = "insert into inb_po_detail(inb_po_header_id,line_number,po_no,erp_po_no,warehouse_code,storer_code,"
+												+ "item_code,total_qty,uom,DAMAGE_QTY,DAMAGE_UOM,SCRAP_QTY,SCRAP_UOM,"
+												+ "LOTTABLE01,LOTTABLE02,LOTTABLE03,LOTTABLE04,LOTTABLE05,LOTTABLE06,LOTTABLE07,LOTTABLE08,LOTTABLE09,LOTTABLE10,"
+												+ "USER_DEF1,USER_DEF2,USER_DEF3,USER_DEF4,USER_DEF5,USER_DEF6,USER_DEF7,"
+												+ "created_dtm_loc,created_by_user,updated_dtm_loc,updated_by_user) "
+												+ "select (select inb_po_header_id from inb_po_header where ERP_PO_NO='"
+												+ ERP_PO_NO + "')," + "'"+LINE_NUMBER+"','" + PO_NO + "','" + ERP_PO_NO + "','"
+												+ WAREHOUSE_CODE +"','"+STORER_CODE+"','"+ITEM_CODE+"','"+TOTAL_QTY+"','"+UOM+"'," 
+												+"'"+DAMAGE_QTY+"','"+DAMAGE_UOM+"','"+SCRAP_QTY+"','"+SCRAP_UOM+"',"
+												+ "'"+LOTTABLE01+"','"+LOTTABLE02+"','"+LOTTABLE03+"','"+LOTTABLE04+"','"+LOTTABLE05+"'," 
+												+ "'"+LOTTABLE06+"','"+LOTTABLE07+"','"+LOTTABLE08+"','"+LOTTABLE09+"','"+LOTTABLE10+"',"  
+												+"'"+USER_DEF1+"','"+USER_DEF2+"','"+USER_DEF3+"','"+USER_DEF4+"','"+USER_DEF5+"','"+USER_DEF6+"','"+USER_DEF7+"'"
+												+ ",now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"'" ;
+										int t = DBOperator.DoUpdate(sql);
+										if (t != 1) {
+											JOptionPane.showMessageDialog(null, "插入PO表明细报错\n" + sql, "错误",
+													JOptionPane.ERROR_MESSAGE);
+											LogInfo.appendLog("插入PO表明细报错\n" + sql, "错误");
+										}
+									}
 								}
-								
-								//插入明细
-								sql = "insert into inb_po_detail(inb_po_header_id,line_number,po_no,erp_po_no,warehouse_code,storer_code,"
-										+ "item_code,total_qty,uom,DAMAGE_QTY,DAMAGE_UOM,SCRAP_QTY,SCRAP_UOM,"
-										+ "LOTTABLE01,LOTTABLE02,LOTTABLE03,LOTTABLE04,LOTTABLE05,LOTTABLE06,LOTTABLE07,LOTTABLE08,LOTTABLE09,LOTTABLE10,"
-										+ "USER_DEF1,USER_DEF2,USER_DEF3,USER_DEF4,USER_DEF5,USER_DEF6,USER_DEF7,"
-										+ "created_dtm_loc,created_by_user,updated_dtm_loc,updated_by_user) "
-										+ "select (select inb_po_header_id from inb_po_header where ERP_PO_NO='"
-										+ ERP_PO_NO + "')," + "'"+LINE_NUMBER+"','" + PO_NO + "','" + ERP_PO_NO + "','"
-										+ WAREHOUSE_CODE +"','"+STORER_CODE+"','"+ITEM_CODE+"','"+TOTAL_QTY+"','"+UOM+"'," 
-										+"'"+DAMAGE_QTY+"','"+DAMAGE_UOM+"','"+SCRAP_QTY+"','"+SCRAP_UOM+"',"
-										+ "'"+LOTTABLE01+"','"+LOTTABLE02+"','"+LOTTABLE03+"','"+LOTTABLE04+"','"+LOTTABLE05+"'," 
-										+ "'"+LOTTABLE06+"','"+LOTTABLE07+"','"+LOTTABLE08+"','"+LOTTABLE09+"','"+LOTTABLE10+"',"  
-										+"'"+USER_DEF1+"','"+USER_DEF2+"','"+USER_DEF3+"','"+USER_DEF4+"','"+USER_DEF5+"','"+USER_DEF6+"','"+USER_DEF7+"'"
-										+ ",now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"'" ;
-								t = DBOperator.DoUpdate(sql);
-								if (t != 1) {
-									JOptionPane.showMessageDialog(null, "插入PO表明细报错\n" + sql, "错误",
-											JOptionPane.ERROR_MESSAGE);
-									LogInfo.appendLog("插入PO表明细报错\n" + sql, "错误");
+								if(sbf.toString().length()>1){
+									Message.showWarningMessage(sbf.toString());
 								}
-							}else{
-								PO_NO = rs.getString("po_no");
-								POStatus = rs.getString("status");
-								if(!POStatus.equals("100")){
-									sbf.append("PO:"+PO_NO+" ERP_PO_NO:"+ERP_PO_NO+" 商品编码:"+ITEM_CODE+" 记录存在，并且订单状态非初始状态，忽略此行导入\n");
-									continue;
-								}
-								sql = "select po_no from inb_po_detail where po_no='"+PO_NO+"' and line_number = "+LINE_NUMBER+" ";
-								LogInfo.appendLog("sql", sql);
-								java.sql.Statement stmt2 = con.createStatement();
-								ResultSet rs2 = stmt2.executeQuery(sql);
-								if(rs2.next()){
-									System.out.println("PO明细重复，忽略改行数据:"+PO_NO+" "+LINE_NUMBER);
-									continue;
-								}
-								//插入明细
-								sql = "insert into inb_po_detail(inb_po_header_id,line_number,po_no,erp_po_no,warehouse_code,storer_code,"
-										+ "item_code,total_qty,uom,DAMAGE_QTY,DAMAGE_UOM,SCRAP_QTY,SCRAP_UOM,"
-										+ "LOTTABLE01,LOTTABLE02,LOTTABLE03,LOTTABLE04,LOTTABLE05,LOTTABLE06,LOTTABLE07,LOTTABLE08,LOTTABLE09,LOTTABLE10,"
-										+ "USER_DEF1,USER_DEF2,USER_DEF3,USER_DEF4,USER_DEF5,USER_DEF6,USER_DEF7,"
-										+ "created_dtm_loc,created_by_user,updated_dtm_loc,updated_by_user) "
-										+ "select (select inb_po_header_id from inb_po_header where ERP_PO_NO='"
-										+ ERP_PO_NO + "')," + "'"+LINE_NUMBER+"','" + PO_NO + "','" + ERP_PO_NO + "','"
-										+ WAREHOUSE_CODE +"','"+STORER_CODE+"','"+ITEM_CODE+"','"+TOTAL_QTY+"','"+UOM+"'," 
-										+"'"+DAMAGE_QTY+"','"+DAMAGE_UOM+"','"+SCRAP_QTY+"','"+SCRAP_UOM+"',"
-										+ "'"+LOTTABLE01+"','"+LOTTABLE02+"','"+LOTTABLE03+"','"+LOTTABLE04+"','"+LOTTABLE05+"'," 
-										+ "'"+LOTTABLE06+"','"+LOTTABLE07+"','"+LOTTABLE08+"','"+LOTTABLE09+"','"+LOTTABLE10+"',"  
-										+"'"+USER_DEF1+"','"+USER_DEF2+"','"+USER_DEF3+"','"+USER_DEF4+"','"+USER_DEF5+"','"+USER_DEF6+"','"+USER_DEF7+"'"
-										+ ",now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"'" ;
-								int t = DBOperator.DoUpdate(sql);
-								if (t != 1) {
-									JOptionPane.showMessageDialog(null, "插入PO表明细报错\n" + sql, "错误",
-											JOptionPane.ERROR_MESSAGE);
-									LogInfo.appendLog("插入PO表明细报错\n" + sql, "错误");
-								}
+							} catch (Exception e) {
+								e.printStackTrace();
+								LogInfo.appendLog(e.getMessage());
 							}
+						} else {
+							JOptionPane.showMessageDialog(null, "Excel无数据", "提示", JOptionPane.WARNING_MESSAGE);
 						}
-						if(sbf.toString().length()>1){
-							Message.showWarningMessage(sbf.toString());
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-						LogInfo.appendLog(e.getMessage());
-					}
-				} else {
-					JOptionPane.showMessageDialog(null, "Excel无数据", "提示", JOptionPane.WARNING_MESSAGE);
-				}
-				JOptionPane.showMessageDialog(null, "数据导入成功！");
-				getHeaderTableData("");
+		            	getHeaderTableData("");
+		                return "";
+		            }
+
+		            @Override
+		            protected void done() {
+		            	splash.stop(); // 结束启动界面
+		            	if(!chooseFileList.ResultValue.equals("")){
+		            		System.out.println("Excel导入完成");
+							JOptionPane.showMessageDialog(null, "Excel导入完成");
+		            	}else{
+		            		System.out.println("Excel导入取消");
+							JOptionPane.showMessageDialog(null, "Excel导入取消");
+		            	}
+		                
+		            }
+		        }.execute();
 			}
 		});
 		topPanel.add(btnExcelImport);
