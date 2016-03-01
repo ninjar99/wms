@@ -105,6 +105,10 @@ public class POFrm extends InnerFrame {
 	private JTextField txt_status;
 	private JLabel label_1;
 	private JTextField txt_remark;
+	private JLabel label_2;
+	private JTextField txt_user;
+	private JLabel label_3;
+	private JTextField txt_create_datetime;
 	
 	public static POFrm getInstance() {
 		if(instance == null) { 
@@ -748,10 +752,28 @@ public class POFrm extends InnerFrame {
 		editPanel.add(label_1);
 		
 		txt_remark = new JTextField();
-		txt_remark.setForeground(Color.BLUE);
+		txt_remark.setForeground(new Color(255, 0, 0));
 		txt_remark.setEditable(false);
 		editPanel.add(txt_remark);
 		txt_remark.setColumns(20);
+		
+		label_2 = new JLabel("\u521B\u5EFA\u7528\u6237\uFF1A");
+		editPanel.add(label_2);
+		
+		txt_user = new JTextField();
+		txt_user.setForeground(new Color(0, 51, 255));
+		txt_user.setEditable(false);
+		editPanel.add(txt_user);
+		txt_user.setColumns(10);
+		
+		label_3 = new JLabel("\u521B\u5EFA\u65F6\u95F4\uFF1A");
+		editPanel.add(label_3);
+		
+		txt_create_datetime = new JTextField();
+		txt_create_datetime.setForeground(new Color(0, 51, 255));
+		txt_create_datetime.setEditable(false);
+		editPanel.add(txt_create_datetime);
+		txt_create_datetime.setColumns(15);
 		
 		JPanel showPanel = new JPanel();
 		rightPanel.add(showPanel, BorderLayout.CENTER);
@@ -1047,11 +1069,15 @@ public class POFrm extends InnerFrame {
 		int r= headerTable.getSelectedRow();
         if(headerTable.getRowCount()>0){
 	        String str_po_no = headerTable.getValueAt(r, headerTable.getColumnModel().getColumnIndex("PO号")).toString();
-	        String sql = "select iph.WAREHOUSE_CODE,bw.WAREHOUSE_NAME,iph.PO_NO,iph.ERP_PO_NO,iph.STORER_CODE,bs.STORER_NAME,iph.VENDOR_CODE,bv.VENDOR_NAME,iph.CREATED_DTM_LOC,iph.CREATED_BY_USER "
+	        String sql = "select iph.WAREHOUSE_CODE,bw.WAREHOUSE_NAME,iph.PO_NO,iph.ERP_PO_NO,iph.STORER_CODE,bs.STORER_NAME,iph.VENDOR_CODE,bv.VENDOR_NAME,"
+	        		+ "iph.CREATED_DTM_LOC,iph.CREATED_BY_USER,user.USER_NAME "
 	        		+",case iph.status when '100' then '新建' when '300' then '收货中' when '900' then '关闭' else iph.status end status,iph.remark "
-					+ " from inb_po_header iph  " + " inner join bas_warehouse bw on iph.WAREHOUSE_CODE=bw.WAREHOUSE_CODE"
+					+ " from inb_po_header iph  " 
+	        		+ " inner join bas_warehouse bw on iph.WAREHOUSE_CODE=bw.WAREHOUSE_CODE"
 					+ " inner join bas_storer bs on iph.STORER_CODE=bs.STORER_CODE"
-					+ " inner join bas_vendor bv on bv.VENDOR_CODE=iph.VENDOR_CODE" + " where iph.po_no='"+str_po_no+"' " + "";
+					+ " inner join bas_vendor bv on bv.VENDOR_CODE=iph.VENDOR_CODE" 
+					+ " inner join sys_user user on iph.CREATED_BY_USER=user.user_code "
+					+ " where iph.po_no='"+str_po_no+"' " + "";
 	        DataManager dm = DBOperator.DoSelect2DM(sql);
 	        if(dm!=null && dm.getCurrentCount()>0){
 	        	txt_warehouse_code.setText(object2String(dm.getString("WAREHOUSE_CODE", 0)));
@@ -1064,6 +1090,8 @@ public class POFrm extends InnerFrame {
 	        	txt_vendor_name.setText(object2String(dm.getString("VENDOR_NAME", 0)));
 	        	txt_status.setText(object2String(dm.getString("status", 0)));
 	        	txt_remark.setText(object2String(dm.getString("remark", 0)));
+	        	txt_user.setText(object2String(dm.getString("USER_NAME", 0)));
+	        	txt_create_datetime.setText(object2String(dm.getString("CREATED_DTM_LOC", 0)));
 	        	getDetailTableData(" and ipd.po_no='"+str_po_no+"'");
 	        }
         }
@@ -1105,11 +1133,12 @@ public class POFrm extends InnerFrame {
 		DefaultTableModel dtm = (DefaultTableModel) detailTable.getModel();
         dtm.getDataVector().removeAllElements();
 		dtm.setRowCount(0);
-		String sql = "select ipd.LINE_NUMBER,bi.ITEM_BAR_CODE,ipd.ITEM_CODE,bi.ITEM_NAME,biu.UNIT_NAME,ipd.TOTAL_QTY,ipd.RECEIVED_QTY,"
+		String sql = "select ipd.LINE_NUMBER,bi.ITEM_BAR_CODE,ipd.ITEM_CODE,bi.ITEM_NAME,case when biu.UNIT_NAME is null then ipd.UOM else biu.unit_name end UNIT_NAME,ipd.TOTAL_QTY,ipd.RECEIVED_QTY,"
 				+ "ipd.LOTTABLE01,ipd.LOTTABLE02,ipd.LOTTABLE03,ipd.LOTTABLE04,"
 				+ "ipd.LOTTABLE05,ipd.LOTTABLE06,ipd.LOTTABLE07,ipd.LOTTABLE08,ipd.LOTTABLE09,ipd.LOTTABLE10,ipd.CREATED_BY_USER,ipd.CREATED_DTM_LOC "
-				+ " from inb_po_detail ipd " + "inner join bas_item bi on ipd.storer_code=bi.storer_code and ipd.ITEM_CODE=bi.ITEM_CODE" 
-				+" inner join bas_item_unit biu on bi.unit_code=biu.unit_code "
+				+ " from inb_po_detail ipd " 
+				+ "inner join bas_item bi on ipd.storer_code=bi.storer_code and ipd.ITEM_CODE=bi.ITEM_CODE" 
+				+" left join bas_item_unit biu on bi.unit_code=biu.unit_code "
 				+ " where 1=1 ";
 		if(!strWhere.equals("")){
 			sql = sql + strWhere;

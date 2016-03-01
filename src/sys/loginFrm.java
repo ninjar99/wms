@@ -42,6 +42,8 @@ import java.net.URL;
 import java.net.URLConnection;
 
 import javax.swing.JComboBox;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class loginFrm extends JFrame {
 
@@ -221,6 +223,20 @@ public class loginFrm extends JFrame {
 	    cbWarehouse.setSelectedDisplayName(saveCf.getValue("wms.userwarehouse"));
 		cbWarehouse.setBounds(129, 37, 155, 21);
 		panel.add(cbWarehouse);
+		
+		JLabel lbl_changepwd = new JLabel("\u4FEE\u6539\u5BC6\u7801");
+		lbl_changepwd.setToolTipText("\u70B9\u51FB\u4FEE\u6539\u7528\u6237\u5BC6\u7801");
+		lbl_changepwd.setFont(new Font("ËÎÌו", Font.BOLD, 12));
+		lbl_changepwd.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				ChangePWD changepwd = new ChangePWD();
+				changepwd.setVisible(true);
+			}
+		});
+		lbl_changepwd.setForeground(Color.BLUE);
+		lbl_changepwd.setBounds(297, 227, 54, 15);
+		panel.add(lbl_changepwd);
 		String curVersion = MainFrm.wmsVersion;
 		String sysVersion = getSysVersion();
 		if(Math_SAM.str2Double(curVersion)<Math_SAM.str2Double(sysVersion)){

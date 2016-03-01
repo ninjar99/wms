@@ -13,8 +13,10 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 import javax.swing.JFrame;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 
@@ -63,6 +65,7 @@ public class poImportFrm extends InnerFrame {
 	private static boolean isOpen = false;
 	private PBSUIBaseGrid headerTable;
 	private PBSUIBaseGrid detailTable;
+	static String retWhere = "";
 	
 	public static poImportFrm getInstance() {
 		 if(instance == null) { 
@@ -157,7 +160,7 @@ public class poImportFrm extends InnerFrame {
 				int y = (int)(toolkit.getScreenSize().getHeight()-query.getHeight())/2;
 				query.setLocation(x, y);
 				query.setVisible(true);
-				String retWhere = QueryDialog.queryValueResult;
+				retWhere = QueryDialog.queryValueResult;
 				if(retWhere.length()>0){
 					retWhere = " and "+retWhere;
 				}
@@ -243,7 +246,7 @@ public class poImportFrm extends InnerFrame {
 									String LINE_NUMBER = String.valueOf(line);//row[4];
 									String ITEM_CODE = excelDM.getString("料号", i);
 									String ITEM_BAR_CODE = excelDM.getString("实际到货商品条码", i);
-									boolean bool = checkItemCode(STORER_CODE,ITEM_CODE,ITEM_BAR_CODE);//检查物料号是否存在，如果不存在，从AOS导入
+									boolean bool = checkItemCode(STORER_CODE,ITEM_CODE,ITEM_BAR_CODE,ERP_PO_NO);//检查物料号是否存在，如果不存在，从AOS导入
 									if(!bool){
 										sbf.append("从AOS导入商品港口信息失败,物料号= 【"+ITEM_CODE+"】");
 									}
@@ -411,6 +414,46 @@ public class poImportFrm extends InnerFrame {
 			}
 		});
 		topPanel.add(btnExcel);
+		
+		JButton btnExcelExport = new JButton("Excel\u5BFC\u51FA");
+		btnExcelExport.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				StringBuffer sbf = new StringBuffer();
+				int[] selRow = headerTable.getSelectedRows();
+				for(int i=0;i<selRow.length;i++){
+					String po_no = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("PO号")).toString();
+					sbf.append("'"+po_no+"'");
+					if(i<selRow.length-1){
+						sbf.append(",");
+					}
+				}
+				JTableExportExcel exportExcel = new JTableExportExcel();
+				DataManager dm = new DataManager();
+				String sql = "select a.WAREHOUSE_CODE 仓库编码,e.WAREHOUSE_NAME 仓库名称,a.PO_NO PO号,a.ERP_PO_NO 提单号,"
+						+ "case a.status when '100' then '新建' when '300' then '收货中' when '900' then '关闭' else a.status end PO状态,"
+						+ "a.STORER_CODE 货主编码,d.STORER_NAME 货主名称,"
+						+"a.REMARK 备注,a.CREATED_DTM_LOC 创建时间,f.USER_NAME 创建人,"
+						+"b.ITEM_CODE 物料号,c.ITEM_BAR_CODE 条码,c.ITEM_NAME 商品名称,b.UOM 单位,b.TOTAL_QTY 数量,b.DAMAGE_QTY 残次数量,b.SCRAP_QTY 报废数量,"
+						+"b.LOTTABLE01 批次属性1,b.LOTTABLE02 批次属性2,b.LOTTABLE03 批次属性3,b.LOTTABLE04 批次属性4,b.LOTTABLE05 批次属性5,"
+						+"b.LOTTABLE06 批次属性6,b.LOTTABLE07 批次属性7,b.LOTTABLE08 批次属性8,b.LOTTABLE09 批次属性9,b.LOTTABLE10 批次属性10,"
+						+"b.UPDATED_DTM_LOC 导入时间,g.USER_NAME 导入用户 "
+						+"from inb_po_header a "
+						+"inner join inb_po_detail b on a.PO_NO=b.PO_NO "
+						+"inner join bas_item c on b.ITEM_CODE=c.ITEM_CODE and b.STORER_CODE=c.STORER_CODE "
+						+"inner join bas_storer d on a.STORER_CODE=d.STORER_CODE "
+						+"inner join bas_warehouse e on a.WAREHOUSE_CODE=e.WAREHOUSE_CODE "
+						+"inner join sys_user f on a.CREATED_BY_USER=f.USER_CODE "
+						+"inner join sys_user g on b.UPDATED_BY_USER=g.USER_CODE "
+						+"where a.WAREHOUSE_CODE='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' "
+						+"and a.PO_NO in ("+sbf.toString()+")"
+						+""
+						+"";
+				dm = DBOperator.DoSelect2DM(sql);
+				exportExcel.exportExcelFromDataManagerByCols(dm);
+			}
+		});
+		btnExcelExport.setForeground(new Color(51, 0, 255));
+		topPanel.add(btnExcelExport);
 		topPanel.add(btnClose);
 		
 		JPanel centerPanel = new JPanel();
@@ -433,6 +476,37 @@ public class poImportFrm extends InnerFrame {
 					headerTable.setColumnSelectionAllowed(true);
 				}
 				headerTableClick();
+			}
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON3) {
+					JPopupMenu popupmenu = new JPopupMenu();
+					JMenuItem menuItem1 = new JMenuItem();
+					menuItem1.setLabel("导入确认");
+					menuItem1.addActionListener(new java.awt.event.ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							boolean b_confirm = Message.showOKorCancelMessage("PO导入确认后，就不允许删除?\n此功能用来防止导入PO被其他用户删除");
+							if(b_confirm){
+								StringBuffer sbf = new StringBuffer();
+								int[] selRow = headerTable.getSelectedRows();
+								for(int i=0;i<selRow.length;i++){
+									String po_no = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("PO号")).toString();
+									sbf.append("'"+po_no+"'");
+									if(i<selRow.length-1){
+										sbf.append(",");
+									}
+								}
+								String sql = "update inb_po_header set status='300' where po_no in ("+sbf.toString()+") and status='100' ";
+								int t = DBOperator.DoUpdate(sql);
+								if(t>0){
+									getHeaderTableData(retWhere);
+								}
+							}
+						}
+						});
+					popupmenu.add(menuItem1);
+					popupmenu.show(e.getComponent(), e.getX(), e.getY());
+				}
 			}
 		});
 		scrollPane.setViewportView(headerTable);
@@ -477,11 +551,14 @@ public class poImportFrm extends InnerFrame {
 	
 	private void getHeaderTableData(String strWhere){
 		String sql = "select iph.WAREHOUSE_CODE 仓库编码,bw.WAREHOUSE_NAME 仓库名称,iph.PO_NO PO号,iph.ERP_PO_NO ERP_PO_NO,"
+				+ "case iph.status when '100' then '新建' when '300' then '收货中' when '900' then '关闭' else iph.status end PO状态,"
 				+ "iph.STORER_CODE 货主编码,bs.STORER_NAME 货主名称,iph.VENDOR_CODE 供应商编码,bv.VENDOR_NAME 供应商名称,iph.REMARK 备注, "
-				+ "iph.CREATED_DTM_LOC 创建时间,iph.CREATED_BY_USER 创建人 "
+				+ "iph.CREATED_DTM_LOC 创建时间,user.USER_NAME 创建人 "
 				+ " from inb_po_header iph  " + " inner join bas_warehouse bw on iph.WAREHOUSE_CODE=bw.WAREHOUSE_CODE"
 				+ " inner join bas_storer bs on iph.STORER_CODE=bs.STORER_CODE"
-				+ " inner join bas_vendor bv on bv.VENDOR_CODE=iph.VENDOR_CODE" + " where 1=1 " 
+				+ " inner join bas_vendor bv on bv.VENDOR_CODE=iph.VENDOR_CODE" 
+				+ " inner join sys_user user on iph.CREATED_BY_USER=user.user_code "
+				+ " where 1=1 " 
 				+ " and iph.WAREHOUSE_CODE = '"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' ";
 		if(!strWhere.equals("")){
 			sql = sql + strWhere;
@@ -500,6 +577,7 @@ public class poImportFrm extends InnerFrame {
 		if(headerTable.getRowCount()>0){
 			headerTable.setRowSelectionInterval(0, 0);//默认选中第一行
 		}
+		tableHeaderRowColorSetup(headerTable);
 		headerTableClick();
 	}
 	
@@ -510,8 +588,12 @@ public class poImportFrm extends InnerFrame {
 		String sql = "select ipd.LINE_NUMBER,ipd.ITEM_CODE,bi.ITEM_BAR_CODE,bi.ITEM_NAME,"
 				+ "ipd.UOM,ipd.TOTAL_QTY,ipd.DAMAGE_QTY,ipd.SCRAP_QTY,ipd.RECEIVED_QTY,"
 				+ "ipd.LOTTABLE01,ipd.LOTTABLE02,ipd.LOTTABLE03,ipd.LOTTABLE04,"
-				+ "ipd.LOTTABLE05,ipd.LOTTABLE06,ipd.LOTTABLE07,ipd.LOTTABLE08,ipd.LOTTABLE09,ipd.LOTTABLE10,ipd.CREATED_BY_USER,ipd.CREATED_DTM_LOC "
-				+ " from inb_po_detail ipd " + "inner join bas_item bi on ipd.storer_code=bi.storer_code and ipd.ITEM_CODE=bi.ITEM_CODE" + " where 1=1 ";
+				+ "ipd.LOTTABLE05,ipd.LOTTABLE06,ipd.LOTTABLE07,ipd.LOTTABLE08,ipd.LOTTABLE09,ipd.LOTTABLE10,"
+				+ "user.user_name CREATED_BY_USER,ipd.CREATED_DTM_LOC "
+				+ " from inb_po_detail ipd " 
+				+ "inner join bas_item bi on ipd.storer_code=bi.storer_code and ipd.ITEM_CODE=bi.ITEM_CODE " 
+				+ "inner join sys_user user on ipd.CREATED_BY_USER=user.user_code "
+				+ " where 1=1 ";
 		if(!strWhere.equals("")){
 			sql = sql + strWhere;
 		}
@@ -585,6 +667,33 @@ public class poImportFrm extends InnerFrame {
 		
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private void tableHeaderRowColorSetup(PBSUIBaseGrid tab){
+		Vector cellColor = new Vector();
+		for(int i=0;i<tab.getRowCount();i++){
+			Vector rowColor = new Vector();
+			String status = (String) tab.getValueAt(i, tab.getColumnModel().getColumnIndex("PO状态"));
+			if(status.equals("收货中")){
+				Object[] rc1Cell = new Object[3];
+		        rc1Cell[0] = new Integer(i);
+		        rc1Cell[1] = new Integer(tab.getColumnModel().getColumnIndex("PO状态"));
+		        rc1Cell[2] = Color.blue;
+		        cellColor.addElement(rc1Cell);
+		        rowColor.addElement(new Integer(i));
+		        //tab.setRowColor(rowColor, Color.lightGray);
+			}else if(status.equals("关闭")){
+				Object[] rc1Cell = new Object[3];
+		        rc1Cell[0] = new Integer(i);
+		        rc1Cell[1] = new Integer(tab.getColumnModel().getColumnIndex("PO状态"));
+		        rc1Cell[2] = Color.red;
+		        cellColor.addElement(rc1Cell);
+		        rowColor.addElement(new Integer(i));
+		        //tab.setRowColor(rowColor, Color.lightGray);
+			}
+		}
+		tab.setCellColor(cellColor);
+	}
+	
 	private String getStorerCodeByName(String storerName){
 		String sql = "select STORER_CODE from bas_storer where STORER_NAME like '%"+storerName+"%' ";
 		DataManager dm = DBOperator.DoSelect2DM(sql);
@@ -595,23 +704,25 @@ public class poImportFrm extends InnerFrame {
 		}
 	}
 	
-	private boolean checkItemCode(String storerCode,String itemCode,String ITEM_BAR_CODE){
+	private boolean checkItemCode(String storerCode,String itemCode,String ITEM_BAR_CODE,String ERP_PO_NO){
 		String sql = "select * from bas_item where STORER_CODE='"+storerCode+"' and ITEM_CODE='"+itemCode+"' ";
 		DataManager dm = DBOperator.DoSelect2DM(sql);
 		if(dm.getCurrentCount()==0){
 			if(!ITEM_BAR_CODE.trim().equals("")){//如果实际条码不为空，需要更新系统条码
 				sql = "insert into bas_item(storer_code,port_code,item_code,item_bar_code,item_name,brand_code,item_spec,"
-						+ "unit_code,country_code,DESCRIPTION,RETAIL_PRICE,WEIGHT,TAX_NUMBER,CREATED_BY_USER,CREATED_DTM_LOC) "
-						+"select '"+storerCode+"',a.PORT_ID,a.MATERIAL_CODE,'"+ITEM_BAR_CODE+"' GOODS_BAR_CODE,a.NAME_CN,a.BRAND_CODE,b.GOOD_SPEC,b.UNIT_CODE,a.ORIGIN,b.GOOD_SPEC,"
-						+ "a.FINAL_PRICE,a.WEIGHT,a.TAX_NUMBER,'sys',now()  "
+						+ "unit_code,country_code,DESCRIPTION,RETAIL_PRICE,WEIGHT,TAX_NUMBER,USER_DEF10,CREATED_BY_USER,CREATED_DTM_LOC) "
+						+"select '"+storerCode+"',a.PORT_ID,a.MATERIAL_CODE,'"+ITEM_BAR_CODE+"' GOODS_BAR_CODE,a.NAME_CN,"
+						+ "a.BRAND_CODE,b.GOOD_SPEC,b.UNIT_CODE,a.ORIGIN,b.GOOD_SPEC,"
+						+ "a.FINAL_PRICE,a.WEIGHT,a.TAX_NUMBER,'"+ERP_PO_NO+"','sys',now()  "
 						+"from AOS.bas_goods_port a "
 						+"inner join AOS.bas_goods b on a.GOOD_CODE=b.GOOD_CODE "
 						+"where a.MATERIAL_CODE='"+itemCode+"' ";
 			}else{
 				sql = "insert into bas_item(storer_code,port_code,item_code,item_bar_code,item_name,brand_code,item_spec,"
-						+ "unit_code,country_code,DESCRIPTION,RETAIL_PRICE,WEIGHT,TAX_NUMBER,CREATED_BY_USER,CREATED_DTM_LOC) "
-						+"select '"+storerCode+"',a.PORT_ID,a.MATERIAL_CODE,a.GOODS_BAR_CODE,a.NAME_CN,a.BRAND_CODE,b.GOOD_SPEC,b.UNIT_CODE,a.ORIGIN,b.GOOD_SPEC,"
-						+ "a.FINAL_PRICE,a.WEIGHT,a.TAX_NUMBER,'sys',now()  "
+						+ "unit_code,country_code,DESCRIPTION,RETAIL_PRICE,WEIGHT,TAX_NUMBER,USER_DEF10,CREATED_BY_USER,CREATED_DTM_LOC) "
+						+"select '"+storerCode+"',a.PORT_ID,a.MATERIAL_CODE,a.GOODS_BAR_CODE,a.NAME_CN,a.BRAND_CODE,"
+						+ "b.GOOD_SPEC,b.UNIT_CODE,a.ORIGIN,b.GOOD_SPEC,"
+						+ "a.FINAL_PRICE,a.WEIGHT,a.TAX_NUMBER,'"+ERP_PO_NO+"','sys',now()  "
 						+"from AOS.bas_goods_port a "
 						+"inner join AOS.bas_goods b on a.GOOD_CODE=b.GOOD_CODE "
 						+"where a.MATERIAL_CODE='"+itemCode+"' ";
