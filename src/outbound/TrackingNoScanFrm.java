@@ -260,7 +260,7 @@ public class TrackingNoScanFrm extends InnerFrame {
 							+",p.part_number,od.commodity_amount,od.is_gift,od.market_price,od.market_price,od.unit_price,od.tax_rate,od.tax,now(),'"+userCode+"',o.order_id "
 							+"from sandwich.ag_order o ,(Select (@rowNum :=0) ) r  "
 							+",sandwich.ag_order_commodity od ,sandwich.ag_product p "
-							+"where o.order_id=od.order_id and p.product_id=od.product_id and o.invoice_no in "+instr.toString()
+							+"where o.order_id=od.order_id and (p.part_number=od.commodity_sn or p.product_id=od.product_id) and o.invoice_no in "+instr.toString()
 							+" and not exists(select shipment_no from oub_shipment_detail osd where osd.shipment_no=o.order_sn) "
 							
 							+" union all "
@@ -830,7 +830,7 @@ public class TrackingNoScanFrm extends InnerFrame {
 								//查找该订单是否有其他明细行有 拣货记录， 如果有，修改订单表头status=190
 								sql = "select shipment_no from oub_pick_detail where shipment_no='"+shipmentNo+"' ";
 								DataManager dmtmp = DBOperator.DoSelect2DM(sql);
-								if(dm==null || dm.getCurrentCount()==0){
+								if(dmtmp==null || dmtmp.getCurrentCount()==0){
 									continue;
 								}else{
 									sql = "update oub_shipment_header set status='190' where shipment_no='"+shipmentNo+"' and status='150' ";

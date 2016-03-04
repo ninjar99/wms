@@ -203,7 +203,7 @@ public class inbScanFrm extends InnerFrame {
 						+"inner join bas_storer bs on iph.STORER_CODE=bs.STORER_CODE "
 						+"inner join bas_warehouse bw on iph.WAREHOUSE_CODE=bw.WAREHOUSE_CODE "
 						+"inner join bas_vendor bv on iph.VENDOR_CODE=bv.VENDOR_CODE "
-						+"where 1=1 and iph.warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' ";
+						+"where iph.status not in (900) and iph.warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' ";
 				tableQueryDialog tableQuery = new tableQueryDialog(sql);
 				Toolkit toolkit = Toolkit.getDefaultToolkit();
 				int x = (int)(toolkit.getScreenSize().getWidth()-tableQuery.getWidth())/2;

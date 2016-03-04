@@ -100,8 +100,8 @@ public class GenerateINVFromStockTakeDetail {
 		String containCode = "*";
 		String receivedQty = "";
 		String receivedUOM = "007";
-		String sql = "select 仓库编码,货主,料号,理论入库数据 "
-				+"from tmp_inv ";
+		String sql = "select 'SHJD' 仓库编码,storer_code 货主,sku 料号,inv_qty 理论入库数据 "
+				+"from tmp5 ";//tmp_inv
 		DataManager dm = DBOperator.DoSelect2DM(sql);
 		for(int i=0;i<dm.getCurrentCount();i++){
 			warehouseCode = dm.getString("仓库编码", i);

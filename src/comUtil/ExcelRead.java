@@ -82,7 +82,7 @@ public class ExcelRead {
 						}
 						break;
 					case HSSFCell.CELL_TYPE_STRING: // ×Ö·û´®
-						cellValue = cell.getStringCellValue();
+						cellValue = cell.getStringCellValue().replaceAll("\n", "");//È¥³ý»Ø³µ×Ö·û
 						break;
 					case HSSFCell.CELL_TYPE_BOOLEAN: // Boolean
 						cellValue = cell.getBooleanCellValue() + "";

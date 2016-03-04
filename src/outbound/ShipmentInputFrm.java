@@ -1407,8 +1407,8 @@ public class ShipmentInputFrm extends InnerFrame {
 				+ "osd.LOTTABLE05,osd.LOTTABLE06,osd.LOTTABLE07,osd.LOTTABLE08,osd.LOTTABLE09,osd.LOTTABLE10,osd.CREATED_DTM_LOC,osd.CREATED_BY_USER,"
 				+ "osd.UPDATED_DTM_LOC,osd.UPDATED_BY_USER "
 				+ " from oub_shipment_detail osd " 
-				+ "inner join bas_item bi on osd.storer_code=bi.storer_code and osd.ITEM_CODE=bi.ITEM_CODE" 
-				+" inner join bas_item_unit biu on bi.unit_code=biu.unit_code "
+				+ "left join bas_item bi on osd.storer_code=bi.storer_code and osd.ITEM_CODE=bi.ITEM_CODE" 
+				+" left join bas_item_unit biu on bi.unit_code=biu.unit_code "
 				+ " where 1=1 ";
 		if(!strWhere.equals("")){
 			sql = sql + strWhere;

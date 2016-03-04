@@ -218,6 +218,7 @@ public class poImportFrm extends InnerFrame {
 								ResultSet rs;
 								StringBuffer sbf = new StringBuffer();
 								for (int i = 0; i <excelDM.getCurrentCount() ; i++) {
+									if(excelDM.getString("仓库编码", i).equals("")) continue;// Excel空白字符行自动跳过
 									int nextRow = (i==excelDM.getCurrentCount()?i:i+1);
 									//根据Excel的erp_po_no自动生成行号
 									if(excelDM.getString("提运单号", i).equals(excelDM.getString("提运单号", nextRow))){
@@ -238,7 +239,7 @@ public class poImportFrm extends InnerFrame {
 									String WAREHOUSE_CODE = excelDM.getString("仓库编码", i);
 									String STORER_CODE = getStorerCodeByName(excelDM.getString("货主", i));
 									if(STORER_CODE.equals("")){
-										sbf.append("货主不正确:"+excelDM.getString("货主", i)+"\n");
+										sbf.append("\n货主不正确:"+excelDM.getString("货主", i)+"("+fileDir+")\n");
 										continue;
 									}
 									String VENDOR_CODE = "001";//默认001
@@ -248,7 +249,7 @@ public class poImportFrm extends InnerFrame {
 									String ITEM_BAR_CODE = excelDM.getString("实际到货商品条码", i);
 									boolean bool = checkItemCode(STORER_CODE,ITEM_CODE,ITEM_BAR_CODE,ERP_PO_NO);//检查物料号是否存在，如果不存在，从AOS导入
 									if(!bool){
-										sbf.append("从AOS导入商品港口信息失败,物料号= 【"+ITEM_CODE+"】");
+										sbf.append("\n从已备案商品信息总表中导入商品信息失败,物料号= 【"+ITEM_CODE+"】"+"("+fileDir+")");
 									}
 									if(!ITEM_BAR_CODE.trim().equals("")){
 										String sqlUpdate = "update bas_item set ITEM_BAR_CODE='"+ITEM_BAR_CODE+"' "
@@ -281,7 +282,7 @@ public class poImportFrm extends InnerFrame {
 									String REMARK = excelDM.getString("备注", i);
 									String status = checkERPPOStatus(STORER_CODE,ERP_PO_NO);
 									if(!status.equals("100") && !status.equals("")){
-										sbf.append(excelDM.getRow(i).toString()+" 已经开始收货，忽略此行导入\n");
+										sbf.append("\n"+excelDM.getRow(i).toString()+" 已经开始收货，忽略此行导入\n");
 										continue;
 									}
 									sql = "select po_no,status from inb_po_header where storer_code='"+STORER_CODE+"' and erp_po_no='" + ERP_PO_NO + "'";
@@ -297,7 +298,7 @@ public class poImportFrm extends InnerFrame {
 										if (t != 1) {
 											JOptionPane.showMessageDialog(null, "插入PO表头报错\n" + sql, "错误",
 													JOptionPane.ERROR_MESSAGE);
-											LogInfo.appendLog("插入PO表头报错\n" + sql, "错误");
+											LogInfo.appendLog("error","插入PO表头报错\n" + sql);
 										}
 										
 										//插入明细
@@ -318,13 +319,13 @@ public class poImportFrm extends InnerFrame {
 										if (t != 1) {
 											JOptionPane.showMessageDialog(null, "插入PO表明细报错\n" + sql, "错误",
 													JOptionPane.ERROR_MESSAGE);
-											LogInfo.appendLog("插入PO表明细报错\n" + sql, "错误");
+											LogInfo.appendLog("error","插入PO表明细报错\n" + sql);
 										}
 									}else{
 										PO_NO = rs.getString("po_no");
 										POStatus = rs.getString("status");
 										if(!POStatus.equals("100")){
-											sbf.append("PO:"+PO_NO+" ERP_PO_NO:"+ERP_PO_NO+" 商品编码:"+ITEM_CODE+" 记录存在，并且订单状态非初始状态，忽略此行导入\n");
+											sbf.append("\nPO:"+PO_NO+" ERP_PO_NO:"+ERP_PO_NO+" 商品编码:"+ITEM_CODE+" 记录存在，并且订单状态非初始状态，忽略此行导入\n");
 											continue;
 										}
 										sql = "select po_no from inb_po_detail where po_no='"+PO_NO+"' and line_number = "+LINE_NUMBER+" ";
@@ -353,12 +354,13 @@ public class poImportFrm extends InnerFrame {
 										if (t != 1) {
 											JOptionPane.showMessageDialog(null, "插入PO表明细报错\n" + sql, "错误",
 													JOptionPane.ERROR_MESSAGE);
-											LogInfo.appendLog("插入PO表明细报错\n" + sql, "错误");
+											LogInfo.appendLog("error","插入PO表明细报错\n" + sql);
 										}
 									}
 								}
 								if(sbf.toString().length()>1){
 									Message.showWarningMessage(sbf.toString());
+									LogInfo.appendLog("error",sbf.toString());
 								}
 							} catch (Exception e) {
 								e.printStackTrace();
@@ -485,22 +487,53 @@ public class poImportFrm extends InnerFrame {
 					menuItem1.setLabel("导入确认");
 					menuItem1.addActionListener(new java.awt.event.ActionListener() {
 						public void actionPerformed(ActionEvent e) {
-							boolean b_confirm = Message.showOKorCancelMessage("PO导入确认后，就不允许删除?\n此功能用来防止导入PO被其他用户删除");
+							if(!MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0).toString().equalsIgnoreCase("SHJD")){
+								Message.showWarningMessage("此功能目前只针对【上海嘉定仓】开放");
+								return;
+							}
+							boolean b_confirm = Message.showOKorCancelMessage("PO导入确认后，就不允许删除，同时系统增加库存，是否确认?");
 							if(b_confirm){
-								StringBuffer sbf = new StringBuffer();
-								int[] selRow = headerTable.getSelectedRows();
-								for(int i=0;i<selRow.length;i++){
-									String po_no = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("PO号")).toString();
-									sbf.append("'"+po_no+"'");
-									if(i<selRow.length-1){
-										sbf.append(",");
-									}
-								}
-								String sql = "update inb_po_header set status='300' where po_no in ("+sbf.toString()+") and status='100' ";
-								int t = DBOperator.DoUpdate(sql);
-								if(t>0){
-									getHeaderTableData(retWhere);
-								}
+								new SwingWorker<String, Void>() {
+									WaitingSplash splash = new WaitingSplash("数据处理中，请稍后... ...");
+
+						            @Override
+						            protected String doInBackground() throws Exception {
+						            	splash.start(); // 运行启动界面
+						            	StringBuffer sbf = new StringBuffer();
+										int[] selRow = headerTable.getSelectedRows();
+										for(int i=0;i<selRow.length;i++){
+											String po_no = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("PO号")).toString();
+											String sql = "select PO_NO from inb_po_header where PO_NO='"+po_no+"' and STATUS<900 ";
+											DataManager dmtmp = DBOperator.DoSelect2DM(sql);
+											if(dmtmp.getCurrentCount()==0){
+												po_no = "";
+											}
+											sbf.append("'"+po_no+"'");
+											if(i<selRow.length-1){
+												sbf.append(",");
+											}
+										}
+										//增加PO明细到库存表   只针对上海嘉定仓库
+										boolean bool = generateInventoryByPO(sbf.toString());
+										if(bool){
+											//更新PO状态有 新建 -> 收货中，防止其他人修改或者删除 
+											String sql = "update inb_po_header set status='900' where po_no in ("+sbf.toString()+") and status < 900 ";
+											int t = DBOperator.DoUpdate(sql);
+											if(t>0){
+												//getHeaderTableData(retWhere);
+											}
+										}
+						                return "";
+						            }
+
+						            @Override
+						            protected void done() {
+						            	splash.stop(); // 结束启动界面
+						                System.out.println("处理完成");
+						                getHeaderTableData(retWhere);
+						            }
+						        }.execute();
+								
 							}
 						}
 						});
@@ -705,27 +738,42 @@ public class poImportFrm extends InnerFrame {
 	}
 	
 	private boolean checkItemCode(String storerCode,String itemCode,String ITEM_BAR_CODE,String ERP_PO_NO){
+		if(itemCode.trim().equals("")) return false;
 		String sql = "select * from bas_item where STORER_CODE='"+storerCode+"' and ITEM_CODE='"+itemCode+"' ";
 		DataManager dm = DBOperator.DoSelect2DM(sql);
 		if(dm.getCurrentCount()==0){
 			if(!ITEM_BAR_CODE.trim().equals("")){//如果实际条码不为空，需要更新系统条码
+//				sql = "insert into bas_item(storer_code,port_code,item_code,item_bar_code,item_name,brand_code,item_spec,"
+//						+ "unit_code,country_code,DESCRIPTION,RETAIL_PRICE,WEIGHT,TAX_NUMBER,USER_DEF10,CREATED_BY_USER,CREATED_DTM_LOC) "
+//						+"select '"+storerCode+"',a.PORT_ID,a.MATERIAL_CODE,'"+ITEM_BAR_CODE+"' GOODS_BAR_CODE,a.NAME_CN,"
+//						+ "a.BRAND_CODE,b.GOOD_SPEC,b.UNIT_CODE,a.ORIGIN,b.GOOD_SPEC,"
+//						+ "a.FINAL_PRICE,a.WEIGHT,a.TAX_NUMBER,'"+ERP_PO_NO+"','sys',now()  "
+//						+"from AOS.bas_goods_port a "
+//						+"inner join AOS.bas_goods b on a.GOOD_CODE=b.GOOD_CODE "
+//						+"where a.MATERIAL_CODE='"+itemCode+"' ";
 				sql = "insert into bas_item(storer_code,port_code,item_code,item_bar_code,item_name,brand_code,item_spec,"
 						+ "unit_code,country_code,DESCRIPTION,RETAIL_PRICE,WEIGHT,TAX_NUMBER,USER_DEF10,CREATED_BY_USER,CREATED_DTM_LOC) "
-						+"select '"+storerCode+"',a.PORT_ID,a.MATERIAL_CODE,'"+ITEM_BAR_CODE+"' GOODS_BAR_CODE,a.NAME_CN,"
-						+ "a.BRAND_CODE,b.GOOD_SPEC,b.UNIT_CODE,a.ORIGIN,b.GOOD_SPEC,"
-						+ "a.FINAL_PRICE,a.WEIGHT,a.TAX_NUMBER,'"+ERP_PO_NO+"','sys',now()  "
-						+"from AOS.bas_goods_port a "
-						+"inner join AOS.bas_goods b on a.GOOD_CODE=b.GOOD_CODE "
-						+"where a.MATERIAL_CODE='"+itemCode+"' ";
+						+"select '"+storerCode+"',a.`口岸`,a.`海关料号`,'"+ITEM_BAR_CODE+"' GOODS_BAR_CODE,a.`商品名称`,"
+						+ "a.`品牌（中+英）`,a.`规格`,a.`售卖单位`,a.`生产国（地区）`,a.`成分说明`,"
+						+ "a.`销售价格`,a.`*净重(单位:克)`,a.`行邮税号`,'"+ERP_PO_NO+"','sys',now()  "
+						+"from bas_sku a "
+						+"where a.`海关料号`='"+itemCode+"' ";
 			}else{
+//				sql = "insert into bas_item(storer_code,port_code,item_code,item_bar_code,item_name,brand_code,item_spec,"
+//						+ "unit_code,country_code,DESCRIPTION,RETAIL_PRICE,WEIGHT,TAX_NUMBER,USER_DEF10,CREATED_BY_USER,CREATED_DTM_LOC) "
+//						+"select '"+storerCode+"',a.PORT_ID,a.MATERIAL_CODE,a.GOODS_BAR_CODE,a.NAME_CN,a.BRAND_CODE,"
+//						+ "b.GOOD_SPEC,b.UNIT_CODE,a.ORIGIN,b.GOOD_SPEC,"
+//						+ "a.FINAL_PRICE,a.WEIGHT,a.TAX_NUMBER,'"+ERP_PO_NO+"','sys',now()  "
+//						+"from AOS.bas_goods_port a "
+//						+"inner join AOS.bas_goods b on a.GOOD_CODE=b.GOOD_CODE "
+//						+"where a.MATERIAL_CODE='"+itemCode+"' ";
 				sql = "insert into bas_item(storer_code,port_code,item_code,item_bar_code,item_name,brand_code,item_spec,"
 						+ "unit_code,country_code,DESCRIPTION,RETAIL_PRICE,WEIGHT,TAX_NUMBER,USER_DEF10,CREATED_BY_USER,CREATED_DTM_LOC) "
-						+"select '"+storerCode+"',a.PORT_ID,a.MATERIAL_CODE,a.GOODS_BAR_CODE,a.NAME_CN,a.BRAND_CODE,"
-						+ "b.GOOD_SPEC,b.UNIT_CODE,a.ORIGIN,b.GOOD_SPEC,"
-						+ "a.FINAL_PRICE,a.WEIGHT,a.TAX_NUMBER,'"+ERP_PO_NO+"','sys',now()  "
-						+"from AOS.bas_goods_port a "
-						+"inner join AOS.bas_goods b on a.GOOD_CODE=b.GOOD_CODE "
-						+"where a.MATERIAL_CODE='"+itemCode+"' ";
+						+"select '"+storerCode+"',a.`口岸`,a.`海关料号`,a.`商品条形码`,a.`商品名称`,a.`品牌（中+英）`,"
+						+ "a.`规格`,a.`售卖单位`,a.`生产国（地区）`,a.`成分说明`,"
+						+ "a.`销售价格`,a.`*净重(单位:克)`,a.`行邮税号`,'"+ERP_PO_NO+"','sys',now()  "
+						+"from bas_sku a "
+						+"where a.`海关料号`='"+itemCode+"' ";
 			}
 			
 			int t = DBOperator.DoUpdate(sql);
@@ -766,6 +814,125 @@ public class poImportFrm extends InnerFrame {
 			}
 		}
 		return false;
+	}
+	
+	//根据PO,系统直接增加库存， 此功能用在嘉定仓库
+	public static boolean generateInventoryByPO(String polist){
+		String po_no = "";
+		String warehouseCode ="";
+		String storerCode = "";
+		String itemCode = "";
+		String lotNo = "";
+		String inventoryID = "";
+		String lottable01 = "";
+		String lottable02 = "";
+		String lottable03 = "";
+		String lottable04 = "";
+		String lottable05 = "";
+		String lottable06 = "";
+		String lottable07 = "";
+		String lottable08 = "";
+		String lottable09 = "";
+		String lottable10 = "";
+		String locationCode = "";
+		String containCode = "";
+		String TOTAL_QTY = "";
+		String UOM = "";
+		String receivedQty = "";
+		String receivedUOM = "";
+		String DAMAGE_QTY = "";
+		String DAMAGE_UOM = "";
+		String SCRAP_QTY = "";
+		String SCRAP_UOM = "";
+		String normalLocationCode = "";
+		
+		if(polist.trim().equals("")){
+			return false;
+		}
+		
+		String sql = "select LOCATION_CODE from bas_location where LOCATION_TYPE_CODE='Normal' and WAREHOUSE_CODE='SHJD' "
+				+ "order by LOCATION_CODE limit 1";
+		DataManager dmloc = DBOperator.DoSelect2DM(sql);
+		normalLocationCode = dmloc.getString("LOCATION_CODE", 0);
+
+		sql = "select PO_NO,WAREHOUSE_CODE,STORER_CODE,ITEM_CODE,'*' CONTAINER_CODE,"
+			+"(select LOCATION_CODE from bas_location where WAREHOUSE_CODE='SHJD' and LOCATION_TYPE_CODE='Damage' limit 1) LOCATION_CODE,"
+			+"LOTTABLE01,LOTTABLE02,LOTTABLE03,LOTTABLE04,LOTTABLE05,LOTTABLE06,LOTTABLE07,LOTTABLE08,LOTTABLE09,LOTTABLE10,"
+			+"TOTAL_QTY,UOM,DAMAGE_QTY,DAMAGE_UOM,SCRAP_QTY,SCRAP_UOM "
+			+"from inb_po_detail where PO_NO in ("+polist+") and WAREHOUSE_CODE='SHJD' ";
+		DataManager dmPO = DBOperator.DoSelect2DM(sql);
+		for(int i=0;i<dmPO.getCurrentCount();i++){
+			po_no = dmPO.getString("PO_NO", i);
+			warehouseCode = dmPO.getString("WAREHOUSE_CODE", i);
+			storerCode = dmPO.getString("STORER_CODE", i);
+			itemCode = dmPO.getString("ITEM_CODE", i);
+			locationCode = dmPO.getString("LOCATION_CODE", i);
+			containCode = dmPO.getString("CONTAINER_CODE", i);
+			TOTAL_QTY = dmPO.getString("TOTAL_QTY", i);
+			UOM = dmPO.getString("UOM", i);
+			DAMAGE_QTY = dmPO.getString("DAMAGE_QTY", i);
+			DAMAGE_UOM = dmPO.getString("DAMAGE_UOM", i);
+			SCRAP_QTY = dmPO.getString("SCRAP_QTY", i);
+			SCRAP_UOM = dmPO.getString("SCRAP_UOM", i);
+			lottable01 = dmPO.getString("LOTTABLE01", i);
+			lottable02 = dmPO.getString("LOTTABLE02", i);
+			lottable03 = dmPO.getString("LOTTABLE03", i);
+			lottable04 = dmPO.getString("LOTTABLE04", i);
+			lottable05 = dmPO.getString("LOTTABLE05", i);
+			lottable06 = dmPO.getString("LOTTABLE06", i);
+			lottable07 = dmPO.getString("LOTTABLE07", i);
+			lottable08 = dmPO.getString("LOTTABLE08", i);
+			lottable09 = dmPO.getString("LOTTABLE09", i);
+			lottable10 = dmPO.getString("LOTTABLE10", i);
+			//先生成库存批次号
+			lotNo = comData.getInventoryLotNo(storerCode,itemCode,lottable01,lottable02,lottable03,lottable04,lottable05,lottable06,lottable07,lottable08,lottable09,lottable10);
+			if(!lotNo.equals("")){
+				//插入库存表  正常库存数量
+				if(Double.parseDouble(TOTAL_QTY)>0){
+					inventoryID = comData.getInventoryID(warehouseCode,storerCode,itemCode,lotNo,normalLocationCode,containCode,TOTAL_QTY,
+							MainFrm.getUserInfo().getString("USER_CODE", 0));
+					if(!inventoryID.equals("")){
+						//库存表写入成功
+					}else{
+						//库存表写入失败
+						LogInfo.appendLog("error","正常库存保存到库存表失败,PO:"+po_no+" ITEM_CODE:"+itemCode);
+						return false;
+					}
+				}
+				//插入库存表  残次
+				if(Double.parseDouble(DAMAGE_QTY)>0){
+					inventoryID = comData.getInventoryID(warehouseCode,storerCode,itemCode,lotNo,locationCode,containCode,DAMAGE_QTY,
+							MainFrm.getUserInfo().getString("USER_CODE", 0));
+					if(!inventoryID.equals("")){
+						//库存表写入成功
+					}else{
+						//库存表写入失败
+						LogInfo.appendLog("error","残次库存保存到库存表失败,PO:"+po_no+" ITEM_CODE:"+itemCode);
+						return false;
+					}
+				}
+				//插入库存表  报废
+				if(Double.parseDouble(SCRAP_QTY)>0){
+					inventoryID = comData.getInventoryID(warehouseCode,storerCode,itemCode,lotNo,locationCode,containCode,
+							SCRAP_QTY,MainFrm.getUserInfo().getString("USER_CODE", 0));
+					if(!inventoryID.equals("")){
+						//库存表写入成功
+					}else{
+						//库存表写入失败
+						LogInfo.appendLog("error","报废库存保存到库存表失败,PO:"+po_no+" ITEM_CODE:"+itemCode);
+						return false;
+					}
+				}
+				//库存全部增加成功，更新PO明细的已收货数量
+				sql = "update inb_po_detail set RECEIVED_QTY=TOTAL_QTY+DAMAGE_QTY+SCRAP_QTY "
+					+ "where PO_NO='"+po_no+"' and ITEM_CODE='"+itemCode+"' and TOTAL_QTY="+TOTAL_QTY+" "
+					+ "and DAMAGE_QTY="+DAMAGE_QTY+" and SCRAP_QTY="+SCRAP_QTY;
+				int t = DBOperator.DoUpdate(sql);
+				
+			}
+		}
+		
+		return true;
 	}
 
 	private void setExtendedState(int maximizedBoth) {

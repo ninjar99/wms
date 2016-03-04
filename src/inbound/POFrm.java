@@ -1089,6 +1089,13 @@ public class POFrm extends InnerFrame {
 	        	txt_vendor_code.setText(object2String(dm.getString("VENDOR_CODE", 0)));
 	        	txt_vendor_name.setText(object2String(dm.getString("VENDOR_NAME", 0)));
 	        	txt_status.setText(object2String(dm.getString("status", 0)));
+	        	if(txt_status.getText().equals("关闭")){
+	        		txt_status.setForeground(Color.red);
+	        	}else if(txt_status.getText().equals("收货中")){
+	        		txt_status.setForeground(Color.blue);
+	        	}else{
+	        		txt_status.setForeground(Color.black);
+	        	}
 	        	txt_remark.setText(object2String(dm.getString("remark", 0)));
 	        	txt_user.setText(object2String(dm.getString("USER_NAME", 0)));
 	        	txt_create_datetime.setText(object2String(dm.getString("CREATED_DTM_LOC", 0)));
@@ -1103,8 +1110,9 @@ public class POFrm extends InnerFrame {
 //        dtm.getDataVector().removeAllElements();
 //        dtm.setRowCount(0);
 //		String sql = "select iph.WAREHOUSE_CODE,bw.WAREHOUSE_NAME,iph.PO_NO,iph.ERP_PO_NO,iph.STORER_CODE,bs.STORER_NAME,iph.VENDOR_CODE,bv.VENDOR_NAME,iph.CREATED_DTM_LOC,iph.CREATED_BY_USER "
-				String sql = "select iph.PO_NO PO号"
-				+ " from inb_po_header iph  " + " inner join bas_warehouse bw on iph.WAREHOUSE_CODE=bw.WAREHOUSE_CODE"
+				String sql = "select iph.PO_NO PO号,case iph.status when '100' then '新建' when '300' then '收货中' when '900' then '关闭' else iph.status end PO状态 "
+				+ " from inb_po_header iph  " 
+				+ " inner join bas_warehouse bw on iph.WAREHOUSE_CODE=bw.WAREHOUSE_CODE"
 				+ " inner join bas_storer bs on iph.STORER_CODE=bs.STORER_CODE"
 				+ " inner join bas_vendor bv on bv.VENDOR_CODE=iph.VENDOR_CODE" + " where 1=1 " 
 				+ "and iph.warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' ";
@@ -1126,7 +1134,35 @@ public class POFrm extends InnerFrame {
 		if(headerTable.getRowCount()>0){
 			headerTable.setRowSelectionInterval(0, 0);//默认选中第一行
 		}
+		tableHeaderRowColorSetup(headerTable);
 		headerTableClick();
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private void tableHeaderRowColorSetup(PBSUIBaseGrid tab){
+		Vector cellColor = new Vector();
+		for(int i=0;i<tab.getRowCount();i++){
+			Vector rowColor = new Vector();
+			String status = (String) tab.getValueAt(i, tab.getColumnModel().getColumnIndex("PO状态"));
+			if(status.equals("收货中")){
+				Object[] rc1Cell = new Object[3];
+		        rc1Cell[0] = new Integer(i);
+		        rc1Cell[1] = new Integer(tab.getColumnModel().getColumnIndex("PO号"));
+		        rc1Cell[2] = Color.blue;
+		        cellColor.addElement(rc1Cell);
+		        rowColor.addElement(new Integer(i));
+		        //tab.setRowColor(rowColor, Color.lightGray);
+			}else if(status.equals("关闭")){
+				Object[] rc1Cell = new Object[3];
+		        rc1Cell[0] = new Integer(i);
+		        rc1Cell[1] = new Integer(tab.getColumnModel().getColumnIndex("PO号"));
+		        rc1Cell[2] = Color.red;
+		        cellColor.addElement(rc1Cell);
+		        rowColor.addElement(new Integer(i));
+		        //tab.setRowColor(rowColor, Color.lightGray);
+			}
+		}
+		tab.setCellColor(cellColor);
 	}
 	
 	private void getDetailTableData(String strWhere){

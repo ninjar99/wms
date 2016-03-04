@@ -27,7 +27,7 @@ public class DBConnectionManager {
 	
 	public static void bindPortSSH() {
 		String user = "root";//SSH连接用户名
-		String password = "540hs0qos";//SSH连接密码
+		String password = "540hs0qosbmn";//SSH连接密码
 		String host = "123.59.82.190";//SSH服务器
 		int port = 22;//SSH访问端口
 		try {
