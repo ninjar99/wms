@@ -938,7 +938,7 @@ public class POFrm extends InnerFrame {
 				if (detailTable.getValueAt(selectRow, column) != null
 						&& !detailTable.getValueAt(selectRow, column).equals("")) {
 					String item_bar_code = detailTable.getValueAt(selectRow, column).toString();
-					Vector data = DBOperator.DoSelect("select bi.item_code,bi.item_name,biu.unit_name from bas_item bi inner join bas_item_unit biu on bi.unit_code=biu.unit_code where bi.item_bar_code='"+item_bar_code+"' and bi.storer_code='"+storer_code+"'");
+					Vector data = DBOperator.DoSelect("select bi.item_code,bi.item_name,biu.unit_name from bas_item bi left join bas_item_unit biu on bi.unit_code=biu.unit_code where bi.item_bar_code='"+item_bar_code+"' and bi.storer_code='"+storer_code+"'");
 					if(data.size()>0){
 						Object[] item_name = (Object[]) data.get(0);
 						detailTable.setValueAt(item_name[0].toString(), selectRow, 2);

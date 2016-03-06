@@ -315,7 +315,7 @@ public class StockTakeQueryFrm extends InnerFrame {
 				+"inner join bas_storer bs on isd.STORER_CODE=bs.STORER_CODE "
 				+"inner join bas_warehouse bw on isd.WAREHOUSE_CODE=bw.WAREHOUSE_CODE "
 				+"inner join bas_item bi on isd.STORER_CODE=bi.STORER_CODE and isd.ITEM_CODE=bi.ITEM_CODE "
-				+"inner join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
+				+"left join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
 				+"where ish.STOCKTAKE_NO='"+stockTakeNo+"'";
 		sql = sql+" order by ish.STOCKTAKE_NO,isd.STORER_CODE,isd.WAREHOUSE_CODE ";
 		DataManager dm = DBOperator.DoSelect2DM(sql);

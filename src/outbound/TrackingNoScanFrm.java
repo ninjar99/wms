@@ -410,7 +410,7 @@ public class TrackingNoScanFrm extends InnerFrame {
 						+" from oub_pick_detail opd "
 						+"inner join oub_shipment_header osh on osh.SHIPMENT_NO=opd.SHIPMENT_NO and osh.STORER_CODE=opd.STORER_CODE "
 						+"inner join bas_item bi on opd.ITEM_CODE=bi.ITEM_CODE and opd.STORER_CODE=bi.STORER_CODE "
-						+"inner join bas_item_unit biu on bi.unit_code=biu.unit_code "
+						+"left join bas_item_unit biu on bi.unit_code=biu.unit_code "
 						+"where 1=1 and opd.PICKED_QTY>0 and opd.`STATUS`<>'999' "
 						+" ";
 				StringBuffer sb = new StringBuffer();
@@ -570,7 +570,7 @@ public class TrackingNoScanFrm extends InnerFrame {
 								String storerName = (String) detailTable.getValueAt(detailTable.getSelectedRow(), detailTable.getColumnModel().getColumnIndex("货主"));
 								String sql = "select item.STORER_CODE 货主编码,bs.STORER_NAME 货主名称,item.ITEM_CODE 货品编码,item.ITEM_NAME 货品名称,item.ITEM_BAR_CODE 货品条码,biu.unit_name 单位  "
 										+ "from bas_item item " + "inner join bas_storer bs on item.STORER_CODE=bs.STORER_CODE "
-										+ "inner join bas_item_unit biu on biu.unit_code=item.UNIT_CODE " 
+										+ "left join bas_item_unit biu on biu.unit_code=item.UNIT_CODE " 
 										+ "where bs.STORER_NAME ='"+storerName+"' ";
 								tableQueryDialog tableQuery = new tableQueryDialog(sql, false);
 								Toolkit toolkit = Toolkit.getDefaultToolkit();

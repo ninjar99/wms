@@ -48,6 +48,7 @@ import javax.swing.ListSelectionModel;
 import javax.swing.JComboBox;
 import javax.swing.BoxLayout;
 import java.awt.GridLayout;
+import java.awt.Color;
 
 public class BasItemMaterialFrm extends InnerFrame{
 	/**
@@ -83,6 +84,8 @@ public class BasItemMaterialFrm extends InnerFrame{
 	private JLabel lblNewLabel_1;
 	private JTNumEdit txt_match_qty;
 	int lastStatus;
+	
+	private String retWhere = "";
 	
 	public BasItemMaterialFrm() {
 		BasicInternalFrameUI ui = (BasicInternalFrameUI)this.getUI(); //去除标题栏
@@ -153,6 +156,15 @@ public class BasItemMaterialFrm extends InnerFrame{
 		});
 		topPanel.add(btnClose);
 		
+		btnRefresh = new JButton("\u5237\u65B0");
+		btnRefresh.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				initTableData(retWhere);
+			}
+		});
+		btnRefresh.setForeground(Color.RED);
+		topPanel.add(btnRefresh);
+		
 		centerPanel = new JPanel();
 		contentPane.add(centerPanel, BorderLayout.CENTER);
 		centerPanel.setLayout(new BorderLayout(0, 0));
@@ -209,7 +221,7 @@ public class BasItemMaterialFrm extends InnerFrame{
 			public void actionPerformed(ActionEvent e) {
 				String sql = "select item.STORER_CODE 货主编码,bs.STORER_NAME 货主名称,item.ITEM_CODE 货品编码,item.ITEM_NAME 货品名称,item.ITEM_BAR_CODE 货品条码,biu.unit_name 单位  "
 						+ "from bas_item item " + "inner join bas_storer bs on item.STORER_CODE=bs.STORER_CODE "
-						+ "inner join bas_item_unit biu on biu.unit_code=item.UNIT_CODE " + "where 1=1 ";
+						+ "left join bas_item_unit biu on biu.unit_code=item.UNIT_CODE " + "where 1=1 ";
 				String storerCode = cb_storer.getSelectedOID().toString();
 				if (!storerCode.equals("")) {
 					sql = sql + " and item.STORER_CODE='" + storerCode + "' ";
@@ -261,7 +273,7 @@ public class BasItemMaterialFrm extends InnerFrame{
 			public void actionPerformed(ActionEvent e) {
 				String sql = "select item.STORER_CODE 货主编码,bs.STORER_NAME 货主名称,item.ITEM_CODE 货品编码,item.ITEM_NAME 货品名称,item.ITEM_BAR_CODE 货品条码,biu.unit_name 单位  "
 						+ "from bas_item item " + "inner join bas_storer bs on item.STORER_CODE=bs.STORER_CODE "
-						+ "inner join bas_item_unit biu on biu.unit_code=item.UNIT_CODE " + "where 1=1 "
+						+ "left join bas_item_unit biu on biu.unit_code=item.UNIT_CODE " + "where 1=1 "
 						+"and item.STORER_CODE='0001' ";
 				tableQueryDialog tableQuery = new tableQueryDialog(sql, false);
 				Toolkit toolkit = Toolkit.getDefaultToolkit();
@@ -476,13 +488,11 @@ public class BasItemMaterialFrm extends InnerFrame{
 			int y = (int)(toolkit.getScreenSize().getHeight()-query.getHeight())/2;
 			query.setLocation(x, y);
 			query.setVisible(true);
-			String retWhere = QueryDialog.queryValueResult;
+			retWhere = QueryDialog.queryValueResult;
 			if(retWhere.length()>0){
 				retWhere = " and "+retWhere;
 			}
 			initTableData(retWhere);
-			
-			
 		}
 	};
 	ActionListener addListener = new ActionListener() {
@@ -496,6 +506,7 @@ public class BasItemMaterialFrm extends InnerFrame{
 			table_itemMaterial.removeMouseListener(mouseAdapter);
 		}
 	};
+	private JButton btnRefresh;
 	
 	private boolean saveData(String storer_code,String item_code,String item_material_code,String match_qty,String user_code) {
 		String validateSql = "select bim.STORER_CODE from bas_item_material bim " + "where bim.STORER_CODE='"

@@ -525,7 +525,7 @@ public class inbScanFrm extends InnerFrame {
 				+"from inb_po_header iph "
 				+"inner join inb_po_detail ipd on iph.PO_NO=ipd.PO_NO and iph.INB_PO_HEADER_ID=ipd.INB_PO_HEADER_ID "
 				+"inner join bas_item bi on ipd.ITEM_CODE=bi.ITEM_CODE "
-				+"inner join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
+				+"left join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
 				+"where ipd.PO_NO='"+poNo+"' and bi.ITEM_BAR_CODE='"+itemBarCode+"' "
 				+" and ifnull(ipd.TOTAL_QTY,0)-ifnull(ipd.RECEIVED_QTY,0)>0 "
 				+"order by ifnull(ipd.TOTAL_QTY,0)-ifnull(ipd.RECEIVED_QTY,0) "
@@ -554,7 +554,7 @@ public class inbScanFrm extends InnerFrame {
 						+"from inb_po_header iph "
 						+"inner join inb_po_detail ipd on iph.PO_NO=ipd.PO_NO and iph.INB_PO_HEADER_ID=ipd.INB_PO_HEADER_ID "
 						+"inner join bas_item bi on ipd.ITEM_CODE=bi.ITEM_CODE "
-						+"inner join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
+						+"left join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
 						+"where ipd.PO_NO='"+poNo+"' and bi.ITEM_BAR_CODE='"+itemBarCode+"' "
 						+" and ifnull(ipd.TOTAL_QTY,0)-ifnull(ipd.RECEIVED_QTY,0)>0 "
 						+"order by ifnull(ipd.TOTAL_QTY,0)-ifnull(ipd.RECEIVED_QTY,0) "
@@ -647,7 +647,7 @@ public class inbScanFrm extends InnerFrame {
 				+",DATE_FORMAT(ird.CREATED_DTM_LOC,'%Y-%c-%d %h:%i:%s') CREATED_DTM_LOC,ird.CREATED_BY_USER "
 				+" from inb_receipt_detail ird "
 				+"inner join bas_item bi on ird.storer_code=bi.storer_code and ird.ITEM_CODE=bi.ITEM_CODE "
-				+"inner join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
+				+"left join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
 				+" where 1=1 ";
 		if(!strWhere.equals("")){
 			sql = sql + strWhere;

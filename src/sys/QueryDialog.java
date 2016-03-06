@@ -168,7 +168,7 @@ public class QueryDialog extends JDialog {
 					btnNewButton = new JButton("\u6DFB\u52A0");
 					btnNewButton.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent e) {
-							if(query_list.getText().length()>0){
+							if(query_list.getText().length()>0 && cb_query_condition.getSelectedItem().toString().equals("")){
 								cb_query_condition.setSelectedIndex(2);
 //								if(cb_query_condition.getSelectedItem().toString().equals("")){
 //									JOptionPane.showMessageDialog(null, "请选择连接条件");

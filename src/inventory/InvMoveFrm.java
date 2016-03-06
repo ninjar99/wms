@@ -1071,7 +1071,7 @@ public class InvMoveFrm extends InnerFrame {
 				+"from inv_inventory ii "
 				+"inner join bas_location bl on ii.LOCATION_CODE=bl.LOCATION_CODE and ii.WAREHOUSE_CODE=bl.WAREHOUSE_CODE "
 				+"inner join bas_item bi on ii.ITEM_CODE=bi.ITEM_CODE and ii.STORER_CODE=bi.STORER_CODE "
-				+"inner join bas_item_unit biu on bi.UNIT_CODE = biu.unit_code "
+				+"left join bas_item_unit biu on bi.UNIT_CODE = biu.unit_code "
 				+"inner join inv_lot il on ii.LOT_NO=il.LOT_NO "
 				+"inner join bas_storer bs on ii.STORER_CODE=bs.STORER_CODE "
 				+"inner join bas_warehouse bw on ii.WAREHOUSE_CODE=bw.WAREHOUSE_CODE "

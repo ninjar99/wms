@@ -392,7 +392,7 @@ public class InvQueryFrm extends InnerFrame {
 	}
 	
 	private void getInvTableData(String retWhere){
-		String sql = "select ii.WAREHOUSE_CODE 仓库编码,bw.WAREHOUSE_NAME 仓库名称,ii.STORER_CODE 货主编码,bs.STORER_NAME 货主名称,ii.LOCATION_CODE 库位编码,"
+		String sql = "select @rowno:=@rowno+1 as 序号,ii.WAREHOUSE_CODE 仓库编码,bw.WAREHOUSE_NAME 仓库名称,ii.STORER_CODE 货主编码,bs.STORER_NAME 货主名称,ii.LOCATION_CODE 库位编码,"
 				+ "case bl.LOCATION_TYPE_CODE when 'Normal' then '正常库位' when 'Dock' then '暂存库位' when 'Damage' then '残次库位' else bl.LOCATION_TYPE_CODE end 库位属性,ii.CONTAINER_CODE 箱号,"
 				+"ii.ITEM_CODE 商品编码,bi.ITEM_BAR_CODE 商品条码,bi.ITEM_NAME 商品名称,bi.ITEM_SPEC 商品规格,ii.ON_HAND_QTY 库存总数,ii.ALLOCATED_QTY 已分配数量,ii.PICKED_QTY 已拣货数量,"
 				+"ii.INACTIVE_QTY 冻结数量,biu.unit_name 单位,ii.lot_no 批次号"
@@ -406,6 +406,7 @@ public class InvQueryFrm extends InnerFrame {
 				+"inner join inv_lot il on ii.LOT_NO=il.LOT_NO "
 				+"inner join bas_storer bs on ii.STORER_CODE=bs.STORER_CODE "
 				+"inner join bas_warehouse bw on ii.WAREHOUSE_CODE=bw.WAREHOUSE_CODE "
+				+"inner join (Select (@rowno :=0) ) rowno "
 				+"where 1=1 and ii.warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' "
 				+"and ii.ON_HAND_QTY+(ii.IN_TRANSIT_QTY)-(ii.ALLOCATED_QTY)-(PICKED_QTY)>0 ";
 		if(!retWhere.equals("")){

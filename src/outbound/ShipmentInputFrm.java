@@ -618,7 +618,7 @@ public class ShipmentInputFrm extends InnerFrame {
 								}
 								String sql = "select item.STORER_CODE 货主编码,bs.STORER_NAME 货主名称,item.ITEM_CODE 货品编码,item.ITEM_NAME 货品名称,item.ITEM_BAR_CODE 货品条码,biu.unit_name 单位  "
 										+ "from bas_item item " + "inner join bas_storer bs on item.STORER_CODE=bs.STORER_CODE "
-										+ "inner join bas_item_unit biu on biu.unit_code=item.UNIT_CODE " 
+										+ "left join bas_item_unit biu on biu.unit_code=item.UNIT_CODE " 
 										+ "where bs.STORER_CODE ='"+STORER_CODE+"' ";
 								tableQueryDialog tableQuery = new tableQueryDialog(sql, false);
 								Toolkit toolkit = Toolkit.getDefaultToolkit();
@@ -1158,7 +1158,7 @@ public class ShipmentInputFrm extends InnerFrame {
 				if (detailTable.getValueAt(selectRow, column) != null
 						&& !detailTable.getValueAt(selectRow, column).equals("")) {
 					String item_bar_code = detailTable.getValueAt(selectRow, column).toString();
-					Vector data = DBOperator.DoSelect("select bi.item_code,bi.item_name,biu.unit_name from bas_item bi inner join bas_item_unit biu on bi.unit_code=biu.unit_code where bi.item_bar_code='"+item_bar_code+"' and bi.storer_code='"+storer_code+"'");
+					Vector data = DBOperator.DoSelect("select bi.item_code,bi.item_name,biu.unit_name from bas_item bi left join bas_item_unit biu on bi.unit_code=biu.unit_code where bi.item_bar_code='"+item_bar_code+"' and bi.storer_code='"+storer_code+"'");
 					if(data.size()>0){
 						Object[] item_name = (Object[]) data.get(0);
 						detailTable.setValueAt(item_name[0].toString(), selectRow, detailTable.getColumnModel().getColumnIndex("商品编码"));

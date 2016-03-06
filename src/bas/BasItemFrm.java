@@ -102,6 +102,8 @@ public class BasItemFrm extends InnerFrame{
 	private JLabel lblcm;
 	private JTNumEdit txt_height;
 	
+	private String retWhere = "";
+	
 	BasItemFrm(){
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 777, 459);
@@ -158,6 +160,15 @@ public class BasItemFrm extends InnerFrame{
 			}
 		});
 		topPanel.add(btnExcel);
+		
+		btnRefresh = new JButton("\u5237\u65B0");
+		btnRefresh.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				initTableData(retWhere);
+			}
+		});
+		btnRefresh.setForeground(Color.RED);
+		topPanel.add(btnRefresh);
 		
 		centerPanel = new JPanel();
 		contentPane.add(centerPanel, BorderLayout.CENTER);
@@ -568,13 +579,11 @@ public class BasItemFrm extends InnerFrame{
 			int y = (int)(toolkit.getScreenSize().getHeight()-query.getHeight())/2;
 			query.setLocation(x, y);
 			query.setVisible(true);
-			String retWhere = QueryDialog.queryValueResult;
+			retWhere = QueryDialog.queryValueResult;
 			if(retWhere.length()>0){
 				retWhere = " and "+retWhere;
 			}
-			initTableData(retWhere);
-			
-			
+			initTableData(retWhere);		
 		}
 	};
 	ActionListener cancelListener = new ActionListener() {
@@ -621,6 +630,7 @@ public class BasItemFrm extends InnerFrame{
 		};
 	private JLabel label_1;
 	private JTextField txt_inv;
+	private JButton btnRefresh;
 		
 	private void initTableData(String strWhere){
 		new SwingWorker<String, Void>() {
@@ -656,7 +666,7 @@ public class BasItemFrm extends InnerFrame{
 	             		   +"ON (`bas_item`.`STORER_CODE` = `bas_storer`.`STORER_CODE`)"
 	             		   +"LEFT JOIN .`bas_brand` "
 	             		   +"ON (`bas_item`.`BRAND_CODE` = `bas_brand`.`BRAND_CODE`)"
-	             		   +"INNER JOIN .`bas_port` "
+	             		   +"LEFT JOIN .`bas_port` "
 	             		   +"ON (`bas_item`.`PORT_CODE` = `bas_port`.`port_code`)"
 	             		   +"LEFT JOIN .`bas_item_unit` "
 	             		   +"ON (`bas_item`.`UNIT_CODE` = `bas_item_unit`.`unit_code`)"

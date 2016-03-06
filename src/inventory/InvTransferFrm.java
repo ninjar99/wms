@@ -19,6 +19,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 
 import DBUtil.DBOperator;
+import DBUtil.LogInfo;
 import comUtil.WMSCombobox;
 import comUtil.comData;
 import dmdata.DataManager;
@@ -672,7 +673,7 @@ public class InvTransferFrm extends InnerFrame {
 								+",il.LOTTABLE06 批次属性6,il.LOTTABLE07 批次属性7,il.LOTTABLE08 批次属性8,il.LOTTABLE09 批次属性9,il.LOTTABLE10 批次属性10 "
 								+"from inv_inventory ii "
 								+"inner join bas_item bi on ii.STORER_CODE=bi.STORER_CODE and ii.ITEM_CODE=bi.ITEM_CODE "
-								+"inner join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
+								+"left join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
 								+"inner join inv_lot il on ii.LOT_NO=il.LOT_NO "
 								+"where ii.warehouse_code='"+warrehouseCode+"' and ii.storer_code='"+storerCode+"' ";
 						tableQueryDialog tableQuery = new tableQueryDialog(sql,false);
@@ -829,7 +830,7 @@ public class InvTransferFrm extends InnerFrame {
 //				+ "inner join bas_storer bs on ii.STORER_CODE=bs.STORER_CODE "
 //				+ "inner join bas_warehouse bw on ii.WAREHOUSE_CODE=bw.WAREHOUSE_CODE "
 //				+ "inner join bas_item bi on ii.STORER_CODE=bi.STORER_CODE and ii.ITEM_CODE=bi.ITEM_CODE "
-//				+ "inner join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code " + "where 1=1 ";
+//				+ "left join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code " + "where 1=1 ";
 		String sql = "select case itd.STATUS when '100' then '新建' when '900' then '完成' else itd.STATUS end 状态,"
 				+ "bs.STORER_NAME 货主,bw.WAREHOUSE_NAME 仓库,bi.ITEM_BAR_CODE 商品条码,bi.ITEM_CODE 商品编码,bi.ITEM_NAME 商品名称, "
         		+"itd.FROM_QTY 原库存数量,itd.FROM_UOM 单位,itd.FROM_LOCATION_CODE 原库位,"
@@ -964,6 +965,7 @@ public class InvTransferFrm extends InnerFrame {
 		headerTable.setColumnEditableAll(false);
 		JTableUtil.fitTableColumnsDoubleWidth(headerTable);
 		headerTable.setSortEnable();
+		detailTable.removeRowAll();
 		//表头隐藏其他列
 		for(int i=0;i<headerTable.getColumnCount();i++){
 			if(i==headerTable.getColumnModel().getColumnIndex("单号")) continue;
@@ -1004,8 +1006,8 @@ public class InvTransferFrm extends InnerFrame {
 	        	cb_from_storer.setSelectedDisplayName(dm.getString("STORER_CODE", 0));
 	        	cb_to_storer.setSelectedDisplayName(dm.getString("TO_STORER_CODE", 0));
 	        	txt_remark.setText(dm.getString("REMARK", 0));
-	        	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss E");
-	        	txt_create_date.setText(sdf.format(dm.getDate("CREATED_DTM_LOC", 0)));
+	        	SimpleDateFormat sdf = new SimpleDateFormat("YYYY-mm-dd HH:mm:ss E");
+	        	txt_create_date.setText(dm.getString("CREATED_DTM_LOC", 0));
 	        	txt_create_date.setForeground(Color.BLUE);
 	        	txt_create_user.setText(dm.getString("USER_NAME", 0));
 	        	txt_create_user.setForeground(Color.BLUE);
@@ -1286,6 +1288,7 @@ public class InvTransferFrm extends InnerFrame {
 				int updateCount = DBOperator.DoUpdate(sql);
 				if(updateCount==0){
 					Message.showErrorMessage("商品信息移入到目标货主失败！\n"+"目标货主："+to_storerCode+"\n商品编码："+itemCode);
+					LogInfo.appendLog("error","商品信息移入到目标货主失败！\n"+"目标货主："+to_storerCode+"\n商品编码："+itemCode);
 					return false;
 				}
 			}
@@ -1293,10 +1296,12 @@ public class InvTransferFrm extends InnerFrame {
 			dm = DBOperator.DoSelect2DM(sql);
 			if(dm==null || dm.getCurrentCount()==0){
 				Message.showErrorMessage("原库存信息不存在！\n"+"货主："+storerName+"\n商品编码："+itemCode);
+				LogInfo.appendLog("error","原库存信息不存在！\n"+"货主："+storerName+"\n商品编码："+itemCode);
 				return false;
 			}else{
 				if(Math_SAM.str2Double(REQ_QTY)>Math_SAM.str2Double(dm.getString("availabledQty", 0))){
 					Message.showErrorMessage("原库存数量小于变更单需求数量！\n"+"货主："+storerName+"\n商品编码："+itemCode);
+					LogInfo.appendLog("error","原库存数量小于变更单需求数量！\n"+"货主："+storerName+"\n商品编码："+itemCode);
 					return false;
 				}
 			}
