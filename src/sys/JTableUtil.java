@@ -34,7 +34,8 @@ public class JTableUtil {
                 width = Math.max(width, preferedWidth);
             }
             header.setResizingColumn(column); // 此行很重要   
-            column.setWidth((int) ((width + table.getIntercellSpacing().width)*1.1));
+            int widthNum = (int) ((width + table.getIntercellSpacing().width)*1.1);
+            column.setWidth(widthNum>400?400:widthNum);
         }
     }
     

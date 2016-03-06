@@ -101,6 +101,11 @@ public class BasItemFrm extends InnerFrame{
 	private JTNumEdit txt_width;
 	private JLabel lblcm;
 	private JTNumEdit txt_height;
+	private JLabel label_1;
+	private JTextField txt_inv;
+	private JButton btnRefresh;
+	private JLabel label_2;
+	private JTNumEdit txt_safeQty;
 	
 	private String retWhere = "";
 	
@@ -332,6 +337,13 @@ public class BasItemFrm extends InnerFrame{
 		panel_5.add(txt_inv);
 		txt_inv.setColumns(10);
 		
+		label_2 = new JLabel("\u5B89\u5168\u5E93\u5B58\uFF1A");
+		panel_5.add(label_2);
+		
+		txt_safeQty = new JTNumEdit(10, "#,##0.00",true);
+		panel_5.add(txt_safeQty);
+		txt_safeQty.setColumns(10);
+		
 		JPanel panel_1 = new JPanel();
 		panel_3.add(panel_1);
 		FlowLayout fl_panel_1 = (FlowLayout) panel_1.getLayout();
@@ -354,10 +366,11 @@ public class BasItemFrm extends InnerFrame{
 		table_item.setSortEnable();
 		table_item.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		table_item.setColumnEditableAll(false);
+		table_item.setRowHeight(25);
 		scrollPane.setViewportView(table_item);
 
 		String[] RHColumnNames = { "序号", "货主", "品牌", "货品编码", "货品名称", "货品条码", "口岸", "税号", "海关编码", "申报要素", "最小计量单位",
-				"货品规格", "国家", "货品描述","货品类型","长度","宽度","高度","库存数量" };
+				"货品规格", "国家", "货品描述","货品类型","长度","宽度","高度","库存数量","安全库存" };
 		table_item.setColumn(RHColumnNames);
 		table_item.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		JTableUtil.fitTableColumns(table_item);
@@ -420,6 +433,7 @@ public class BasItemFrm extends InnerFrame{
 			String length = txt_length.getText();
 			String width = txt_width.getText();
 			String height = txt_height.getText();
+			String SAFE_QTY = txt_safeQty.getText();
 			if(comboBox_STORER_CODE.getSelectedItem().toString().trim().equals("")||
 					itemCode.equals("")||
 					itemName.equals("")||
@@ -441,12 +455,12 @@ public class BasItemFrm extends InnerFrame{
 				}else{
 					String sql = " insert into bas_item(STORER_CODE,BRAND_CODE,ITEM_CODE,ITEM_NAME,ITEM_BAR_CODE,"
 							+ " PORT_CODE,UNIT_CODE,ITEM_SPEC,COUNTRY_CODE,DESCRIPTION,CREATED_BY_USER,CREATED_DTM_LOC,"
-							+ "TAX_NUMBER,HSCODE,HSCODE_DESC,ITEM_CLASS_CODE,LENGTH,WIDTH,HEIGHT) "
+							+ "TAX_NUMBER,HSCODE,HSCODE_DESC,ITEM_CLASS_CODE,LENGTH,WIDTH,HEIGHT,SAFE_QTY) "
 							+ " value('"+store_code+"','"+brandCode+"','"
 							+ itemCode+"','"+itemName+"','"+barCode+"','"+portCode+"','"+unitCode+"','"
 							+ itemSpec+"','"+countryCode+"','"+description
 									+ "','"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now(),'"+TAX_NUMBER+"','"+HSCODE+"','"+HSCODE_DESC+"','"+ITEM_CLASS_CODE+"',"
-									+ ""+length+","+width+","+height+" )";
+									+ ""+length+","+width+","+height+","+SAFE_QTY+" )";
 //					System.out.println("sql = "+sql);
 					comData.sqlValidate(sql);
 					int t = DBOperator.DoUpdate(sql);
@@ -469,7 +483,7 @@ public class BasItemFrm extends InnerFrame{
 										",ITEM_CLASS_CODE='"+ITEM_CLASS_CODE+"'"
 										+ ",LENGTH="+length+""
 										+ ",WIDTH="+width+""
-										+ ",HEIGHT="+height+" "+
+										+ ",HEIGHT="+height+",SAFE_QTY="+SAFE_QTY+
 										" where STORER_CODE='"+store_code+"' and ITEM_CODE='"+itemCode+"'";
 //				System.out.println("sql_update  = "+sql_update);
 				int t = DBOperator.DoUpdate(sql_update);
@@ -626,11 +640,10 @@ public class BasItemFrm extends InnerFrame{
 				txt_width.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("宽度"))));
 				txt_height.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("高度"))));
 				txt_inv.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("库存数量"))));
+				txt_safeQty.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("安全库存"))));
 			}
 		};
-	private JLabel label_1;
-	private JTextField txt_inv;
-	private JButton btnRefresh;
+	
 		
 	private void initTableData(String strWhere){
 		new SwingWorker<String, Void>() {
@@ -659,7 +672,7 @@ public class BasItemFrm extends InnerFrame{
 	             		   +", `bas_country`.`country_name`"
 	             		   +", `bas_item`.`DESCRIPTION`"
 	             		   +", bcd.DISPLAY_VALUE_CN ITEM_CLASS_CODE "
-	             		   +",bas_item.LENGTH,bas_item.WIDTH,bas_item.HEIGHT,round(ifnull(inv.qty,0),2) qty "
+	             		   +",bas_item.LENGTH,bas_item.WIDTH,bas_item.HEIGHT,round(ifnull(inv.qty,0),2) qty,`bas_item`.SAFE_QTY "
 	             		   +" FROM"
 	             		   +".`bas_item`"
 	             		   +"INNER JOIN .`bas_storer` "
@@ -743,6 +756,7 @@ public class BasItemFrm extends InnerFrame{
 		txt_length.setEditable(b);
 		txt_width.setEditable(b);
 		txt_height.setEditable(b);
+		txt_safeQty.setEditable(b);
 	}
 	private void clearEditUI(){
 		textField_itemCode.setText("");
@@ -763,6 +777,7 @@ public class BasItemFrm extends InnerFrame{
 		txt_width.setText("0");
 		txt_height.setText("0");
 		txt_inv.setText("0");
+		txt_safeQty.setText("0");
 	}
 	public static BasItemFrm getInstance() {
 		if(instance == null) { 
