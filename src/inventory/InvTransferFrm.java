@@ -208,7 +208,8 @@ public class InvTransferFrm extends InnerFrame {
 				String[] addRowValues = new String[detailTable.getColumnCount()];
 				addRowValues[detailTable.getColumnModel().getColumnIndex("目标数量")]="0";
 				detailTable.addRow(addRowValues);
-				detailTable.setComponent(new JTNumEdit(15, "#####", true), detailTable.getColumnModel().getColumnIndex("目标数量"));
+				detailTable.setComponent(new JTNumEdit(15, "#####.##", true), detailTable.getColumnModel().getColumnIndex("目标数量"));
+				detailTable.setComponent(new JTNumEdit(15, "#####.##", true), detailTable.getColumnModel().getColumnIndex("目标零售价"));
 
 				detailTableEditSetup(true);
 				tableRowColorSetup(detailTable);
@@ -667,7 +668,8 @@ public class InvTransferFrm extends InnerFrame {
 						return;
 					}
 					if(column==detailTable.getColumnModel().getColumnIndex("商品条码")){
-						String sql = "select ii.INV_INVENTORY_ID 库存ID,bi.ITEM_BAR_CODE 商品条码,ii.ITEM_CODE 商品编码,bi.ITEM_NAME 商品名称,ii.ON_HAND_QTY+ii.IN_TRANSIT_QTY-(ii.ALLOCATED_QTY)-(ii.PICKED_QTY) 库存数量, "
+						String sql = "select ii.INV_INVENTORY_ID 库存ID,bi.ITEM_BAR_CODE 商品条码,ii.ITEM_CODE 商品编码,bi.ITEM_NAME 商品名称,"
+								+ "bi.RETAIL_PRICE 零售价,ii.ON_HAND_QTY+ii.IN_TRANSIT_QTY-(ii.ALLOCATED_QTY)-(ii.PICKED_QTY) 库存数量, "
 								+"biu.unit_name 单位,ii.LOCATION_CODE 库位,ii.CONTAINER_CODE 箱号,ii.LOT_NO 批次"
 								+",il.LOTTABLE01 批次属性1,il.LOTTABLE02 批次属性2,il.LOTTABLE03 批次属性3,il.LOTTABLE04 批次属性4,il.LOTTABLE05 批次属性5"
 								+",il.LOTTABLE06 批次属性6,il.LOTTABLE07 批次属性7,il.LOTTABLE08 批次属性8,il.LOTTABLE09 批次属性9,il.LOTTABLE10 批次属性10 "
@@ -694,6 +696,7 @@ public class InvTransferFrm extends InnerFrame {
 						detailTable.setValueAt(dm.getString("商品条码", 0), row, detailTable.getColumnModel().getColumnIndex("商品条码"));
 						detailTable.setValueAt(dm.getString("商品编码", 0), row, detailTable.getColumnModel().getColumnIndex("商品编码"));
 						detailTable.setValueAt(dm.getString("商品名称", 0), row, detailTable.getColumnModel().getColumnIndex("商品名称"));
+						detailTable.setValueAt(dm.getString("零售价", 0), row, detailTable.getColumnModel().getColumnIndex("商品名称"));
 						detailTable.setValueAt(dm.getString("库存数量", 0), row, detailTable.getColumnModel().getColumnIndex("原库存数量"));
 						detailTable.setValueAt(dm.getString("单位", 0), row, detailTable.getColumnModel().getColumnIndex("单位"));
 						detailTable.setValueAt(dm.getString("库位", 0), row, detailTable.getColumnModel().getColumnIndex("原库位"));
@@ -832,11 +835,11 @@ public class InvTransferFrm extends InnerFrame {
 //				+ "inner join bas_item bi on ii.STORER_CODE=bi.STORER_CODE and ii.ITEM_CODE=bi.ITEM_CODE "
 //				+ "left join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code " + "where 1=1 ";
 		String sql = "select case itd.STATUS when '100' then '新建' when '900' then '完成' else itd.STATUS end 状态,"
-				+ "bs.STORER_NAME 货主,bw.WAREHOUSE_NAME 仓库,bi.ITEM_BAR_CODE 商品条码,bi.ITEM_CODE 商品编码,bi.ITEM_NAME 商品名称, "
+				+ "bs.STORER_NAME 货主,bw.WAREHOUSE_NAME 仓库,bi.ITEM_BAR_CODE 商品条码,bi.ITEM_CODE 商品编码,bi.ITEM_NAME 商品名称,bi.RETAIL_PRICE 零售价, "
         		+"itd.FROM_QTY 原库存数量,itd.FROM_UOM 单位,itd.FROM_LOCATION_CODE 原库位,"
         		+"itd.FROM_CONTAINER_CODE 原箱号,itd.FROM_LOT_NO 原批次号,itd.LOTTABLE01 原批次属性1,itd.LOTTABLE02 原批次属性2,itd.LOTTABLE03 原批次属性3,itd.LOTTABLE04 原批次属性4,"
         		+"itd.LOTTABLE05 原批次属性5,itd.LOTTABLE06 原批次属性6,itd.LOTTABLE07 原批次属性7,itd.LOTTABLE08 原批次属性8,itd.LOTTABLE09 原批次属性9,itd.LOTTABLE10 原批次属性10,"
-        		+"bs2.STORER_NAME 目标货主,bw2.WAREHOUSE_NAME 目标仓库,itd.TO_LOCATION_CODE 目标库位,itd.TO_CONTAINER_CODE 目标箱号,itd.REQ_QTY 目标数量,"
+        		+"bs2.STORER_NAME 目标货主,bw2.WAREHOUSE_NAME 目标仓库,itd.TO_LOCATION_CODE 目标库位,itd.TO_CONTAINER_CODE 目标箱号,itd.REQ_QTY 目标数量,itd.TO_RETAIL_PRICE 目标零售价,"
         		+"itd.TO_LOTTABLE01 目标批次属性1,itd.TO_LOTTABLE02 目标批次属性2,itd.TO_LOTTABLE03 目标批次属性3,itd.TO_LOTTABLE04 目标批次属性4,itd.TO_LOTTABLE05 目标批次属性5,"
         		+"itd.TO_LOTTABLE06 目标批次属性6,itd.TO_LOTTABLE07 目标批次属性7,itd.TO_LOTTABLE08 目标批次属性8,itd.TO_LOTTABLE09 目标批次属性9,itd.TO_LOTTABLE10 目标批次属性10,"
         		+"itd.INV_INVENTORY_ID 原库存ID,itd.TO_INV_INVENTORY_ID 目标库存ID "
@@ -1070,6 +1073,12 @@ public class InvTransferFrm extends InnerFrame {
 			rc1Cell[1] = new Integer(tab.getColumnModel().getColumnIndex("目标数量"));
 			rc1Cell[2] = Color.ORANGE;
 			cellColor.addElement(rc1Cell);
+			
+			rc1Cell = new Object[3];
+			rc1Cell[0] = new Integer(i);
+			rc1Cell[1] = new Integer(tab.getColumnModel().getColumnIndex("目标零售价"));
+			rc1Cell[2] = Color.ORANGE;
+			cellColor.addElement(rc1Cell);
 
 			rc1Cell = new Object[3];
 			rc1Cell[0] = new Integer(i);
@@ -1213,18 +1222,26 @@ public class InvTransferFrm extends InnerFrame {
 					String TO_LOTTABLE08=object2String(detailTable.getValueAt(i, detailTable.getColumnModel().getColumnIndex("目标批次属性8"))).toString();
 					String TO_LOTTABLE09=object2String(detailTable.getValueAt(i, detailTable.getColumnModel().getColumnIndex("目标批次属性9"))).toString();
 					String TO_LOTTABLE10=object2String(detailTable.getValueAt(i, detailTable.getColumnModel().getColumnIndex("目标批次属性10"))).toString();
+					String FROM_RETAIL_PRICE=object2String(detailTable.getValueAt(i, detailTable.getColumnModel().getColumnIndex("零售价"))).toString();
+					if(FROM_RETAIL_PRICE.equals("")){
+						FROM_RETAIL_PRICE = "0";
+					}
+					String TO_RETAIL_PRICE=object2String(detailTable.getValueAt(i, detailTable.getColumnModel().getColumnIndex("目标零售价"))).toString();
+					if(TO_RETAIL_PRICE.equals("")){
+						TO_RETAIL_PRICE = "0";
+					}
 					sql = "insert into inv_transfer_detail(INV_TRANSFER_HEADER_ID,TRANSFER_NO,STATUS,INV_INVENTORY_ID,FROM_WAREHOUSE_CODE,TO_WAREHOUSE_CODE"
 							+",FROM_STORER_CODE,TO_STORER_CODE,FROM_LOCATION_CODE,TO_LOCATION_CODE,FROM_CONTAINER_CODE,TO_CONTAINER_CODE,FROM_LOT_NO"
 							+",ITEM_CODE,FROM_QTY,FROM_UOM,REQ_QTY,REQ_UOM,LOTTABLE01,LOTTABLE02,LOTTABLE03,LOTTABLE04,LOTTABLE05"
 							+",LOTTABLE06,LOTTABLE07,LOTTABLE08,LOTTABLE09,LOTTABLE10,TO_LOTTABLE01,TO_LOTTABLE02,TO_LOTTABLE03,TO_LOTTABLE04,TO_LOTTABLE05"
-							+",TO_LOTTABLE06,TO_LOTTABLE07,TO_LOTTABLE08,TO_LOTTABLE09,TO_LOTTABLE10,CREATED_BY_USER,CREATED_DTM_LOC) "
+							+",TO_LOTTABLE06,TO_LOTTABLE07,TO_LOTTABLE08,TO_LOTTABLE09,TO_LOTTABLE10,FROM_RETAIL_PRICE,TO_RETAIL_PRICE,CREATED_BY_USER,CREATED_DTM_LOC) "
 							+"select (select INV_TRANSFER_HEADER_ID from inv_transfer_header where TRANSFER_NO='"+transferNo+"' limit 1),'"+transferNo+"'"
 							+",'100','"+INV_INVENTORY_ID+"','"+warrehouseCode+"','"+to_warrehouseCode+"' "
 							+",'"+storerCode+"','"+to_storerCode+"',ii.location_code,'"+TO_LOCATION_CODE+"',ii.container_code,'"+TO_CONTAINER_CODE+"',ii.lot_no"
 							+",ii.item_code,"+FROM_QTY+",'"+REQ_UOM+"',"+REQ_QTY+",'"+REQ_UOM+"','"+LOTTABLE01+"','"+LOTTABLE02+"','"+LOTTABLE03+"','"+LOTTABLE04+"'"
 							+",'"+LOTTABLE05+"','"+LOTTABLE06+"','"+LOTTABLE07+"','"+LOTTABLE08+"','"+LOTTABLE09+"','"+LOTTABLE10+"','"+TO_LOTTABLE01+"','"+TO_LOTTABLE02+"','"+TO_LOTTABLE03+"','"+TO_LOTTABLE04+"'"
 							+",'"+TO_LOTTABLE05+"','"+TO_LOTTABLE06+"','"+TO_LOTTABLE07+"','"+TO_LOTTABLE08+"','"+TO_LOTTABLE09+"','"+TO_LOTTABLE10+"'"
-							+",'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now() "
+							+","+FROM_RETAIL_PRICE+","+TO_RETAIL_PRICE+",'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now() "
 							+"from inv_inventory ii where ii.INV_INVENTORY_ID='"+INV_INVENTORY_ID+"' ";
 					t = DBOperator.DoUpdate(sql);
 					if(t==0){
@@ -1396,6 +1413,7 @@ public class InvTransferFrm extends InnerFrame {
 		detailTable.setColumnEditable(bool, detailTable.getColumnModel().getColumnIndex("目标库位"));
 		detailTable.setColumnEditable(bool, detailTable.getColumnModel().getColumnIndex("目标箱号"));
 		detailTable.setColumnEditable(bool, detailTable.getColumnModel().getColumnIndex("目标数量"));
+		detailTable.setColumnEditable(bool, detailTable.getColumnModel().getColumnIndex("目标零售价"));
 		detailTable.setColumnEditable(bool, detailTable.getColumnModel().getColumnIndex("目标批次属性1"));
 		detailTable.setColumnEditable(bool, detailTable.getColumnModel().getColumnIndex("目标批次属性2"));
 		detailTable.setColumnEditable(bool, detailTable.getColumnModel().getColumnIndex("目标批次属性3"));
@@ -1407,6 +1425,8 @@ public class InvTransferFrm extends InnerFrame {
 		detailTable.setColumnEditable(bool, detailTable.getColumnModel().getColumnIndex("目标批次属性9"));
 		detailTable.setColumnEditable(bool, detailTable.getColumnModel().getColumnIndex("目标批次属性10"));
 		detailTable.editCellAt(detailTable.getRowCount() - 1, detailTable.getColumnModel().getColumnIndex("商品条码"));
+		detailTable.setComponent(new JTNumEdit(15, "#####.##", true), detailTable.getColumnModel().getColumnIndex("目标数量"));
+		detailTable.setComponent(new JTNumEdit(15, "#####.##", true), detailTable.getColumnModel().getColumnIndex("目标零售价"));
 	}
 	
 	public String object2String(Object o){
