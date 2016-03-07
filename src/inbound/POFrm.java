@@ -204,6 +204,9 @@ public class POFrm extends InnerFrame {
 				btnSave.setEnabled(true);
 				btnCancel.setEnabled(true);
 				btnClose.setEnabled(false);
+				btnStorerQuery.setEnabled(true);
+				btnWarehouseQuery.setEnabled(true);
+				btnVendorQuery.setEnabled(true);
 				
 				clearFrom();
 				
@@ -424,6 +427,9 @@ public class POFrm extends InnerFrame {
 				btnCancel.setEnabled(false);
 				btnClose.setEnabled(true);
 				headerTable.setEnabled(true);
+				btnStorerQuery.setEnabled(false);
+				btnWarehouseQuery.setEnabled(false);
+				btnVendorQuery.setEnabled(false);
 				saveData();
 				getHeaderTableData(" and iph.po_no='"+txt_po_no.getText().trim()+"'");
 			}
@@ -453,6 +459,9 @@ public class POFrm extends InnerFrame {
 				btnSave.setEnabled(false);
 				btnCancel.setEnabled(false);
 				btnClose.setEnabled(true);
+				btnStorerQuery.setEnabled(false);
+				btnWarehouseQuery.setEnabled(false);
+				btnVendorQuery.setEnabled(false);
 				headerTable.setEnabled(true);
 				detailTable.setColumnEditableAll(false);
 				clearDetailTable();
@@ -572,6 +581,7 @@ public class POFrm extends InnerFrame {
 		txt_storer_code.setColumns(8);
 		
 		btnStorerQuery = new JButton("<");
+		btnStorerQuery.setEnabled(false);
 		btnStorerQuery.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String sql = "select distinct storer_code 货主编码,storer_name 货主名称 from bas_storer ";
@@ -643,6 +653,7 @@ public class POFrm extends InnerFrame {
 		txt_warehouse_code.setColumns(8);
 		
 		btnWarehouseQuery = new JButton("<");
+		btnWarehouseQuery.setEnabled(false);
 		btnWarehouseQuery.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String sql = "select distinct warehouse_code 仓库编码,warehouse_name 仓库名称  from bas_warehouse where warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' ";
@@ -714,6 +725,7 @@ public class POFrm extends InnerFrame {
 		txt_vendor_code.setColumns(8);
 		
 		btnVendorQuery = new JButton("<");
+		btnVendorQuery.setEnabled(false);
 		btnVendorQuery.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				String sql = "select distinct vendor_code 供应商编码,vendor_name 供应商名称  from bas_vendor ";
@@ -804,6 +816,53 @@ public class POFrm extends InnerFrame {
 					});
 					popupmenu.add(menuItem1);
 					popupmenu.show(e.getComponent(), e.getX(), e.getY());
+				}
+			}
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if(e.getClickCount()>=2){
+					detailTable.setColumnSelectionAllowed(true);
+					if(!btnSave.isEnabled()){
+						return;
+					}
+					int row = detailTable.getSelectedRow();
+					int column = detailTable.getSelectedColumn();
+					String storerCode = txt_storer_code.getText();
+					String warrehouseCode = txt_warehouse_code.getText();
+					if(storerCode.equals("")){
+						JOptionPane.showMessageDialog(null, "请输入货主信息");
+						btnStorerQuery.requestFocus();
+						return;
+					}
+					if(warrehouseCode.equals("")){
+						JOptionPane.showMessageDialog(null, "请输入仓库信息");
+						btnWarehouseQuery.requestFocus();
+						return;
+					}
+					if(column==detailTable.getColumnModel().getColumnIndex("商品编码") ||
+							column==detailTable.getColumnModel().getColumnIndex("商品名称") ||
+							column==detailTable.getColumnModel().getColumnIndex("单位")){
+						String sql = "select bi.ITEM_BAR_CODE 商品条码,bi.ITEM_CODE 商品编码,bi.ITEM_NAME 商品名称, "
+								+"biu.unit_name 单位 "
+								+"from bas_item bi "
+								+"left join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
+								+"where bi.storer_code='"+storerCode+"' ";
+						tableQueryDialog tableQuery = new tableQueryDialog(sql,false);
+						Toolkit toolkit = Toolkit.getDefaultToolkit();
+						int x = (int)(toolkit.getScreenSize().getWidth()-tableQuery.getWidth())/2;
+						int y = (int)(toolkit.getScreenSize().getHeight()-tableQuery.getHeight())/2;
+						tableQuery.setLocation(x, y);
+						tableQuery.setModal(true);
+						tableQuery.setVisible(true);
+						DataManager dm = tableQueryDialog.resultDM;
+						if(dm==null || dm.getCurrentCount()==0){
+							return;
+						}
+						detailTable.setValueAt(dm.getString("商品条码", 0), row, detailTable.getColumnModel().getColumnIndex("商品条码"));
+						detailTable.setValueAt(dm.getString("商品编码", 0), row, detailTable.getColumnModel().getColumnIndex("商品编码"));
+						detailTable.setValueAt(dm.getString("商品名称", 0), row, detailTable.getColumnModel().getColumnIndex("商品名称"));
+						detailTable.setValueAt(dm.getString("单位", 0), row, detailTable.getColumnModel().getColumnIndex("单位"));
+					}
 				}
 			}
 		});
