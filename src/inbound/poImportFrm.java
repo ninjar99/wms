@@ -154,6 +154,8 @@ public class poImportFrm extends InnerFrame {
 				fieldList.add("iph.ERP_PO_NO:ERP_PO_NO号");
 				fieldList.add("iph.WAREHOUSE_CODE:仓库编码");
 				fieldList.add("iph.STORER_CODE:货主编码");
+				fieldList.add("ipd.ITEM_CODE:商品编码");
+				fieldList.add("bi.ITEM_NAME:商品名称");
 				QueryDialog query = QueryDialog.getInstance(fieldList);
 				Toolkit toolkit = Toolkit.getDefaultToolkit();
 				int x = (int)(toolkit.getScreenSize().getWidth()-query.getWidth())/2;
@@ -583,14 +585,17 @@ public class poImportFrm extends InnerFrame {
 	}
 	
 	private void getHeaderTableData(String strWhere){
-		String sql = "select iph.WAREHOUSE_CODE 仓库编码,bw.WAREHOUSE_NAME 仓库名称,iph.PO_NO PO号,iph.ERP_PO_NO ERP_PO_NO,"
+		String sql = "select distinct iph.WAREHOUSE_CODE 仓库编码,bw.WAREHOUSE_NAME 仓库名称,iph.PO_NO PO号,iph.ERP_PO_NO ERP_PO_NO,"
 				+ "case iph.status when '100' then '新建' when '300' then '收货中' when '900' then '关闭' else iph.status end PO状态,"
 				+ "iph.STORER_CODE 货主编码,bs.STORER_NAME 货主名称,iph.VENDOR_CODE 供应商编码,bv.VENDOR_NAME 供应商名称,iph.REMARK 备注, "
 				+ "iph.CREATED_DTM_LOC 创建时间,user.USER_NAME 创建人 "
-				+ " from inb_po_header iph  " + " inner join bas_warehouse bw on iph.WAREHOUSE_CODE=bw.WAREHOUSE_CODE"
+				+ " from inb_po_header iph  " 
+				+ " inner join bas_warehouse bw on iph.WAREHOUSE_CODE=bw.WAREHOUSE_CODE"
 				+ " inner join bas_storer bs on iph.STORER_CODE=bs.STORER_CODE"
 				+ " inner join bas_vendor bv on bv.VENDOR_CODE=iph.VENDOR_CODE" 
 				+ " inner join sys_user user on iph.CREATED_BY_USER=user.user_code "
+				+ " inner join inb_po_detail ipd on iph.PO_NO=ipd.PO_NO "
+				+ " inner join bas_item bi on iph.STORER_CODE=bi.STORER_CODE and ipd.ITEM_CODE=bi.ITEM_CODE "
 				+ " where 1=1 " 
 				+ " and iph.WAREHOUSE_CODE = '"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' ";
 		if(!strWhere.equals("")){
