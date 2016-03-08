@@ -49,6 +49,11 @@ public class Test {
 			String storer_code = dm.getString("storer_code", i);
 			String sku = dm.getString("sku", i);
 			String qty = dm.getString("qty", i);
+			if(sku.equals("")){
+				System.out.println("¸üÐÂÊ§°Ü£º"+sql);
+				LogInfo.appendLog("tmp2",sql);
+				continue;
+			}
 			sql = "update inv_inventory set "
 				+ "ALLOCATED_QTY = ifnull(ALLOCATED_QTY,0) + ("+qty+") "
 				+ "where INV_INVENTORY_ID=(select INV_INVENTORY_ID from (select INV_INVENTORY_ID from inv_inventory "
@@ -56,19 +61,12 @@ public class Test {
 						+ "order by ON_HAND_QTY desc limit 1) t) ";
 			int t = DBOperator.DoUpdate(sql);
 			if(t==0){
-				if(sku.equalsIgnoreCase("AZKAUA050310001")){
-					sql = "update inv_inventory set "
-							+ "ALLOCATED_QTY = ifnull(ALLOCATED_QTY,0) + ("+qty+") "
-							+ "where INV_INVENTORY_ID=(select INV_INVENTORY_ID from (select INV_INVENTORY_ID from inv_inventory "
-							+ "  where WAREHOUSE_CODE='SHJD' and item_code='"+sku+"' and storer_code='' "
-									+ "order by ON_HAND_QTY desc limit 1) t) ";
-				}else{
-					sql = "update inv_inventory set "
-							+ "ALLOCATED_QTY = ifnull(ALLOCATED_QTY,0) + ("+qty+") "
-							+ "where INV_INVENTORY_ID=(select INV_INVENTORY_ID from (select INV_INVENTORY_ID from inv_inventory "
-							+ "  where WAREHOUSE_CODE='SHJD' and item_code='"+sku+"' "
-									+ "order by ON_HAND_QTY desc limit 1) t) ";
-				}
+
+				sql = "update inv_inventory set "
+						+ "ALLOCATED_QTY = ifnull(ALLOCATED_QTY,0) + ("+qty+") "
+						+ "where INV_INVENTORY_ID=(select INV_INVENTORY_ID from (select INV_INVENTORY_ID from inv_inventory "
+						+ "  where WAREHOUSE_CODE='SHJD' and item_code='"+sku+"' "
+								+ "order by ON_HAND_QTY desc limit 1) t) ";
 				
 				t = DBOperator.DoUpdate(sql);
 				if(t==0){

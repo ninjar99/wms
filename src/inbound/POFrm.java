@@ -1078,12 +1078,22 @@ public class POFrm extends InnerFrame {
 				String LOTTABLE08 = object2String(row[14]);
 				String LOTTABLE09 = object2String(row[15]);
 				String LOTTABLE10 = object2String(row[16]);
-				sql = "select po_no from inb_po_detail where po_no='"+PO_NO+"' and line_number = "+LINE_NUMBER+" ";
+				sql = "select po_no from inb_po_detail where po_no='"+PO_NO+"' "
+					+ "and line_number = "+LINE_NUMBER+" and TOTAL_QTY= "+TOTAL_QTY
+					+" and LOTTABLE01='"+LOTTABLE01+"' and LOTTABLE02='"+LOTTABLE01+"' "
+					+" and LOTTABLE03='"+LOTTABLE01+"' and LOTTABLE04='"+LOTTABLE01+"' "
+					+" and LOTTABLE05='"+LOTTABLE01+"' and LOTTABLE05='"+LOTTABLE01+"' "
+					+" and LOTTABLE07='"+LOTTABLE01+"' and LOTTABLE06='"+LOTTABLE01+"' "
+					+" and LOTTABLE09='"+LOTTABLE01+"' and LOTTABLE10='"+LOTTABLE01+"' ";
 				java.sql.Statement stmt2 = con.createStatement();
 				ResultSet rs2 = stmt2.executeQuery(sql);
 				if(rs2.next()){
 					System.out.println("PO明细重复，忽略改行数据:"+PO_NO+" "+LINE_NUMBER);
 					continue;
+				}else{
+					sql = "delete from inb_po_detail where po_no='"+PO_NO+"' "
+					+ "and line_number = "+LINE_NUMBER+"";
+					DBOperator.DoUpdate(sql);
 				}
 				//插入明细
 				sql = "insert into inb_po_detail(inb_po_header_id,line_number,po_no,erp_po_no,warehouse_code,storer_code,item_code,total_qty,uom,"
