@@ -892,9 +892,10 @@ public class poImportFrm extends InnerFrame {
 			//先生成库存批次号
 			lotNo = comData.getInventoryLotNo(storerCode,itemCode,lottable01,lottable02,lottable03,lottable04,lottable05,lottable06,lottable07,lottable08,lottable09,lottable10);
 			if(!lotNo.equals("")){
-				//插入库存表  正常库存数量
-				if(Double.parseDouble(TOTAL_QTY)>0){
-					inventoryID = comData.getInventoryID(warehouseCode,storerCode,itemCode,lotNo,normalLocationCode,containCode,TOTAL_QTY,
+				//插入库存表  正常库存数量    正常库存=总PO数量 - 破损数量 - 报废数量
+				double availQty = Double.parseDouble(TOTAL_QTY)-Double.parseDouble(DAMAGE_QTY)-Double.parseDouble(SCRAP_QTY);
+				if(availQty>0){
+					inventoryID = comData.getInventoryID(warehouseCode,storerCode,itemCode,lotNo,normalLocationCode,containCode,String.valueOf(availQty),
 							MainFrm.getUserInfo().getString("USER_CODE", 0));
 					if(!inventoryID.equals("")){
 						//库存表写入成功
@@ -929,7 +930,7 @@ public class poImportFrm extends InnerFrame {
 					}
 				}
 				//库存全部增加成功，更新PO明细的已收货数量
-				sql = "update inb_po_detail set RECEIVED_QTY=TOTAL_QTY+DAMAGE_QTY+SCRAP_QTY "
+				sql = "update inb_po_detail set RECEIVED_QTY=TOTAL_QTY "
 					+ "where PO_NO='"+po_no+"' and ITEM_CODE='"+itemCode+"' and TOTAL_QTY="+TOTAL_QTY+" "
 					+ "and DAMAGE_QTY="+DAMAGE_QTY+" and SCRAP_QTY="+SCRAP_QTY;
 				int t = DBOperator.DoUpdate(sql);
