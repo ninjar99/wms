@@ -41,6 +41,7 @@ import sys.QueryDialog;
 import sys.tableQueryDialog;
 import util.JTNumEdit;
 import util.MyTableCellRenderrer;
+import util.WaitingSplash;
 
 import javax.swing.JButton;
 import java.awt.Component;
@@ -56,6 +57,7 @@ import java.awt.Toolkit;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
@@ -430,8 +432,27 @@ public class POFrm extends InnerFrame {
 				btnStorerQuery.setEnabled(false);
 				btnWarehouseQuery.setEnabled(false);
 				btnVendorQuery.setEnabled(false);
-				saveData();
-				getHeaderTableData(" and iph.po_no='"+txt_po_no.getText().trim()+"'");
+				//保存PO明细
+				new SwingWorker<String, Void>() {
+					WaitingSplash splash = new WaitingSplash();
+
+		            @Override
+		            protected String doInBackground() throws Exception {
+		            	//获取嘉境通库存
+		            	splash.start(); // 运行启动界面
+		            	saveData();
+		                return "";
+		            }
+
+		            @Override
+		            protected void done() {
+		            	splash.stop(); // 结束启动界面
+		            	getHeaderTableData(" and iph.po_no='"+txt_po_no.getText().trim()+"'");
+		                System.out.println("PO明细保存完成");
+						JOptionPane.showMessageDialog(null, "PO明细保存完成");
+		            }
+		        }.execute();
+				
 			}
 		});
 		btnSave.setEnabled(false);
@@ -1079,12 +1100,12 @@ public class POFrm extends InnerFrame {
 				String LOTTABLE09 = object2String(row[15]);
 				String LOTTABLE10 = object2String(row[16]);
 				sql = "select po_no from inb_po_detail where po_no='"+PO_NO+"' "
-					+ "and line_number = "+LINE_NUMBER+" and TOTAL_QTY= "+TOTAL_QTY
-					+" and LOTTABLE01='"+LOTTABLE01+"' and LOTTABLE02='"+LOTTABLE01+"' "
-					+" and LOTTABLE03='"+LOTTABLE01+"' and LOTTABLE04='"+LOTTABLE01+"' "
-					+" and LOTTABLE05='"+LOTTABLE01+"' and LOTTABLE05='"+LOTTABLE01+"' "
-					+" and LOTTABLE07='"+LOTTABLE01+"' and LOTTABLE06='"+LOTTABLE01+"' "
-					+" and LOTTABLE09='"+LOTTABLE01+"' and LOTTABLE10='"+LOTTABLE01+"' ";
+					+ "and line_number = "+LINE_NUMBER+" and ITEM_CODE='"+ITEM_CODE+"' and TOTAL_QTY= "+TOTAL_QTY
+					+" and LOTTABLE01='"+LOTTABLE01+"' and LOTTABLE02='"+LOTTABLE02+"' "
+					+" and LOTTABLE03='"+LOTTABLE03+"' and LOTTABLE04='"+LOTTABLE04+"' "
+					+" and LOTTABLE05='"+LOTTABLE05+"' and LOTTABLE05='"+LOTTABLE06+"' "
+					+" and LOTTABLE07='"+LOTTABLE07+"' and LOTTABLE06='"+LOTTABLE08+"' "
+					+" and LOTTABLE09='"+LOTTABLE09+"' and LOTTABLE10='"+LOTTABLE10+"' ";
 				java.sql.Statement stmt2 = con.createStatement();
 				ResultSet rs2 = stmt2.executeQuery(sql);
 				if(rs2.next()){
@@ -1092,7 +1113,7 @@ public class POFrm extends InnerFrame {
 					continue;
 				}else{
 					sql = "delete from inb_po_detail where po_no='"+PO_NO+"' "
-					+ "and line_number = "+LINE_NUMBER+"";
+					+ "and line_number = "+LINE_NUMBER+" ";
 					DBOperator.DoUpdate(sql);
 				}
 				//插入明细
@@ -1146,7 +1167,7 @@ public class POFrm extends InnerFrame {
 					+ " inner join bas_storer bs on iph.STORER_CODE=bs.STORER_CODE"
 					+ " inner join bas_vendor bv on bv.VENDOR_CODE=iph.VENDOR_CODE" 
 					+ " inner join sys_user user on iph.CREATED_BY_USER=user.user_code "
-					+ " where iph.po_no='"+str_po_no+"' " + "";
+					+ " where iph.po_no='"+str_po_no+"' " + " ";
 	        DataManager dm = DBOperator.DoSelect2DM(sql);
 	        if(dm!=null && dm.getCurrentCount()>0){
 	        	txt_warehouse_code.setText(object2String(dm.getString("WAREHOUSE_CODE", 0)));
@@ -1248,6 +1269,7 @@ public class POFrm extends InnerFrame {
 		if(!strWhere.equals("")){
 			sql = sql + strWhere;
 		}
+		sql = sql + " order by ipd.LINE_NUMBER ";
 		System.out.println(sql);
 		try{
 			java.sql.Connection con = DBConnectionManager.getInstance().getConnection("wms");
