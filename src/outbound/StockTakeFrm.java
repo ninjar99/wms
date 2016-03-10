@@ -72,6 +72,9 @@ public class StockTakeFrm extends InnerFrame {
 	private JTextField txt_stocktake_status;
 	private JButton btn_stocktake_query;
 	JCheckBox cb_by_storer;
+	private JButton btnLocationQuery;
+	private JButton btnContainerQuery;
+	private JButton btnBarcodeQuery;
 	
 	public static StockTakeFrm getInstance() {
 		if(instance == null) { 
@@ -134,7 +137,7 @@ public class StockTakeFrm extends InnerFrame {
 				isOpen = true;
 			}
 		});
-		setBounds(100, 100, 662, 320);
+		setBounds(100, 100, 828, 320);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
@@ -347,7 +350,7 @@ public class StockTakeFrm extends InnerFrame {
 						+"from inv_stocktake_header ish "
 						+"inner join bas_storer bs on ish.STORER_CODE=bs.STORER_CODE "
 						+"inner join bas_warehouse bw on ish.WAREHOUSE_CODE=bw.WAREHOUSE_CODE "
-						+" where ish.status in('100','200') ";
+						+" where ish.status in('100','200') order by ish.STOCKTAKE_NO desc ";
 				tableQueryDialog tableQuery = new tableQueryDialog(sql,false);
 				Toolkit toolkit = Toolkit.getDefaultToolkit();
 				int x = (int)(toolkit.getScreenSize().getWidth()-tableQuery.getWidth())/2;
@@ -433,6 +436,38 @@ public class StockTakeFrm extends InnerFrame {
 		panel_1.add(txt_location_code);
 		txt_location_code.setColumns(10);
 		
+		btnLocationQuery = new JButton("<");
+		btnLocationQuery.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				String warehouseCode = cb_warehouse.getSelectedOID();
+				String sql = "select ii.INV_INVENTORY_ID 库存ID,ii.LOCATION_CODE 库位编码,ii.CONTAINER_CODE 箱号,"
+						+ "bi.ITEM_BAR_CODE 商品条码,ii.ITEM_CODE 商品编码,bi.ITEM_NAME 商品名称,"
+						+ "bi.RETAIL_PRICE 零售价,ii.ON_HAND_QTY+ii.IN_TRANSIT_QTY-(ii.ALLOCATED_QTY)-(ii.PICKED_QTY) 库存数量, "
+						+"biu.unit_name 单位,ii.LOCATION_CODE 库位,ii.LOT_NO 批次"
+						+",il.LOTTABLE01 批次属性1,il.LOTTABLE02 批次属性2,il.LOTTABLE03 批次属性3,il.LOTTABLE04 批次属性4,il.LOTTABLE05 批次属性5"
+						+",il.LOTTABLE06 批次属性6,il.LOTTABLE07 批次属性7,il.LOTTABLE08 批次属性8,il.LOTTABLE09 批次属性9,il.LOTTABLE10 批次属性10 "
+						+"from inv_inventory ii "
+						+"inner join bas_item bi on ii.STORER_CODE=bi.STORER_CODE and ii.ITEM_CODE=bi.ITEM_CODE "
+						+"left join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
+						+"inner join inv_lot il on ii.LOT_NO=il.LOT_NO "
+						+"where ii.warehouse_code='"+warehouseCode+"' and ii.storer_code='"+cb_storer.getSelectedOID()+"' ";
+				tableQueryDialog tableQuery = new tableQueryDialog(sql,false);
+				Toolkit toolkit = Toolkit.getDefaultToolkit();
+				int x = (int)(toolkit.getScreenSize().getWidth()-tableQuery.getWidth())/2;
+				int y = (int)(toolkit.getScreenSize().getHeight()-tableQuery.getHeight())/2;
+				tableQuery.setLocation(x, y);
+				tableQuery.setModal(true);
+				tableQuery.setVisible(true);
+				DataManager dm = tableQueryDialog.resultDM;
+				if(dm==null || dm.getCurrentCount()==0){
+					txt_location_code.setText("");
+				}else{
+					txt_location_code.setText(dm.getString("库位编码", 0));
+				}
+			}
+		});
+		panel_1.add(btnLocationQuery);
+		
 		JLabel lblNewLabel_4 = new JLabel("\u7BB1\u53F7\uFF1A");
 		panel_1.add(lblNewLabel_4);
 		
@@ -471,7 +506,40 @@ public class StockTakeFrm extends InnerFrame {
 		panel_1.add(txt_container_code);
 		txt_container_code.setColumns(10);
 		
-		JLabel lblNewLabel_5 = new JLabel("\u6761\u7801\uFF1A");
+		btnContainerQuery = new JButton("<");
+		btnContainerQuery.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String warehouseCode = cb_warehouse.getSelectedOID();
+				String sql = "select ii.INV_INVENTORY_ID 库存ID,ii.LOCATION_CODE 库位编码,ii.CONTAINER_CODE 箱号,"
+						+ "bi.ITEM_BAR_CODE 商品条码,ii.ITEM_CODE 商品编码,bi.ITEM_NAME 商品名称,"
+						+ "bi.RETAIL_PRICE 零售价,ii.ON_HAND_QTY+ii.IN_TRANSIT_QTY-(ii.ALLOCATED_QTY)-(ii.PICKED_QTY) 库存数量, "
+						+"biu.unit_name 单位,ii.LOCATION_CODE 库位,ii.LOT_NO 批次"
+						+",il.LOTTABLE01 批次属性1,il.LOTTABLE02 批次属性2,il.LOTTABLE03 批次属性3,il.LOTTABLE04 批次属性4,il.LOTTABLE05 批次属性5"
+						+",il.LOTTABLE06 批次属性6,il.LOTTABLE07 批次属性7,il.LOTTABLE08 批次属性8,il.LOTTABLE09 批次属性9,il.LOTTABLE10 批次属性10 "
+						+"from inv_inventory ii "
+						+"inner join bas_item bi on ii.STORER_CODE=bi.STORER_CODE and ii.ITEM_CODE=bi.ITEM_CODE "
+						+"left join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
+						+"inner join inv_lot il on ii.LOT_NO=il.LOT_NO "
+						+"where ii.warehouse_code='"+warehouseCode+"' and ii.storer_code='"+cb_storer.getSelectedOID()+"' "
+						+ "and ii.LOCATION_CODE like '%"+txt_location_code.getText().trim()+"%' ";
+				tableQueryDialog tableQuery = new tableQueryDialog(sql,false);
+				Toolkit toolkit = Toolkit.getDefaultToolkit();
+				int x = (int)(toolkit.getScreenSize().getWidth()-tableQuery.getWidth())/2;
+				int y = (int)(toolkit.getScreenSize().getHeight()-tableQuery.getHeight())/2;
+				tableQuery.setLocation(x, y);
+				tableQuery.setModal(true);
+				tableQuery.setVisible(true);
+				DataManager dm = tableQueryDialog.resultDM;
+				if(dm==null || dm.getCurrentCount()==0){
+					txt_container_code.setText("");
+				}else{
+					txt_container_code.setText(dm.getString("箱号", 0));
+				}
+			}
+		});
+		panel_1.add(btnContainerQuery);
+		
+		JLabel lblNewLabel_5 = new JLabel("\u6761\u7801/\u6599\u53F7\uFF1A");
 		panel_1.add(lblNewLabel_5);
 		
 		txt_item_barcode = new JTextField();
@@ -487,13 +555,13 @@ public class StockTakeFrm extends InnerFrame {
 				if(e.getKeyChar()=='\n'){
 					String itemCode = "";
 					String itemQty = txt_item_qty.getText();
-					String itemBarCode = txt_item_barcode.getText().trim();
+					String itemBarCode = txt_item_barcode.getText().trim();//条码 或者 料号
 					String storerCode = cb_storer.getSelectedOID();
 					String warehouseCode = cb_warehouse.getSelectedOID();
 					String locationCode = txt_location_code.getText();
 					String containerCode = txt_container_code.getText();
 					String stockTakeNo = txt_stocktake_no.getText().trim();
-					String sql = "select item_code,unit_code,item_name from bas_item where storer_code='"+storerCode+"' and item_bar_code='"+itemBarCode+"'";
+					String sql = "select item_code,unit_code,item_name from bas_item where storer_code='"+storerCode+"' and (item_bar_code='"+itemBarCode+"' or item_code='"+itemBarCode+"')";
 					if (!itemBarCode.equals("")) {
 						if(warehouseCode.equals("")){
 							Message.showWarningMessage("请选择盘点仓库");
@@ -575,6 +643,41 @@ public class StockTakeFrm extends InnerFrame {
 		});
 		panel_1.add(txt_item_barcode);
 		txt_item_barcode.setColumns(12);
+		
+		btnBarcodeQuery = new JButton("<");
+		btnBarcodeQuery.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String warehouseCode = cb_warehouse.getSelectedOID();
+				String sql = "select ii.INV_INVENTORY_ID 库存ID,ii.LOCATION_CODE 库位编码,ii.CONTAINER_CODE 箱号,"
+						+ "bi.ITEM_BAR_CODE 商品条码,ii.ITEM_CODE 商品编码,bi.ITEM_NAME 商品名称,"
+						+ "bi.RETAIL_PRICE 零售价,ii.ON_HAND_QTY+ii.IN_TRANSIT_QTY-(ii.ALLOCATED_QTY)-(ii.PICKED_QTY) 库存数量, "
+						+"biu.unit_name 单位,ii.LOCATION_CODE 库位,ii.LOT_NO 批次"
+						+",il.LOTTABLE01 批次属性1,il.LOTTABLE02 批次属性2,il.LOTTABLE03 批次属性3,il.LOTTABLE04 批次属性4,il.LOTTABLE05 批次属性5"
+						+",il.LOTTABLE06 批次属性6,il.LOTTABLE07 批次属性7,il.LOTTABLE08 批次属性8,il.LOTTABLE09 批次属性9,il.LOTTABLE10 批次属性10 "
+						+"from inv_inventory ii "
+						+"inner join bas_item bi on ii.STORER_CODE=bi.STORER_CODE and ii.ITEM_CODE=bi.ITEM_CODE "
+						+"left join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
+						+"inner join inv_lot il on ii.LOT_NO=il.LOT_NO "
+						+"where ii.warehouse_code='"+warehouseCode+"' and ii.storer_code='"+cb_storer.getSelectedOID()+"' "
+						+"and ii.location_code like '%"+txt_location_code.getText().trim()+"%' "
+						+ "and ii.container_code like '%"+txt_container_code.getText().trim()+"%' "
+						+ "and (bi.ITEM_CODE like '%"+txt_item_barcode.getText()+"%' or bi.ITEM_BAR_CODE like '%"+txt_item_barcode.getText()+"%')";
+				tableQueryDialog tableQuery = new tableQueryDialog(sql,false);
+				Toolkit toolkit = Toolkit.getDefaultToolkit();
+				int x = (int)(toolkit.getScreenSize().getWidth()-tableQuery.getWidth())/2;
+				int y = (int)(toolkit.getScreenSize().getHeight()-tableQuery.getHeight())/2;
+				tableQuery.setLocation(x, y);
+				tableQuery.setModal(true);
+				tableQuery.setVisible(true);
+				DataManager dm = tableQueryDialog.resultDM;
+				if(dm==null || dm.getCurrentCount()==0){
+					txt_item_barcode.setText("");
+				}else{
+					txt_item_barcode.setText(dm.getString("商品编码", 0));
+				}
+			}
+		});
+		panel_1.add(btnBarcodeQuery);
 		
 		txt_item_qty = new JTNumEdit(8, "#####",true);
 		txt_item_qty.setText("1");

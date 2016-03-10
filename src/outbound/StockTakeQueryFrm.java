@@ -229,6 +229,40 @@ public class StockTakeQueryFrm extends InnerFrame {
 						}
 						});
 					popupmenu.add(menuItem1);
+					JMenuItem menuItem2 = new JMenuItem();
+					menuItem2.setLabel("删除盘点单号");
+					menuItem2.addActionListener(new java.awt.event.ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							boolean b_confirm = Message.showOKorCancelMessage("是否删除该盘点单号所有数据?");
+							if(b_confirm){
+								String stockTakeNo = (String) headerTable.getValueAt(headerTable.getSelectedRow(), headerTable.getColumnModel().getColumnIndex("盘点单号"));
+								String stockTakeNoStatus = (String) headerTable.getValueAt(headerTable.getSelectedRow(), headerTable.getColumnModel().getColumnIndex("状态"));
+								String sql = "";
+								if(stockTakeNoStatus.equalsIgnoreCase("新建") || stockTakeNoStatus.equalsIgnoreCase("初盘完成")){
+									sql = "delete from inv_stocktake_header "
+										+ "where WAREHOUSE_CODE='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' "
+										+ "and STOCKTAKE_NO='"+stockTakeNo+"' and STATUS in ('100','300')";
+									int t = DBOperator.DoUpdate(sql);
+									if(t>0){
+										sql = "delete from inv_stocktake_detail "
+											+ "where WAREHOUSE_CODE='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' "
+											+ "and STOCKTAKE_NO='"+stockTakeNo+"' and STATUS in ('100')";
+										if(t>0){
+											Message.showWarningMessage("操作成功");
+											getHeaderTableData("");
+										}else{
+											Message.showWarningMessage("删除盘点明细失败");
+										}
+									}else{
+										Message.showWarningMessage("只能删除当前选择仓库下的盘点单，或者盘点单状态为【新建、初盘完成】才能删除");
+									}
+								}else{
+									Message.showWarningMessage("盘点单只有是【新建、初盘完成】状态才能做盘点删除");
+								}
+							}
+						}
+						});
+					popupmenu.add(menuItem2);
 					popupmenu.show(e.getComponent(), e.getX(), e.getY());
 				}
 			}
