@@ -273,7 +273,7 @@ public class poImportFrm extends InnerFrame {
 									String LOTTABLE07 = "";
 									String LOTTABLE08 = "";
 									String LOTTABLE09 = "";
-									String LOTTABLE10 = "";
+									String LOTTABLE10 = ERP_PO_NO;
 									String USER_DEF1 = excelDM.getString("差异数量", i);
 									String USER_DEF2 = excelDM.getString("差异原因", i);
 									String USER_DEF3 = excelDM.getString("入仓时间", i);
