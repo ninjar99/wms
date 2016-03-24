@@ -9,7 +9,15 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
 import java.sql.ResultSet;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.Vector;
 
 import javax.swing.JFrame;
@@ -19,6 +27,8 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+
+import org.apache.commons.lang.StringEscapeUtils;
 
 import java.awt.FlowLayout;
 import javax.swing.JButton;
@@ -30,12 +40,16 @@ import java.awt.Toolkit;
 import DBUtil.DBConnectionManager;
 import DBUtil.DBOperator;
 import DBUtil.LogInfo;
+import api.HttpClientUtil;
 import comUtil.ExcelRead;
 import comUtil.JTableExportExcel;
+import comUtil.MD5;
 import comUtil.chooseFileList;
 import comUtil.comData;
 import dmdata.DataManager;
 import main.PBSUIBaseGrid;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import sys.InnerFrame;
 import sys.JTableUtil;
 import sys.MainFrm;
@@ -91,16 +105,25 @@ public class poImportFrm extends InnerFrame {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					poImportFrm frame = new poImportFrm();
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+		String sql = "select item_code MerchantProductID,TOTAL_QTY Qty from inb_po_detail where PO_NO='PO00000233' ";
+		DataManager podetail = DBOperator.DoSelect2DM(sql);
+		JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetail, "Items"));
+		try {
+			new poImportFrm().openPOAPI("164027000093",dataJson.get("Items").toString());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+//		EventQueue.invokeLater(new Runnable() {
+//			public void run() {
+//				try {
+//					poImportFrm frame = new poImportFrm();
+//					frame.setVisible(true);
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		});
 	}
 
 	/**
@@ -189,7 +212,7 @@ public class poImportFrm extends InnerFrame {
 					WaitingSplash splash = new WaitingSplash();
 		            @Override
 		            protected String doInBackground() throws Exception {
-		            	//获取嘉境通库存
+		            	//
 		            	splash.start(); // 运行启动界面
 		            	String fileDir = chooseFileList.ResultValue;
 						if(fileDir.equals("")) return "";
@@ -253,6 +276,7 @@ public class poImportFrm extends InnerFrame {
 									if(!bool){
 										sbf.append("\n从已备案商品信息总表中导入商品信息失败,物料号= 【"+ITEM_CODE+"】"+"("+fileDir+")");
 									}
+									//按照  实际到货商品条码  为准，如果  实际到货商品条码 = 空  ，就取   备案商品条码
 									if(!ITEM_BAR_CODE.trim().equals("")){
 										String sqlUpdate = "update bas_item set ITEM_BAR_CODE='"+ITEM_BAR_CODE+"' "
 												+ "where STORER_CODE='"+STORER_CODE+"' and ITEM_CODE='"+ITEM_CODE+"'";
@@ -523,6 +547,24 @@ public class poImportFrm extends InnerFrame {
 											int t = DBOperator.DoUpdate(sql);
 											if(t>0){
 												//getHeaderTableData(retWhere);
+												//写入三明治锁库表  sandwich.ag_product_lock
+												sql = "insert into sandwich.ag_sku_batch_lock(ag_product_id,ag_batch,ag_total_num,ag_safe_num,created_time) "
+													+ "select (select product_id from sandwich.ag_product where part_number=ITEM_CODE limit 1) product_id,ERP_PO_NO "
+													+ ",sum(TOTAL_QTY) ag_total_num,0 ag_safe_num,now() "
+													+ "from inb_po_detail where WAREHOUSE_CODE='SHJD'  and PO_NO in ("+sbf.toString()+") "
+													+ "group by STORER_CODE,ITEM_CODE,ERP_PO_NO ";
+												DBOperator.DoUpdate(sql);
+												
+												//通知外部接口，PO已经完成收货
+												for(int i=0;i<selRow.length;i++){
+													String po_no = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("PO号")).toString();
+													String ERP_PO_NO = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("ERP_PO_NO")).toString();
+													sql = "select item_code MerchantProductID,TOTAL_QTY Qty from inb_po_detail where PO_NO='"+po_no+"' ";
+													DataManager podetail = DBOperator.DoSelect2DM(sql);
+													JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetail, "Items"));
+													openPOAPI(ERP_PO_NO,dataJson.get("Items").toString());
+													Thread.sleep(1000);
+												}
 											}
 										}
 						                return "";
@@ -574,6 +616,60 @@ public class poImportFrm extends InnerFrame {
 		contentPane.add(bottomPanel, BorderLayout.SOUTH);
 		
 		getHeaderTableData("");
+	}
+	
+	public static  String getDateTimeString(){
+        Date now = new Date();
+        DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+        String result = dateFormat.format(now);
+        return  result;
+    }
+	
+	public String createLinkString(Map<String, String> params) {
+
+		List<String> keys = new ArrayList<String>(params.keySet());
+		Collections.sort(keys);
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < keys.size(); i++) {
+			sb.append(keys.get(i)).append("=").append(params.get(keys.get(i))).append("&");
+		}
+		return sb.toString();
+	}
+	
+	public void openPOAPI(String ERP_PO_NO,String Items) throws Exception{
+		String url = "http://api.ajyaguru.com/openAPI.html";
+		String charset = "utf-8";
+		HttpClientUtil httpClientUtil = new HttpClientUtil();
+		String httpOrgCreateTest = url;
+		Map<String, String> hashMap = new HashMap<String, String>();
+		hashMap.put("appid", "seller1280");
+		hashMap.put("format", "json");
+		hashMap.put("method", "Inventory.ProductInStockNoSign");
+		hashMap.put("timestamp", getDateTimeString());
+		hashMap.put("data", "{\"POID\":\""+ERP_PO_NO+"\",\"WarehouseID\":\"54\",\"Items\":"+Items+"}");
+		hashMap.put("nonce",(new Random().nextInt(100000000)) + "");
+		hashMap.put("version", "1.0");
+		String salt = createLinkString(hashMap) + "appsecret=0bae030e6a964214aca12698b4a52d5c";
+		System.out.println(salt);
+		String mysign = MD5.GetMD5Code(salt);
+		hashMap.put("sign", mysign);
+		String httpOrgCreateTestRtn = httpClientUtil.doPost(httpOrgCreateTest,hashMap,charset);
+		System.out.println("result:"+httpOrgCreateTestRtn);
+		LogInfo.appendLog("API",httpOrgCreateTestRtn);
+		JSONObject dataJson = JSONObject.fromObject(httpOrgCreateTestRtn);
+		JSONArray data = null;
+		if(dataJson.containsKey("Data")){
+//			data=dataJson.getJSONArray("Data");
+//			for(int i=0;i<data.size();i++){
+//				JSONObject info=data.getJSONObject(i);
+//				String ProductID = info.getString("ProductID");
+//				String OnlineQty = info.getString("OnlineQty");
+//				String WareHouseID = info.getString("WareHouseID");
+//				System.out.println(WareHouseID+" / "+ProductID +" : "+ OnlineQty);
+//			}
+		}else if(dataJson.containsKey("Code")){
+			throw new Exception(httpOrgCreateTestRtn);
+		}
 	}
 	
 	private void headerTableClick(){

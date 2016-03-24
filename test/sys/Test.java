@@ -51,7 +51,7 @@ public class Test {
 			String qty = dm.getString("qty", i);
 			if(sku.equals("")){
 				System.out.println("更新失败："+sql);
-				LogInfo.appendLog("tmp2",sql);
+				LogInfo.appendLog("inv_update",sql);
 				continue;
 			}
 			sql = "update inv_inventory set "
@@ -71,7 +71,7 @@ public class Test {
 				t = DBOperator.DoUpdate(sql);
 				if(t==0){
 					System.out.println("更新失败："+sql);
-					LogInfo.appendLog("tmp2",sql);
+					LogInfo.appendLog("inv_update",sql);
 				}
 				
 			}
