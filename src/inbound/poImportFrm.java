@@ -55,6 +55,7 @@ import sys.JTableUtil;
 import sys.MainFrm;
 import sys.Message;
 import sys.QueryDialog;
+import sys.tableQueryDialog;
 import util.Math_SAM;
 import util.MyTableCellRenderrer;
 import util.WaitingSplash;
@@ -513,6 +514,10 @@ public class poImportFrm extends InnerFrame {
 					menuItem1.setLabel("导入确认");
 					menuItem1.addActionListener(new java.awt.event.ActionListener() {
 						public void actionPerformed(ActionEvent e) {
+							if(!comData.getUserMenuPower("PO导入-确认")){
+								Message.showWarningMessage("无此功能权限");
+								return;
+							}
 							if(!MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0).toString().equalsIgnoreCase("SHJD")){
 								Message.showWarningMessage("此功能目前只针对【上海嘉定仓】开放");
 								return;
@@ -553,18 +558,22 @@ public class poImportFrm extends InnerFrame {
 													+ ",sum(TOTAL_QTY) ag_total_num,0 ag_safe_num,now() "
 													+ "from inb_po_detail where WAREHOUSE_CODE='SHJD'  and PO_NO in ("+sbf.toString()+") "
 													+ "group by STORER_CODE,ITEM_CODE,ERP_PO_NO ";
-												DBOperator.DoUpdate(sql);
-												
-												//通知外部接口，PO已经完成收货
-												for(int i=0;i<selRow.length;i++){
-													String po_no = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("PO号")).toString();
-													String ERP_PO_NO = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("ERP_PO_NO")).toString();
-													sql = "select item_code MerchantProductID,TOTAL_QTY Qty from inb_po_detail where PO_NO='"+po_no+"' ";
-													DataManager podetail = DBOperator.DoSelect2DM(sql);
-													JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetail, "Items"));
-													openPOAPI(ERP_PO_NO,dataJson.get("Items").toString());
-													Thread.sleep(1000);
-												}
+												t = DBOperator.DoUpdate(sql);
+												if(t>0){
+													//通知外部接口，PO已经完成收货
+													for(int i=0;i<selRow.length;i++){
+														String po_no = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("PO号")).toString();
+														String ERP_PO_NO = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("ERP_PO_NO")).toString();
+														sql = "select item_code MerchantProductID,TOTAL_QTY Qty from inb_po_detail where PO_NO='"+po_no+"' ";
+														DataManager podetail = DBOperator.DoSelect2DM(sql);
+														JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetail, "Items"));
+														openPOAPI(ERP_PO_NO,dataJson.get("Items").toString());
+														Thread.sleep(1000);
+													}
+												}else{
+													Message.showErrorMessage("写入三明治锁库表  sandwich.ag_product_lock 失败，请联系管理员");
+													LogInfo.appendLog("error","写入三明治锁库表  sandwich.ag_product_lock 失败，请联系管理员:"+sql);
+												}	
 											}
 										}
 						                return "";
@@ -601,6 +610,45 @@ public class poImportFrm extends InnerFrame {
 			public void mouseClicked(MouseEvent e) {
 				if(e.getClickCount()>=2){
 					detailTable.setColumnSelectionAllowed(true);
+				}
+			}
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON3) {
+					JPopupMenu popupmenu = new JPopupMenu();
+					JMenuItem menuItem1 = new JMenuItem();
+					menuItem1.setLabel("查询该商品库存");
+					menuItem1.addActionListener(new java.awt.event.ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							int header_row = headerTable.getSelectedRow();
+							int header_column = headerTable.getSelectedColumn();
+							int detail_row = detailTable.getSelectedRow();
+							int detail_column = detailTable.getSelectedColumn();
+							String warrehouseCode = headerTable.getValueAt(header_row, headerTable.getColumnModel().getColumnIndex("仓库编码")).toString();
+							String storerCode = headerTable.getValueAt(header_row, headerTable.getColumnModel().getColumnIndex("货主编码")).toString();
+							String itemCode = detailTable.getValueAt(detail_row, detailTable.getColumnModel().getColumnIndex("商品编码")).toString();
+							String sql = "select ii.INV_INVENTORY_ID 库存ID,bi.ITEM_BAR_CODE 商品条码,ii.ITEM_CODE 商品编码,bi.ITEM_NAME 商品名称,"
+									+ "bi.RETAIL_PRICE 零售价,ii.ON_HAND_QTY 总库存,ii.ALLOCATED_QTY 已分配数量,ii.PICKED_QTY 已拣货数量,ii.ON_HAND_QTY+ii.IN_TRANSIT_QTY-(ii.ALLOCATED_QTY)-(ii.PICKED_QTY) 实际可用库存, "
+									+"biu.unit_name 单位,ii.LOCATION_CODE 库位,ii.CONTAINER_CODE 箱号,ii.LOT_NO 批次"
+									+",il.LOTTABLE01 批次属性1,il.LOTTABLE02 批次属性2,il.LOTTABLE03 批次属性3,il.LOTTABLE04 批次属性4,il.LOTTABLE05 批次属性5"
+									+",il.LOTTABLE06 批次属性6,il.LOTTABLE07 批次属性7,il.LOTTABLE08 批次属性8,il.LOTTABLE09 批次属性9,il.LOTTABLE10 批次属性10 "
+									+"from inv_inventory ii "
+									+"inner join bas_item bi on ii.STORER_CODE=bi.STORER_CODE and ii.ITEM_CODE=bi.ITEM_CODE "
+									+"left join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
+									+"inner join inv_lot il on ii.LOT_NO=il.LOT_NO "
+									+"where ii.warehouse_code='"+warrehouseCode+"' and ii.storer_code='"+storerCode+"' "
+									+ "and ii.item_code='"+itemCode+"' ";
+							tableQueryDialog tableQuery = new tableQueryDialog(sql,false);
+							Toolkit toolkit = Toolkit.getDefaultToolkit();
+							int x = (int)(toolkit.getScreenSize().getWidth()-tableQuery.getWidth())/2;
+							int y = (int)(toolkit.getScreenSize().getHeight()-tableQuery.getHeight())/2;
+							tableQuery.setLocation(x, y);
+							tableQuery.setModal(true);
+							tableQuery.setVisible(true);
+						}
+						});
+					popupmenu.add(menuItem1);
+					popupmenu.show(e.getComponent(), e.getX(), e.getY());
 				}
 			}
 		});
@@ -702,6 +750,7 @@ public class poImportFrm extends InnerFrame {
 			headerTable.setColumn(dm.getCols());
 		}
 		headerTable.removeRowAll();
+		detailTable.removeRowAll();
 		headerTable.setData(dm.getDataStrings());
 		headerTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		headerTable.setColumnEditableAll(false);

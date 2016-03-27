@@ -17,6 +17,7 @@ import dmdata.DataManager;
 import main.PBSUIBaseGrid;
 import sys.InnerFrame;
 import sys.JTableUtil;
+import sys.MainFrm;
 import sys.Message;
 import sys.QueryDialog;
 import util.Math_SAM;
@@ -212,7 +213,8 @@ public class ShipmentQueryFrm extends InnerFrame {
 		            	headerTable.setColumnEditableAll(false);
 		            	splash.start(); // 运行启动界面
 		            	try{
-		            		strWhere = " and osh.status='100' ";
+		            		String warehouseCode = MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0);
+		            		strWhere = " and osh.warehouse_code='"+warehouseCode+"' and osh.status='100' ";
 		    				if(!getHeaderTableData(strWhere)){
 		    					splash.stop();
 		    					headerTable.setEnabled(true);
@@ -247,7 +249,8 @@ public class ShipmentQueryFrm extends InnerFrame {
 		            	headerTable.setColumnEditableAll(false);
 		            	splash.start(); // 运行启动界面
 		            	try{
-		            		String strWhere = " and osh.status='500' ";
+		            		String warehouseCode = MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0);
+		            		strWhere = " and osh.warehouse_code='"+warehouseCode+"' and osh.status='500' ";
 		            		if(!getHeaderTableData(strWhere)){
 		    					splash.stop();
 		    					headerTable.setEnabled(true);
@@ -516,7 +519,7 @@ public class ShipmentQueryFrm extends InnerFrame {
 	
 	private void getDetailTableData(String shipmentNo){
 		String sql = "select osd.shipment_no 出库单号,osd.shipment_line_no 行号,osd.status 订单状态,osd.create_order_date 订单创建日期,osd.erp_order_no 外部订单号,osd.warehouse_code 仓库编码,osd.storer_code 货主"
-				+",osd.item_code 商品编码,bi.item_bar_code 条码,bi.item_name 商品名称,osd.req_qty 订单数量,osd.ALLOCATED_QTY 分配数量,biu.unit_name 单位,osd.is_gift 是否礼品,osd.price 价格,osd.item_retail_price 零售价格,osd.tax_rate 税率,osd.tax 税额,osd.created_dtm_loc WMS创建时间,osd.created_by_user WMS创建用户 "
+				+",osd.item_code 商品编码,ifnull(bi.item_bar_code,'') 条码,ifnull(bi.item_name,'') 商品名称,osd.req_qty 订单数量,osd.ALLOCATED_QTY 分配数量,ifnull(biu.unit_name,'') 单位,osd.is_gift 是否礼品,osd.price 价格,osd.item_retail_price 零售价格,ifnull(osd.tax_rate,'') 税率,ifnull(osd.tax,'') 税额,osd.created_dtm_loc WMS创建时间,osd.created_by_user WMS创建用户 "
 				+"from oub_shipment_detail osd "
 				+"inner join oub_shipment_header osh on osd.shipment_no=osh.shipment_no "
 				+"left outer join bas_item bi on bi.storer_code=osh.storer_code and bi.item_code=osd.item_code "

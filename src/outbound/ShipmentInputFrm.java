@@ -362,6 +362,7 @@ public class ShipmentInputFrm extends InnerFrame {
 		btnQuery.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				ArrayList<String> fieldList = new ArrayList<String>();
+				fieldList.add("osh.TRANSFER_ORDER_NO:运单号");
 				fieldList.add("osh.SHIPMENT_NO:订单号");
 				fieldList.add("osh.ERP_ORDER_NO:外部订单号");
 				fieldList.add("osh.WAREHOUSE_CODE:仓库编码");

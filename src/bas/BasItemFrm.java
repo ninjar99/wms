@@ -18,6 +18,7 @@ import java.util.Vector;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
@@ -42,10 +43,12 @@ import sys.MainFrm;
 import sys.Message;
 import sys.QueryDialog;
 import sys.ToolBarItem;
+import sys.tableQueryDialog;
 import util.JTNumEdit;
 import util.WaitingSplash;
 
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JComboBox;
 import java.awt.GridLayout;
@@ -109,7 +112,7 @@ public class BasItemFrm extends InnerFrame{
 	private JLabel label_3;
 	private JTNumEdit txt_price;
 	
-	private String retWhere = "";
+	private String retWhere = " and bas_storer.STORER_NAME like '%德运%' ";
 	
 	BasItemFrm(){
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -377,6 +380,73 @@ public class BasItemFrm extends InnerFrame{
 		centerPanel.add(scrollPane, BorderLayout.CENTER);
 		
 		table_item = new PBSUIBaseGrid();
+		table_item.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if(e.getClickCount()>=2){
+					table_item.setColumnSelectionAllowed(true);
+				}
+				int r = table_item.getSelectedRow();
+				comboBox_STORER_CODE.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货主"))));
+				comboBox_BRAND_CODE.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("品牌"))));
+				textField_itemCode.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品编码"))));
+				textField_itemName.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品名称"))));
+				textField_BAR_CODE.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品条码"))));
+				comboBox_port_no.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("口岸"))));
+				textField_TAX_NUMBER.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("税号"))));
+				textField_HSCODE.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("海关编码"))));
+				textField_HSCODE_DESC.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("申报要素"))));
+				comboBox_unit_code.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("最小计量单位"))));
+				textField_item_spec.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品规格"))));
+				comboBox_country_code.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("国家"))));
+				textArea_DESCRIPTION.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品描述"))));
+				cb_item_class.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品类型"))));
+				txt_length.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("长度"))));
+				txt_width.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("宽度"))));
+				txt_height.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("高度"))));
+				txt_inv.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("库存数量"))));
+				txt_safeQty.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("安全库存"))));
+				txt_price.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("零售价"))));
+			}
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if(btnSave.isEnabled()) return;
+				if (e.getButton() == MouseEvent.BUTTON3) {
+					JPopupMenu popupmenu = new JPopupMenu();
+					JMenuItem menuItem1 = new JMenuItem();
+					menuItem1.setLabel("查询该商品库存");
+					menuItem1.addActionListener(new java.awt.event.ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							int header_row = table_item.getSelectedRow();
+							int header_column = table_item.getSelectedColumn();
+							String warrehouseCode = MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0).toString();
+							String storerCode = comboBox_STORER_CODE.getSelectedOID();
+							String itemCode = table_item.getValueAt(header_row, table_item.getColumnModel().getColumnIndex("货品编码")).toString();
+							String sql = "select ii.INV_INVENTORY_ID 库存ID,bi.ITEM_BAR_CODE 商品条码,ii.ITEM_CODE 商品编码,bi.ITEM_NAME 商品名称,"
+									+ "bi.RETAIL_PRICE 零售价,ii.ON_HAND_QTY 总库存,ii.ALLOCATED_QTY 已分配数量,ii.PICKED_QTY 已拣货数量,ii.ON_HAND_QTY+ii.IN_TRANSIT_QTY-(ii.ALLOCATED_QTY)-(ii.PICKED_QTY) 实际可用库存, "
+									+"biu.unit_name 单位,ii.LOCATION_CODE 库位,ii.CONTAINER_CODE 箱号,ii.LOT_NO 批次"
+									+",il.LOTTABLE01 批次属性1,il.LOTTABLE02 批次属性2,il.LOTTABLE03 批次属性3,il.LOTTABLE04 批次属性4,il.LOTTABLE05 批次属性5"
+									+",il.LOTTABLE06 批次属性6,il.LOTTABLE07 批次属性7,il.LOTTABLE08 批次属性8,il.LOTTABLE09 批次属性9,il.LOTTABLE10 批次属性10 "
+									+"from inv_inventory ii "
+									+"inner join bas_item bi on ii.STORER_CODE=bi.STORER_CODE and ii.ITEM_CODE=bi.ITEM_CODE "
+									+"left join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
+									+"inner join inv_lot il on ii.LOT_NO=il.LOT_NO "
+									+"where ii.warehouse_code='"+warrehouseCode+"' and ii.storer_code='"+storerCode+"' "
+									+ "and ii.item_code='"+itemCode+"' ";
+							tableQueryDialog tableQuery = new tableQueryDialog(sql,false);
+							Toolkit toolkit = Toolkit.getDefaultToolkit();
+							int x = (int)(toolkit.getScreenSize().getWidth()-tableQuery.getWidth())/2;
+							int y = (int)(toolkit.getScreenSize().getHeight()-tableQuery.getHeight())/2;
+							tableQuery.setLocation(x, y);
+							tableQuery.setModal(true);
+							tableQuery.setVisible(true);
+						}
+						});
+					popupmenu.add(menuItem1);
+					popupmenu.show(e.getComponent(), e.getX(), e.getY());
+				}
+			}
+		});
 		table_item.setSortEnable();
 		table_item.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		table_item.setColumnEditableAll(false);
@@ -425,7 +495,6 @@ public class BasItemFrm extends InnerFrame{
 			enableSaveCancelButton(true);
 			clearEditUI();
 			table_item.setEnabled(false);
-			table_item.removeMouseListener(mouseAdapter);
 		}
 	};
 	ActionListener saveListener = new ActionListener() {
@@ -627,38 +696,8 @@ public class BasItemFrm extends InnerFrame{
 	private void init(){
 		enableEditComp(false);
 		enableSaveCancelButton(false);
-		initTableData("");
-		
-		table_item.addMouseListener(mouseAdapter);
+		initTableData(retWhere);
 	}
-	MouseAdapter mouseAdapter = new MouseAdapter() {
-			public void mouseClicked(MouseEvent e) {
-				if(e.getClickCount()>=2){
-					table_item.setColumnSelectionAllowed(true);
-				}
-				int r = table_item.getSelectedRow();
-				comboBox_STORER_CODE.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货主"))));
-				comboBox_BRAND_CODE.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("品牌"))));
-				textField_itemCode.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品编码"))));
-				textField_itemName.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品名称"))));
-				textField_BAR_CODE.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品条码"))));
-				comboBox_port_no.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("口岸"))));
-				textField_TAX_NUMBER.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("税号"))));
-				textField_HSCODE.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("海关编码"))));
-				textField_HSCODE_DESC.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("申报要素"))));
-				comboBox_unit_code.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("最小计量单位"))));
-				textField_item_spec.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品规格"))));
-				comboBox_country_code.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("国家"))));
-				textArea_DESCRIPTION.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品描述"))));
-				cb_item_class.setSelectedItem(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("货品类型"))));
-				txt_length.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("长度"))));
-				txt_width.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("宽度"))));
-				txt_height.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("高度"))));
-				txt_inv.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("库存数量"))));
-				txt_safeQty.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("安全库存"))));
-				txt_price.setText(NulltoSpace(table_item.getValueAt(r, table_item.getColumnModel().getColumnIndex("零售价"))));
-			}
-		};
 		
 	private void initTableData(String strWhere){
 		new SwingWorker<String, Void>() {
@@ -702,7 +741,9 @@ public class BasItemFrm extends InnerFrame{
 	             		   +"LEFT JOIN .`bas_country` "
 	             		   +"ON (`bas_item`.`COUNTRY_CODE` = `bas_country`.`country_code`) "
 	             		   +"LEFT JOIN bas_code_dict bcd on bcd.CODE_VALUE=bas_item.ITEM_CLASS_CODE and bcd.TYPE_CODE='ITEM_CLASS_CODE' "
-	             		   +"LEFT JOIN (select storer_code,item_code,sum(ON_HAND_QTY-ALLOCATED_QTY-PICKED_QTY) qty from inv_inventory where WAREHOUSE_CODE='hz' group by storer_code,item_code having sum(ON_HAND_QTY-ALLOCATED_QTY-PICKED_QTY)>0) inv "
+	             		   +"LEFT JOIN (select storer_code,item_code,sum(ON_HAND_QTY-ALLOCATED_QTY-PICKED_QTY) qty "
+	             		   + "from inv_inventory where WAREHOUSE_CODE='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' "
+	             		   + "group by storer_code,item_code having sum(ON_HAND_QTY-ALLOCATED_QTY-PICKED_QTY)>0) inv "
 	             		   + "on inv.storer_code=`bas_item`.`STORER_CODE` and inv.item_code=`bas_item`.`ITEM_CODE` "
 	             		   +" where 1=1 ";
 	                 if(!strWhere.equals("")){
@@ -738,9 +779,7 @@ public class BasItemFrm extends InnerFrame{
 		enableSaveCancelButton(!b);
 		clearEditUI();
 		table_item.setEnabled(b);
-		if(b==true){
-			table_item.addMouseListener(mouseAdapter);
-		}
+		
 	}
 	
 	private void enableCRUDbutton(boolean b){

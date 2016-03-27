@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import DBUtil.DBOperator;
+import comUtil.JTableExportExcel;
 import dmdata.DataManager;
 import main.PBSUIBaseGrid;
 
@@ -187,6 +188,16 @@ public class tableQueryDialog extends JDialog {
 						tableQuery.dispose();
 					}
 				});
+				{
+					JButton btnExcel = new JButton("Excel\u5BFC\u51FA");
+					btnExcel.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent arg0) {
+							JTableExportExcel exportExcel = new JTableExportExcel(table); 
+							exportExcel.export();
+						}
+					});
+					buttonPane.add(btnExcel);
+				}
 				btnClose.setActionCommand("OK");
 				buttonPane.add(btnClose);
 				getRootPane().setDefaultButton(btnClose);
