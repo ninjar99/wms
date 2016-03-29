@@ -1354,7 +1354,8 @@ public class InvTransferFrm extends InnerFrame {
 				if(!inventoryID.equals("")){
 					//库存表写入成功
 					//扣减原库存
-					String sql = "update inv_inventory ii set ii.ON_HAND_QTY=ii.ON_HAND_QTY - ("+REQ_QTY+") "
+					String sql = "update inv_inventory ii set ii.ON_HAND_QTY=ii.ON_HAND_QTY - ("+REQ_QTY+"),"
+							+ "ii.OUB_TOTAL_QTY=ii.OUB_TOTAL_QTY + ("+REQ_QTY+") "
 							+"where ii.INV_INVENTORY_ID='"+INV_INVENTORY_ID+"' "
 							+"";
 					int t = DBOperator.DoUpdate(sql);

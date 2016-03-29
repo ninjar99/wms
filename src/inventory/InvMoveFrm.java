@@ -765,7 +765,8 @@ public class InvMoveFrm extends InnerFrame {
 						&& !locationTo.equals("")) {
 					if(isDamage){						
 						sql = "update inv_inventory set warehouse_code='" + warehouseTo + "',location_code='" + locationTo
-								+ "' " + ",INACTIVE_QTY=ifnull(ii.ON_HAND_QTY,0)-(ifnull(ii.ALLOCATED_QTY,0))-(ifnull(ii.PICKED_QTY,0))-(ifnull(INACTIVE_QTY,0)) where warehouse_code='" + warehousrFrom + "' and location_code='" + locationFrom
+								+ "' " + ",INACTIVE_QTY=ifnull(ii.ON_HAND_QTY,0)-(ifnull(ii.ALLOCATED_QTY,0))-(ifnull(ii.PICKED_QTY,0))-(ifnull(INACTIVE_QTY,0)) "
+								+ "where warehouse_code='" + warehousrFrom + "' and location_code='" + locationFrom
 								+ "' and container_code='" + containerFrom + "' ";
 					}else{
 						sql = "update inv_inventory set warehouse_code='" + warehouseTo + "',location_code='" + locationTo
@@ -789,9 +790,9 @@ public class InvMoveFrm extends InnerFrame {
 						//不存在就插入目标库位新记录   冻结数量
 						if(dm2==null || dm2.getCurrentCount()==0){
 							sql = "insert into inv_inventory(WAREHOUSE_CODE,STORER_CODE,ITEM_CODE,ITEM_NAME,INV_LOT_ID,LOT_NO,LOCATION_CODE"
-									+ ",CONTAINER_CODE,INACTIVE_QTY,CREATED_BY_USER,CREATED_DTM_LOC) "
+									+ ",CONTAINER_CODE,INACTIVE_QTY,INB_TOTAL_QTY,CREATED_BY_USER,CREATED_DTM_LOC) "
 									+"select WAREHOUSE_CODE,STORER_CODE,ITEM_CODE,ITEM_NAME,INV_LOT_ID,LOT_NO,'"+locationTo+"',"
-									+"'"+containerTo+"',"+inputInvQty+",'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now() "
+									+"'"+containerTo+"',"+inputInvQty+","+inputInvQty+",'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now() "
 									+" from inv_inventory where warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' and location_code='" + locationFrom + "' and container_code='" + containerFrom
 									+ "' and item_code='" + itemCodeFrom.toString().trim() + "' and LOT_NO = '"+lotNo+"' ";
 							int insertCount = DBOperator.DoUpdate(sql);
@@ -800,7 +801,8 @@ public class InvMoveFrm extends InnerFrame {
 								return;
 							}else{
 								//存在就扣减原库位数量
-								sql = "update inv_inventory set ON_HAND_QTY=ON_HAND_QTY-("+inputInvQty+") "
+								sql = "update inv_inventory set ON_HAND_QTY=ON_HAND_QTY-("+inputInvQty+"),"
+										+ "OUB_TOTAL_QTY=OUB_TOTAL_QTY+("+inputInvQty+") "
 										+ "where INV_INVENTORY_ID='"+fromInvID+"' and warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' and location_code='" + locationFrom + "' and container_code='" + containerFrom
 										+ "' and item_code='" + itemCodeFrom.toString().trim() + "' and LOT_NO = '"+lotNo+"' ";
 								DBOperator.DoUpdate(sql);
@@ -808,7 +810,8 @@ public class InvMoveFrm extends InnerFrame {
 						}else{
 							//存在 更新目标库位库存数量    冻结数量
 							String toInvID = dm2.getString("INV_INVENTORY_ID", 0);
-							sql = "update inv_inventory set INACTIVE_QTY=INACTIVE_QTY+("+inputInvQty+") "
+							sql = "update inv_inventory set INACTIVE_QTY=INACTIVE_QTY+("+inputInvQty+"),"
+									+ "INB_TOTAL_QTY=INB_TOTAL_QTY+("+inputInvQty+") "
 									+ "where INV_INVENTORY_ID='"+toInvID+"' and warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' and location_code='" + locationTo + "' and container_code='" + containerTo
 									+ "' and item_code='" + itemCodeFrom.toString().trim() + "' and LOT_NO = '"+lotNo+"' ";
 							int insertCount = DBOperator.DoUpdate(sql);
@@ -817,7 +820,8 @@ public class InvMoveFrm extends InnerFrame {
 								return;
 							}else{
 								//存在就扣减原库位数量
-								sql = "update inv_inventory set ON_HAND_QTY=ON_HAND_QTY-("+inputInvQty+") "
+								sql = "update inv_inventory set ON_HAND_QTY=ON_HAND_QTY-("+inputInvQty+"),"
+										+ "OUB_TOTAL_QTY=OUB_TOTAL_QTY+("+inputInvQty+") "
 										+ "where INV_INVENTORY_ID='"+fromInvID+"' and warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' and location_code='" + locationFrom + "' and container_code='" + containerFrom
 										+ "' and item_code='" + itemCodeFrom.toString().trim() + "' and LOT_NO = '"+lotNo+"' ";
 								//放到后面执行
@@ -837,9 +841,9 @@ public class InvMoveFrm extends InnerFrame {
 						//不存在就插入目标库位新记录
 						if(dm2==null || dm2.getCurrentCount()==0){
 							sql = "insert into inv_inventory(WAREHOUSE_CODE,STORER_CODE,ITEM_CODE,ITEM_NAME,INV_LOT_ID,LOT_NO,LOCATION_CODE"
-									+ ",CONTAINER_CODE,ON_HAND_QTY,CREATED_BY_USER,CREATED_DTM_LOC) "
+									+ ",CONTAINER_CODE,ON_HAND_QTY,INB_TOTAL_QTY,CREATED_BY_USER,CREATED_DTM_LOC) "
 									+"select WAREHOUSE_CODE,STORER_CODE,ITEM_CODE,ITEM_NAME,INV_LOT_ID,LOT_NO,'"+locationTo+"',"
-									+"'"+containerTo+"',"+inputInvQty+",'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now() "
+									+"'"+containerTo+"',"+inputInvQty+","+inputInvQty+",'"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',now() "
 									+" from inv_inventory where warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' and location_code='" + locationFrom + "' and container_code='" + containerFrom
 									+ "' and item_code='" + itemCodeFrom.toString().trim() + "' and LOT_NO = '"+lotNo+"' ";
 							int insertCount = DBOperator.DoUpdate(sql);
@@ -848,7 +852,8 @@ public class InvMoveFrm extends InnerFrame {
 								return;
 							}else{
 								//存在就扣减原库位数量
-								sql = "update inv_inventory set ON_HAND_QTY=ON_HAND_QTY-("+inputInvQty+") "
+								sql = "update inv_inventory set ON_HAND_QTY=ON_HAND_QTY-("+inputInvQty+"),"
+										+ "OUB_TOTAL_QTY=OUB_TOTAL_QTY+("+inputInvQty+") "
 										+ "where INV_INVENTORY_ID='"+fromInvID+"' and warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' and location_code='" + locationFrom + "' and container_code='" + containerFrom
 										+ "' and item_code='" + itemCodeFrom.toString().trim() + "' and LOT_NO = '"+lotNo+"' ";
 								//放到后面执行
@@ -856,7 +861,8 @@ public class InvMoveFrm extends InnerFrame {
 						}else{
 							//存在 更新目标库位库存数量
 							String toInvID = dm2.getString("INV_INVENTORY_ID", 0);
-							sql = "update inv_inventory set ON_HAND_QTY=ON_HAND_QTY+("+inputInvQty+") "
+							sql = "update inv_inventory set ON_HAND_QTY=ON_HAND_QTY+("+inputInvQty+"),"
+									+ "INB_TOTAL_QTY=INB_TOTAL_QTY+("+inputInvQty+") "
 									+ "where INV_INVENTORY_ID='"+toInvID+"' and warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' and location_code='" + locationTo + "' and container_code='" + containerTo
 									+ "' and item_code='" + itemCodeFrom.toString().trim() + "' and LOT_NO = '"+lotNo+"' ";
 							int insertCount = DBOperator.DoUpdate(sql);
@@ -865,7 +871,8 @@ public class InvMoveFrm extends InnerFrame {
 								return;
 							}else{
 								//存在就扣减原库位数量
-								sql = "update inv_inventory set ON_HAND_QTY=ON_HAND_QTY-("+inputInvQty+") "
+								sql = "update inv_inventory set ON_HAND_QTY=ON_HAND_QTY-("+inputInvQty+"),"
+										+ "OUB_TOTAL_QTY=OUB_TOTAL_QTY+("+inputInvQty+") "
 										+ "where INV_INVENTORY_ID='"+fromInvID+"' and warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' and location_code='" + locationFrom + "' and container_code='" + containerFrom
 										+ "' and item_code='" + itemCodeFrom.toString().trim() + "' and LOT_NO = '"+lotNo+"' ";
 								//放到后面执行

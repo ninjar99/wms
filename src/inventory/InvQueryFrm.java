@@ -394,7 +394,7 @@ public class InvQueryFrm extends InnerFrame {
 		String sql = "select @rowno:=@rowno+1 as 序号,ii.WAREHOUSE_CODE 仓库编码,bw.WAREHOUSE_NAME 仓库名称,ii.STORER_CODE 货主编码,bs.STORER_NAME 货主名称,ii.LOCATION_CODE 库位编码,"
 				+ "case bl.LOCATION_TYPE_CODE when 'Normal' then '正常库位' when 'Dock' then '暂存库位' when 'Damage' then '残次库位' else bl.LOCATION_TYPE_CODE end 库位属性,ii.CONTAINER_CODE 箱号,"
 				+"ii.ITEM_CODE 商品编码,bi.ITEM_BAR_CODE 商品条码,bi.ITEM_NAME 商品名称,bi.ITEM_SPEC 商品规格,ii.ON_HAND_QTY 库存总数,ii.ALLOCATED_QTY 已分配数量,ii.PICKED_QTY 已拣货数量,"
-				+"ii.INACTIVE_QTY 冻结数量,ii.ON_HAND_QTY-(ii.ALLOCATED_QTY)-ii.PICKED_QTY 可用库存,ii.OUB_TOTAL_QTY 总出库数量,bi.SAFE_QTY 安全库存数量,biu.unit_name 单位,ii.lot_no 批次号"
+				+"ii.INACTIVE_QTY 冻结数量,ii.ON_HAND_QTY-(ii.ALLOCATED_QTY)-ii.PICKED_QTY 可用库存,ii.INB_TOTAL_QTY 总入库数量,ii.OUB_TOTAL_QTY 总出库数量,bi.SAFE_QTY 安全库存数量,biu.unit_name 单位,ii.lot_no 批次号"
 				+",il.LOTTABLE01 批次属性1,il.LOTTABLE02 批次属性2,il.LOTTABLE03 批次属性3,il.LOTTABLE04 批次属性4,il.LOTTABLE05 批次属性5,"
 				+"il.LOTTABLE06 批次属性6,il.LOTTABLE07 批次属性7,il.LOTTABLE08 批次属性8,il.LOTTABLE09 批次属性9,il.LOTTABLE10 批次属性10 "
 				+",ii.`STATUS` 库存状态,ii.QUALITY 库存质量,ii.INV_INVENTORY_ID 库存ID  "

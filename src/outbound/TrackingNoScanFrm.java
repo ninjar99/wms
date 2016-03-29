@@ -230,13 +230,15 @@ public class TrackingNoScanFrm extends InnerFrame {
 						+ "ship_to_country,ship_to_province_code,ship_to_city_code,ship_to_region_code,ship_to_street_code,ship_to_address1,ship_to_cell,"
 						+ "ship_to_tel,ship_to_email,created_dtm_loc,created_by_user) "
 						
-						+ "select distinct o.supplier_id,o.order_sn,o.external_order,o.external_order,'"+userSelectWarehouse+"',o.created_date,o.invoice_no,o.consignee_name,o.consignee_name,o.consignee_idcard "
+						+ "select distinct o.supplier_id,case when ifnull(o.order_sn,'')='' then o.external_order else o.order_sn end,o.external_order,o.external_order,'"+userSelectWarehouse+"',o.created_date,o.invoice_no,o.consignee_name,o.consignee_name,o.consignee_idcard "
 						+ ",o.consignee_country,o.consignee_province,o.consignee_city,o.consignee_district,'',o.consignee_address,o.consignee_mobile,o.consignee_mobile,o.consignee_email,"
 						+"now(),'"+userCode+"' "
 						+ "from sandwich.ag_order o "
 						+ "inner join sandwich.ag_order_commodity od on o.order_id=od.order_id "
 						+ "where o.invoice_no in "+instr.toString()
-						+" and not exists(select shipment_no from oub_shipment_header osh where osh.shipment_no=o.order_sn) "
+						+" and not exists(select shipment_no from oub_shipment_header osh where osh.shipment_no="
+						+ "(case when ifnull(o.order_sn,'')='' then o.external_order else o.order_sn end)"
+						+ ") "
 						
 						+"union all "
 						
@@ -256,12 +258,15 @@ public class TrackingNoScanFrm extends InnerFrame {
 					sql = "insert into oub_shipment_detail(shipment_no,shipment_line_no,status,create_order_date,erp_order_no,erp_order_line_no,warehouse_code,storer_code"
 							+",item_code,req_qty,is_gift,price,item_retail_price,item_net_price,tax_rate,tax,created_dtm_loc,created_by_user,USER_DEF8) "
 							
-							+"select o.order_sn,(@rowNum:=@rowNum+1) as rowNo,'100',o.created_date,o.external_order,(@rowNum:=@rowNum) as rowNo,'"+userSelectWarehouse+"',o.supplier_id "
+							+"select case when ifnull(o.order_sn,'')='' then o.external_order else o.order_sn end"
+							+ ",(@rowNum:=@rowNum+1) as rowNo,'100',o.created_date,o.external_order,(@rowNum:=@rowNum) as rowNo,'"+userSelectWarehouse+"',o.supplier_id "
 							+",p.part_number,od.commodity_amount,od.is_gift,od.market_price,od.market_price,od.unit_price,od.tax_rate,od.tax,now(),'"+userCode+"',o.order_id "
 							+"from sandwich.ag_order o ,(Select (@rowNum :=0) ) r  "
 							+",sandwich.ag_order_commodity od ,sandwich.ag_product p "
 							+"where o.order_id=od.order_id and (p.part_number=od.commodity_sn or p.product_id=od.product_id) and o.invoice_no in "+instr.toString()
-							+" and not exists(select shipment_no from oub_shipment_detail osd where osd.shipment_no=o.order_sn) "
+							+" and not exists(select shipment_no from oub_shipment_detail osd where osd.shipment_no="
+							+ "(case when ifnull(o.order_sn,'')='' then o.external_order else o.order_sn end)"
+							+ ") "
 							
 							+" union all "
 							
@@ -857,7 +862,7 @@ public class TrackingNoScanFrm extends InnerFrame {
 										+"inner join oub_shipment_detail osd on osh.SHIPMENT_NO=osd.SHIPMENT_NO "
 										+"where osh.SHIPMENT_NO='"+shipmentNo+"' and osd.SHIPMENT_LINE_NO= "+shipmentLineNo+" "
 										+ "and not exists(select PICK_NO from oub_pick_detail where SHIPMENT_NO='"+shipmentNo+"' "
-										+ "and SHIPMENT_LINE_NO="+shipmentLineNo+" and STATUS='100')";
+										+ "and SHIPMENT_LINE_NO="+shipmentLineNo+" and STATUS='100' and REQ_QTY=PICKED_QTY)";
 								t = DBOperator.DoUpdate(sql);
 								if(t>0){
 									sql = "update oub_shipment_detail osd set status='200',osd.ALLOCATED_QTY=ifnull((select sum(PICKED_QTY) from oub_pick_detail opd "
@@ -887,6 +892,11 @@ public class TrackingNoScanFrm extends InnerFrame {
 				sql = "update oub_shipment_header set WAVE_NO='',status='100' where SHIPMENT_NO='"+shipmentNo+"' and WAREHOUSE_CODE='"+shipmentWarehouseCode+"' ";
 				DBOperator.DoUpdate(sql);
 				sql = "update oub_shipment_detail set status='100',ALLOCATED_QTY=0 where SHIPMENT_NO='"+shipmentNo+"' and WAREHOUSE_CODE='"+shipmentWarehouseCode+"' ";
+				DBOperator.DoUpdate(sql);
+				//分配失败，清除库存分配数量
+				sql = "update oub_pick_detail a inner join inv_inventory b on a.INV_INVENTORY_ID=b.INV_INVENTORY_ID "
+					+ "set b.ALLOCATED_QTY=b.ALLOCATED_QTY - (a.REQ_QTY) "
+					+ "where a.SHIPMENT_NO='"+shipmentNo+"'";
 				DBOperator.DoUpdate(sql);
 				//分配失败，清除拣货单表头 + 明细
 				sql = "delete from oub_pick_header where SHIPMENT_NO='"+shipmentNo+"' and WAREHOUSE_CODE='"+shipmentWarehouseCode+"' ";

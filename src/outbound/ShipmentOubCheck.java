@@ -282,7 +282,9 @@ public class ShipmentOubCheck extends InnerFrame {
 						sql = "update inv_inventory ii "
 							+"inner join oub_pick_detail opd on ii.INV_INVENTORY_ID=opd.INV_INVENTORY_ID "
 							+"inner join oub_shipment_header osh on osh.WAREHOUSE_CODE=opd.WAREHOUSE_CODE and osh.SHIPMENT_NO=opd.SHIPMENT_NO "
-							+" set ii.ON_HAND_QTY=ii.ON_HAND_QTY-(opd.PICKED_QTY),ii.PICKED_QTY=ii.PICKED_QTY-(opd.PICKED_QTY),ii.OUB_TOTAL_QTY=ii.OUB_TOTAL_QTY+opd.PICKED_QTY "
+							+" set ii.ON_HAND_QTY=ii.ON_HAND_QTY-(opd.PICKED_QTY),"
+							+ "ii.PICKED_QTY=ii.PICKED_QTY-(opd.PICKED_QTY),"
+							+ "ii.OUB_TOTAL_QTY=ii.OUB_TOTAL_QTY+opd.PICKED_QTY "
 							+",ii.UPDATED_DTM_LOC=now(),ii.UPDATED_BY_USER='"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"'"
 							+"where osh.TRANSFER_ORDER_NO='"+trackingNo+"' "
 							+"";
@@ -308,7 +310,8 @@ public class ShipmentOubCheck extends InnerFrame {
 										+ "from oub_shipment_detail osd "
 										+ "left join bas_item_material bim on osd.STORER_CODE=bim.STORER_CODE and osd.ITEM_CODE=bim.ITEM_CODE "
 										+ "where osd.SHIPMENT_NO='"+shipmentNo+"') tmp on tmp.ITEM_CODE_MATERIAL=ii.ITEM_CODE "
-										+ "set ii.ON_HAND_QTY=ii.ON_HAND_QTY-(tmp.MATERIAL_QTY),ii.OUB_TOTAL_QTY=ii.OUB_TOTAL_QTY+(tmp.MATERIAL_QTY) "
+										+ "set ii.ON_HAND_QTY=ii.ON_HAND_QTY-(tmp.MATERIAL_QTY),"
+										+ "ii.OUB_TOTAL_QTY=ii.OUB_TOTAL_QTY+(tmp.MATERIAL_QTY) "
 										+ "";
 								t = DBOperator.DoUpdate(sql);
 								if(t==0){

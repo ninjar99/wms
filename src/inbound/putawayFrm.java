@@ -335,7 +335,8 @@ public class putawayFrm extends InnerFrame {
 		if(tmpDM.getCurrentCount()>1){
 			return "ERR-该箱号之前有收货完成未上架的任务，不能重复使用该箱号上架";
 		}
-		sql = "update inv_inventory set location_code='"+LOCATION_CODE+"' where container_code='"+CONTAINER_CODE+"' and warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' ";
+		sql = "update inv_inventory set location_code='"+LOCATION_CODE+"' "
+			+ "where container_code='"+CONTAINER_CODE+"' and warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' ";
 		int t = DBOperator.DoUpdate(sql);
 		if(t==0){
 			return "ERR-上架失败，未找到数据,库位："+LOCATION_CODE+"，箱号："+CONTAINER_CODE+"，请联系系统管理员";

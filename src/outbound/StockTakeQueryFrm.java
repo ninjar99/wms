@@ -469,7 +469,9 @@ public class StockTakeQueryFrm extends InnerFrame {
 //								+"";
 					}else{
 						String INV_INVENTORY_ID = dmInv.getString("INV_INVENTORY_ID", 0);
-						sql = "update inv_inventory set ON_HAND_QTY="+CONF_QTY+" where INV_INVENTORY_ID='"+INV_INVENTORY_ID+"' " ;
+						sql = "update inv_inventory set ON_HAND_QTY="+CONF_QTY+","
+							+ "OUB_TOTAL_QTY=OUB_TOTAL_QTY+("+String.valueOf(diff)+") "
+							+ "where INV_INVENTORY_ID='"+INV_INVENTORY_ID+"' " ;
 						int t = DBOperator.DoUpdate(sql);
 						if(t!=1){
 							return "ERR-库存更新失败，无法处理盘点差异\n"+"STORER_CODE="+STORER_CODE+" WAREHOUSE_CODE="+WAREHOUSE_CODE
@@ -501,7 +503,9 @@ public class StockTakeQueryFrm extends InnerFrame {
 //								+"";
 					}else{
 						String INV_INVENTORY_ID = dmInv.getString("INV_INVENTORY_ID", 0);
-						sql = "update inv_inventory set ON_HAND_QTY="+CONF_QTY+" where INV_INVENTORY_ID='"+INV_INVENTORY_ID+"' " ;
+						sql = "update inv_inventory set ON_HAND_QTY="+CONF_QTY+","
+							+ "INB_TOTAL_QTY=INB_TOTAL_QTY+("+String.valueOf(diff)+") "
+							+ "where INV_INVENTORY_ID='"+INV_INVENTORY_ID+"' " ;
 						int t = DBOperator.DoUpdate(sql);
 						if(t!=1){
 							return "ERR-库存更新失败，无法处理盘点差异\n"+"STORER_CODE="+STORER_CODE+" WAREHOUSE_CODE="+WAREHOUSE_CODE
