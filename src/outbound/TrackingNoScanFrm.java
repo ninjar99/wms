@@ -640,6 +640,44 @@ public class TrackingNoScanFrm extends InnerFrame {
 					popupmenu.show(e.getComponent(), e.getX(), e.getY());
 				}
 			}
+			@Override
+			public void mousePressed(MouseEvent e) {
+				if (e.getButton() == MouseEvent.BUTTON3) {
+					JPopupMenu popupmenu = new JPopupMenu();
+					JMenuItem menuItem1 = new JMenuItem();
+					menuItem1.setLabel("查询该商品库存");
+					menuItem1.addActionListener(new java.awt.event.ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							int header_row = detailTable.getSelectedRow();
+							int header_column = detailTable.getSelectedColumn();
+							String warrehouseCode = MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0).toString();
+							String storerName = detailTable.getValueAt(header_row, detailTable.getColumnModel().getColumnIndex("货主")).toString();
+							String itemCode = detailTable.getValueAt(header_row, detailTable.getColumnModel().getColumnIndex("商品编码")).toString();
+							String sql = "select ii.INV_INVENTORY_ID 库存ID,bi.ITEM_BAR_CODE 商品条码,ii.ITEM_CODE 商品编码,bi.ITEM_NAME 商品名称,"
+									+ "bi.RETAIL_PRICE 零售价,ii.ON_HAND_QTY 总库存,ii.ALLOCATED_QTY 已分配数量,ii.PICKED_QTY 已拣货数量,ii.ON_HAND_QTY+ii.IN_TRANSIT_QTY-(ii.ALLOCATED_QTY)-(ii.PICKED_QTY) 实际可用库存, "
+									+"biu.unit_name 单位,ii.LOCATION_CODE 库位,ii.CONTAINER_CODE 箱号,ii.LOT_NO 批次"
+									+",il.LOTTABLE01 批次属性1,il.LOTTABLE02 批次属性2,il.LOTTABLE03 批次属性3,il.LOTTABLE04 批次属性4,il.LOTTABLE05 批次属性5"
+									+",il.LOTTABLE06 批次属性6,il.LOTTABLE07 批次属性7,il.LOTTABLE08 批次属性8,il.LOTTABLE09 批次属性9,il.LOTTABLE10 批次属性10 "
+									+"from inv_inventory ii "
+									+"inner join bas_item bi on ii.STORER_CODE=bi.STORER_CODE and ii.ITEM_CODE=bi.ITEM_CODE "
+									+"left join bas_item_unit biu on bi.UNIT_CODE=biu.unit_code "
+									+"inner join inv_lot il on ii.LOT_NO=il.LOT_NO "
+									+"inner join bas_storer storer on ii.STORER_CODE=storer.STORER_CODE "
+									+"where ii.warehouse_code='"+warrehouseCode+"' and storer.STORER_NAME='"+storerName+"' "
+									+ "and ii.item_code='"+itemCode+"' ";
+							tableQueryDialog tableQuery = new tableQueryDialog(sql,false);
+							Toolkit toolkit = Toolkit.getDefaultToolkit();
+							int x = (int)(toolkit.getScreenSize().getWidth()-tableQuery.getWidth())/2;
+							int y = (int)(toolkit.getScreenSize().getHeight()-tableQuery.getHeight())/2;
+							tableQuery.setLocation(x, y);
+							tableQuery.setModal(true);
+							tableQuery.setVisible(true);
+						}
+						});
+					popupmenu.add(menuItem1);
+					popupmenu.show(e.getComponent(), e.getX(), e.getY());
+				}
+			}
 		});
 		scrollPane_1.setViewportView(detailTable);
 		showData("(0)");
