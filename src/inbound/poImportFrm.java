@@ -8,6 +8,7 @@ import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
+import java.net.URLEncoder;
 import java.sql.ResultSet;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -106,15 +107,38 @@ public class poImportFrm extends InnerFrame {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		String sql = "select item_code MerchantProductID,TOTAL_QTY Qty from inb_po_detail where PO_NO='PO00000233' ";
-		DataManager podetail = DBOperator.DoSelect2DM(sql);
-		JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetail, "Items"));
-		try {
-			new poImportFrm().openPOAPI("164027000093",dataJson.get("Items").toString());
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+//		String sql = "select item_code MerchantProductID,TOTAL_QTY Qty from inb_po_detail where PO_NO='PO00000233' ";
+//		DataManager podetail = DBOperator.DoSelect2DM(sql);
+//		JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetail, "Items"));
+//		try {
+//			new poImportFrm().openPOAPI("164027000093",dataJson.get("Items").toString());
+//		} catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
+		//调用三明治POCreate API接口，创建PO预入库单
+		String warehouseID="54";
+		String etaTime = LogInfo.getCurrentDate_Short();
+		String assBillNo = "";
+		String sql = "select PO_NO,ERP_PO_NO from inb_po_header where PO_NO in('PO00000280')";
+		DataManager poHeaderListDM = DBOperator.DoSelect2DM(sql);
+		for(int i=0;i<poHeaderListDM.getCurrentCount();i++){
+			String po_no = poHeaderListDM.getString("PO_NO", i);
+			String ERP_PO_NO = poHeaderListDM.getString("ERP_PO_NO", i);
+			assBillNo = ERP_PO_NO;
+			sql = "select item_code commoditySn,TOTAL_QTY qty from inb_po_detail where PO_NO='"+po_no+"' ";
+			DataManager podetailDM = DBOperator.DoSelect2DM(sql);
+			JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetailDM, "Items"));
+			try {
+				new poImportFrm().poCreateAPI(warehouseID,assBillNo,etaTime,dataJson.get("Items").toString());
+				Thread.sleep(1000);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		
 //		EventQueue.invokeLater(new Runnable() {
 //			public void run() {
 //				try {
@@ -219,6 +243,7 @@ public class poImportFrm extends InnerFrame {
 						if(fileDir.equals("")) return "";
 						ExcelRead excel = new ExcelRead(fileDir);
 						ArrayList<?> list = null;
+						StringBuffer poNoList = new StringBuffer();
 						DataManager excelDM = new DataManager();
 						try {
 							list = excel.getExcelData();
@@ -239,9 +264,9 @@ public class poImportFrm extends InnerFrame {
 							boolean changeLine = false;
 							try {
 								String sql = "";
-								java.sql.Connection con = DBConnectionManager.getInstance().getConnection("wms");
-								java.sql.Statement stmt = con.createStatement();
-								ResultSet rs;
+//								java.sql.Connection con = DBConnectionManager.getInstance().getConnection("wms");
+//								java.sql.Statement stmt = con.createStatement();
+//								ResultSet rs;
 								StringBuffer sbf = new StringBuffer();
 								for (int i = 0; i <excelDM.getCurrentCount() ; i++) {
 									if(excelDM.getString("仓库编码", i).equals("")) continue;// Excel空白字符行自动跳过
@@ -313,10 +338,10 @@ public class poImportFrm extends InnerFrame {
 										continue;
 									}
 									sql = "select po_no,status from inb_po_header where storer_code='"+STORER_CODE+"' and erp_po_no='" + ERP_PO_NO + "'";
-									LogInfo.appendLog("sql", sql);
-									rs = stmt.executeQuery(sql);
-									if (!rs.next()) {
+									DataManager poDM = DBOperator.DoSelect2DM(sql);
+									if (poDM.getCurrentCount()>0) {
 										PO_NO = comData.getValueFromBasNumRule("inb_po_header", "po_no");
+										poNoList.append("'"+PO_NO+"',");
 										//插入表头
 										sql = "insert into inb_po_header(po_no,warehouse_code,storer_code,vendor_code,erp_po_no,remark,created_dtm_loc,created_by_user,updated_dtm_loc,updated_by_user)"
 												+ " select '" + PO_NO + "','" + WAREHOUSE_CODE + "','" + STORER_CODE + "','" + VENDOR_CODE
@@ -349,17 +374,15 @@ public class poImportFrm extends InnerFrame {
 											LogInfo.appendLog("error","插入PO表明细报错\n" + sql);
 										}
 									}else{
-										PO_NO = rs.getString("po_no");
-										POStatus = rs.getString("status");
+										PO_NO = poDM.getString("po_no",0);
+										POStatus = poDM.getString("status",0);
 										if(!POStatus.equals("100")){
 											sbf.append("\nPO:"+PO_NO+" ERP_PO_NO:"+ERP_PO_NO+" 商品编码:"+ITEM_CODE+" 记录存在，并且订单状态非初始状态，忽略此行导入\n");
 											continue;
 										}
 										sql = "select po_no from inb_po_detail where po_no='"+PO_NO+"' and line_number = "+LINE_NUMBER+" ";
-										LogInfo.appendLog("sql", sql);
-										java.sql.Statement stmt2 = con.createStatement();
-										ResultSet rs2 = stmt2.executeQuery(sql);
-										if(rs2.next()){
+										DataManager poDetailDM = DBOperator.DoSelect2DM(sql);
+										if(poDetailDM.getCurrentCount()>0){
 											System.out.println("PO明细重复，忽略改行数据:"+PO_NO+" "+LINE_NUMBER);
 											continue;
 										}
@@ -389,6 +412,24 @@ public class poImportFrm extends InnerFrame {
 									Message.showWarningMessage(sbf.toString());
 									LogInfo.appendLog("error",sbf.toString());
 								}
+								//调用三明治POCreate API接口，创建PO预入库单
+								String warehouseID="54";
+								String etaTime = LogInfo.getCurrentDate_Short();
+								String assBillNo = "";
+								poNoList.append("''");
+								sql = "select PO_NO,ERP_PO_NO from inb_po_header where PO_NO in("+poNoList+")";
+								DataManager poHeaderListDM = DBOperator.DoSelect2DM(sql);
+								for(int i=0;i<poHeaderListDM.getCurrentCount();i++){
+									String po_no = poHeaderListDM.getString("PO_NO", i);
+									String ERP_PO_NO = poHeaderListDM.getString("ERP_PO_NO", i);
+									assBillNo = ERP_PO_NO;
+									sql = "select item_code commoditySn,TOTAL_QTY qty from inb_po_detail where PO_NO='"+po_no+"' ";
+									DataManager podetailDM = DBOperator.DoSelect2DM(sql);
+									JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetailDM, "Items"));
+									poCreateAPI(warehouseID,assBillNo,etaTime,dataJson.get("Items").toString());
+									Thread.sleep(1000);
+								}
+								
 							} catch (Exception e) {
 								e.printStackTrace();
 								LogInfo.appendLog(e.getMessage());
@@ -553,27 +594,27 @@ public class poImportFrm extends InnerFrame {
 											if(t>0){
 												//getHeaderTableData(retWhere);
 												//写入三明治锁库表  sandwich.ag_product_lock
-												sql = "insert into sandwich.ag_sku_batch_lock(ag_product_id,ag_batch,ag_total_num,ag_safe_num,created_time) "
-													+ "select (select product_id from sandwich.ag_product where part_number=ITEM_CODE limit 1) product_id,ERP_PO_NO "
-													+ ",sum(TOTAL_QTY) ag_total_num,0 ag_safe_num,now() "
-													+ "from inb_po_detail where WAREHOUSE_CODE='SHJD'  and PO_NO in ("+sbf.toString()+") "
-													+ "group by STORER_CODE,ITEM_CODE,ERP_PO_NO ";
-												t = DBOperator.DoUpdate(sql);
-												if(t>0){
-													//通知外部接口，PO已经完成收货
-													for(int i=0;i<selRow.length;i++){
-														String po_no = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("PO号")).toString();
-														String ERP_PO_NO = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("ERP_PO_NO")).toString();
-														sql = "select item_code MerchantProductID,TOTAL_QTY Qty from inb_po_detail where PO_NO='"+po_no+"' ";
-														DataManager podetail = DBOperator.DoSelect2DM(sql);
-														JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetail, "Items"));
-														openPOAPI(ERP_PO_NO,dataJson.get("Items").toString());
-														Thread.sleep(1000);
-													}
-												}else{
-													Message.showErrorMessage("写入三明治锁库表  sandwich.ag_product_lock 失败，请联系管理员");
-													LogInfo.appendLog("error","写入三明治锁库表  sandwich.ag_product_lock 失败，请联系管理员:"+sql);
-												}	
+//												sql = "insert into sandwich.ag_sku_batch_lock(ag_product_id,ag_batch,ag_total_num,ag_safe_num,created_time) "
+//													+ "select (select product_id from sandwich.ag_product where part_number=ITEM_CODE limit 1) product_id,ERP_PO_NO "
+//													+ ",sum(TOTAL_QTY) ag_total_num,0 ag_safe_num,now() "
+//													+ "from inb_po_detail where WAREHOUSE_CODE='SHJD'  and PO_NO in ("+sbf.toString()+") "
+//													+ "group by STORER_CODE,ITEM_CODE,ERP_PO_NO ";
+//												t = DBOperator.DoUpdate(sql);
+//												if(t>0){
+												//通知外部接口，PO已经完成收货
+												for(int i=0;i<selRow.length;i++){
+													String po_no = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("PO号")).toString();
+													String ERP_PO_NO = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("ERP_PO_NO")).toString();
+													sql = "select item_code MerchantProductID,TOTAL_QTY Qty from inb_po_detail where PO_NO='"+po_no+"' ";
+													DataManager podetail = DBOperator.DoSelect2DM(sql);
+													JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetail, "Items"));
+													openPOAPI(ERP_PO_NO,dataJson.get("Items").toString());
+													Thread.sleep(1000);
+												}
+//												}else{
+//													Message.showErrorMessage("写入三明治锁库表  sandwich.ag_product_lock 失败，请联系管理员");
+//													LogInfo.appendLog("error","写入三明治锁库表  sandwich.ag_product_lock 失败，请联系管理员:"+sql);
+//												}	
 											}
 										}
 						                return "";
@@ -674,7 +715,6 @@ public class poImportFrm extends InnerFrame {
     }
 	
 	public String createLinkString(Map<String, String> params) {
-
 		List<String> keys = new ArrayList<String>(params.keySet());
 		Collections.sort(keys);
 		StringBuffer sb = new StringBuffer();
@@ -683,6 +723,21 @@ public class poImportFrm extends InnerFrame {
 		}
 		return sb.toString();
 	}
+	
+	public String createLinkString_AGG(Map<String, String> params) {
+		List<String> keys = new ArrayList<String>(params.keySet());
+		Collections.sort(keys);
+		String prestr = "";
+		for (int i = 0; i < keys.size(); i++) {
+			if (i < keys.size() - 1) {
+				prestr = prestr + ((String) keys.get(i)) + "=" + (String) params.get(keys.get(i)) + "&";
+			} else {
+				prestr = prestr + ((String) keys.get(i)) + "=" + (String) params.get(keys.get(i));
+			}
+		}
+		return prestr;
+	}
+
 	
 	public void openPOAPI(String ERP_PO_NO,String Items) throws Exception{
 		String url = "http://api.ajyaguru.com/openAPI.html";
@@ -715,6 +770,38 @@ public class poImportFrm extends InnerFrame {
 //				String WareHouseID = info.getString("WareHouseID");
 //				System.out.println(WareHouseID+" / "+ProductID +" : "+ OnlineQty);
 //			}
+		}else if(dataJson.containsKey("Code")){
+			throw new Exception(httpOrgCreateTestRtn);
+		}
+	}
+	
+	public void poCreateAPI(String warehouseID,String assBillNo,String etaTime,String Items) throws Exception{
+		String url = "http://api.ajyaguru.com/openAPI.html";
+		String charset = "utf-8";
+		HttpClientUtil httpClientUtil = new HttpClientUtil();
+		String httpOrgCreateTest = url;
+		/* 将参数值放入map */
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("appid", "ed76a13b11b26e90246f365ceea1b3f9db0c40f8");
+		map.put("format", "json");
+		map.put("method", "POCreate");
+		map.put("tstamp", (new SimpleDateFormat("yyyyMMddHHmmss").format(new Date())));
+
+		map.put("nonce", ((int) ((Math.random() * 9 + 1) * 100000)) + "");
+		map.put("version", "1.0");
+		String prestr = createLinkString_AGG(map);
+		System.out.println(prestr);
+		System.out.println(URLEncoder.encode(prestr).toLowerCase() + "8ece581d7ea7e37652579dbf0c5d08d9");
+		String sign = MD5.GetMD5Code(URLEncoder.encode(prestr).toLowerCase() + "8ece581d7ea7e37652579dbf0c5d08d9").toLowerCase();
+		System.out.println(sign);
+		map.put("sign", sign);
+		map.put("data", "{\"thdNum\":\""+assBillNo+"\",\"assBillNo\":\""+assBillNo+"\",\"warehouseID\":\""+warehouseID+"\",\"etaTime\":\""+etaTime+"\",\"Items\":"+Items+"}");
+		
+		String httpOrgCreateTestRtn = httpClientUtil.doPost(httpOrgCreateTest,map,charset);
+		System.out.println("result:"+httpOrgCreateTestRtn);
+		LogInfo.appendLog("API",httpOrgCreateTestRtn);
+		JSONObject dataJson = JSONObject.fromObject(httpOrgCreateTestRtn);
+		if(dataJson.containsKey("Data")){
 		}else if(dataJson.containsKey("Code")){
 			throw new Exception(httpOrgCreateTestRtn);
 		}

@@ -31,6 +31,11 @@ public class LogInfo {
         SimpleDateFormat sm = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss SSS");
         return sm.format(new Date());
     }
+    
+    public static String getCurrentDate_Short() {
+        SimpleDateFormat sm = new SimpleDateFormat("yyyyMMdd");
+        return sm.format(new Date());
+    }
 
     public static String strRight(String value) {
         return value.substring(value.length() - 2, value.length());
