@@ -107,37 +107,38 @@ public class poImportFrm extends InnerFrame {
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-//		String sql = "select item_code MerchantProductID,TOTAL_QTY Qty from inb_po_detail where PO_NO='PO00000233' ";
-//		DataManager podetail = DBOperator.DoSelect2DM(sql);
-//		JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetail, "Items"));
-//		try {
-//			new poImportFrm().openPOAPI("164027000093",dataJson.get("Items").toString());
-//		} catch (Exception e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		String sql = "select STORER_CODE,item_code MerchantProductID,TOTAL_QTY Qty from inb_po_detail where PO_NO='PO00000233' ";
+		DataManager podetail = DBOperator.DoSelect2DM(sql);
+		String supplierID = podetail.getString("STORER_CODE", 0);
+		JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetail, "Items"));
+		try {
+			new poImportFrm().openPOAPI(supplierID,"164027000093",dataJson.get("Items").toString());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		//调用三明治POCreate API接口，创建PO预入库单
-		String warehouseID="54";
-		String etaTime = LogInfo.getCurrentDate_Short();
-		String assBillNo = "";
-		String sql = "select PO_NO,ERP_PO_NO from inb_po_header where PO_NO in('PO00000280')";
-		DataManager poHeaderListDM = DBOperator.DoSelect2DM(sql);
-		for(int i=0;i<poHeaderListDM.getCurrentCount();i++){
-			String po_no = poHeaderListDM.getString("PO_NO", i);
-			String ERP_PO_NO = poHeaderListDM.getString("ERP_PO_NO", i);
-			assBillNo = ERP_PO_NO;
-			sql = "select item_code commoditySn,TOTAL_QTY qty from inb_po_detail where PO_NO='"+po_no+"' ";
-			DataManager podetailDM = DBOperator.DoSelect2DM(sql);
-			JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetailDM, "Items"));
-			try {
-				new poImportFrm().poCreateAPI(warehouseID,assBillNo,etaTime,dataJson.get("Items").toString());
-				Thread.sleep(1000);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+//		String warehouseID="54";
+//		String etaTime = LogInfo.getCurrentDate_Short();
+//		String assBillNo = "";
+//		String sql = "select PO_NO,ERP_PO_NO from inb_po_header where PO_NO in('PO00000280')";
+//		DataManager poHeaderListDM = DBOperator.DoSelect2DM(sql);
+//		for(int i=0;i<poHeaderListDM.getCurrentCount();i++){
+//			String po_no = poHeaderListDM.getString("PO_NO", i);
+//			String ERP_PO_NO = poHeaderListDM.getString("ERP_PO_NO", i);
+//			assBillNo = ERP_PO_NO;
+//			sql = "select item_code commoditySn,TOTAL_QTY qty from inb_po_detail where PO_NO='"+po_no+"' ";
+//			DataManager podetailDM = DBOperator.DoSelect2DM(sql);
+//			JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetailDM, "Items"));
+//			try {
+//				new poImportFrm().poCreateAPI(warehouseID,assBillNo,etaTime,dataJson.get("Items").toString());
+//				Thread.sleep(1000);
+//			} catch (Exception e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
 		
 //		EventQueue.invokeLater(new Runnable() {
 //			public void run() {
@@ -413,22 +414,22 @@ public class poImportFrm extends InnerFrame {
 									LogInfo.appendLog("error",sbf.toString());
 								}
 								//调用三明治POCreate API接口，创建PO预入库单
-								String warehouseID="54";
-								String etaTime = LogInfo.getCurrentDate_Short();
-								String assBillNo = "";
-								poNoList.append("''");
-								sql = "select PO_NO,ERP_PO_NO from inb_po_header where PO_NO in("+poNoList+")";
-								DataManager poHeaderListDM = DBOperator.DoSelect2DM(sql);
-								for(int i=0;i<poHeaderListDM.getCurrentCount();i++){
-									String po_no = poHeaderListDM.getString("PO_NO", i);
-									String ERP_PO_NO = poHeaderListDM.getString("ERP_PO_NO", i);
-									assBillNo = ERP_PO_NO;
-									sql = "select item_code commoditySn,TOTAL_QTY qty from inb_po_detail where PO_NO='"+po_no+"' ";
-									DataManager podetailDM = DBOperator.DoSelect2DM(sql);
-									JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetailDM, "Items"));
-									poCreateAPI(warehouseID,assBillNo,etaTime,dataJson.get("Items").toString());
-									Thread.sleep(1000);
-								}
+//								String warehouseID="54";
+//								String etaTime = LogInfo.getCurrentDate_Short();
+//								String assBillNo = "";
+//								poNoList.append("''");
+//								sql = "select PO_NO,ERP_PO_NO from inb_po_header where PO_NO in("+poNoList+")";
+//								DataManager poHeaderListDM = DBOperator.DoSelect2DM(sql);
+//								for(int i=0;i<poHeaderListDM.getCurrentCount();i++){
+//									String po_no = poHeaderListDM.getString("PO_NO", i);
+//									String ERP_PO_NO = poHeaderListDM.getString("ERP_PO_NO", i);
+//									assBillNo = ERP_PO_NO;
+//									sql = "select item_code commoditySn,TOTAL_QTY qty from inb_po_detail where PO_NO='"+po_no+"' ";
+//									DataManager podetailDM = DBOperator.DoSelect2DM(sql);
+//									JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetailDM, "Items"));
+//									poCreateAPI(warehouseID,assBillNo,etaTime,dataJson.get("Items").toString());
+//									Thread.sleep(1000);
+//								}
 								
 							} catch (Exception e) {
 								e.printStackTrace();
@@ -605,10 +606,11 @@ public class poImportFrm extends InnerFrame {
 												for(int i=0;i<selRow.length;i++){
 													String po_no = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("PO号")).toString();
 													String ERP_PO_NO = headerTable.getValueAt(selRow[i], headerTable.getColumnModel().getColumnIndex("ERP_PO_NO")).toString();
-													sql = "select item_code MerchantProductID,TOTAL_QTY Qty from inb_po_detail where PO_NO='"+po_no+"' ";
+													sql = "select STORER_CODE,item_code MerchantProductID,TOTAL_QTY Qty from inb_po_detail where PO_NO='"+po_no+"' ";
 													DataManager podetail = DBOperator.DoSelect2DM(sql);
+													String supplierID = podetail.getString("STORER_CODE", 0);
 													JSONObject dataJson = JSONObject.fromObject(DBOperator.DataManager2JSONString(podetail, "Items"));
-													openPOAPI(ERP_PO_NO,dataJson.get("Items").toString());
+													openPOAPI(supplierID,ERP_PO_NO,dataJson.get("Items").toString());
 													Thread.sleep(1000);
 												}
 //												}else{
@@ -739,7 +741,7 @@ public class poImportFrm extends InnerFrame {
 	}
 
 	
-	public void openPOAPI(String ERP_PO_NO,String Items) throws Exception{
+	public void openPOAPI(String supplierID,String ERP_PO_NO,String Items) throws Exception{
 		String url = "http://api.ajyaguru.com/openAPI.html";
 		String charset = "utf-8";
 		HttpClientUtil httpClientUtil = new HttpClientUtil();
@@ -749,7 +751,7 @@ public class poImportFrm extends InnerFrame {
 		hashMap.put("format", "json");
 		hashMap.put("method", "Inventory.ProductInStockNoSign");
 		hashMap.put("timestamp", getDateTimeString());
-		hashMap.put("data", "{\"POID\":\""+ERP_PO_NO+"\",\"WarehouseID\":\"54\",\"Items\":"+Items+"}");
+		hashMap.put("data", "{\"SupplierID\":\""+supplierID+"\",\"POID\":\""+ERP_PO_NO+"\",\"WarehouseID\":\"54\",\"Items\":"+Items+"}");
 		hashMap.put("nonce",(new Random().nextInt(100000000)) + "");
 		hashMap.put("version", "1.0");
 		String salt = createLinkString(hashMap) + "appsecret=0bae030e6a964214aca12698b4a52d5c";
