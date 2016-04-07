@@ -339,7 +339,7 @@ public class poImportFrm extends InnerFrame {
 									}
 									sql = "select po_no,status from inb_po_header where storer_code='"+STORER_CODE+"' and erp_po_no='" + ERP_PO_NO + "'";
 									DataManager poDM = DBOperator.DoSelect2DM(sql);
-									if (poDM.getCurrentCount()>0) {
+									if (poDM.getCurrentCount()==0) {
 										PO_NO = comData.getValueFromBasNumRule("inb_po_header", "po_no");
 										poNoList.append("'"+PO_NO+"',");
 										//≤Â»Î±ÌÕ∑
