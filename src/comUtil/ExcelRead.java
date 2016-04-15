@@ -51,7 +51,7 @@ public class ExcelRead {
 			String[] str = new String[totalCells];
 			row = sheet.getRow(i);
 			for (int j = 0; j < totalCells; j++) {
-				cell = (Cell) sheet.getCellComment(j, i);
+//				cell = (Cell) sheet.getCellComment(j, i);
 				cell = row.getCell(j);
 //				System.out.println(j + "DDDDDDDDDD");
 				 str[j] = cell==null?"":cell.toString();
