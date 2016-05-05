@@ -6,6 +6,9 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Vector;
 
 import dmdata.DataManager;
@@ -169,6 +172,47 @@ public class DBOperator {
 		jsonObject.put(jsonRoot, jsonAllArray);
 		LogInfo.appendLog(jsonObject.toString());
 		return jsonObject.toString();
+	}
+	
+	@SuppressWarnings("rawtypes")
+	public static synchronized String DataManager2JSONString(DataManager dm,String jsonRoot,HashMap hm){
+		JSONObject jsonObject = new JSONObject();
+		JSONArray jsonAllArray = new JSONArray();
+		if(dm==null || dm.getCurrentCount()==0){
+			Iterator iter = hm.entrySet().iterator();
+			while (iter.hasNext()) {
+				Map.Entry entry = (Map.Entry) iter.next();
+				Object key = entry.getKey();
+				Object val = entry.getValue();
+				jsonObject.put(key, val);
+			}
+			jsonObject.put(jsonRoot, jsonAllArray);
+			LogInfo.appendLog(jsonObject.toString());
+			return jsonObject.toString();
+		}
+		for(int i=0;i<dm.getCurrentCount();i++){
+			JSONObject jsonArray = new JSONObject();
+			for(int j=0;j<dm.getColCount();j++){
+				jsonArray.put(dm.getCol(j), dm.getObject(j, i).toString());
+			}
+			jsonAllArray.add(jsonArray);
+		}
+		if(jsonRoot.equals("")){
+			LogInfo.appendLog(jsonAllArray.toString());
+			return jsonAllArray.toString();
+		}else{
+			Iterator iter = hm.entrySet().iterator();
+			while (iter.hasNext()) {
+				Map.Entry entry = (Map.Entry) iter.next();
+				Object key = entry.getKey();
+				Object val = entry.getValue();
+				jsonObject.put(key, val);
+			}
+			jsonObject.put(jsonRoot, jsonAllArray);
+			LogInfo.appendLog(jsonObject.toString());
+			return jsonObject.toString();
+		}
+		
 	}
 	
 	private static Object ChangeTimeStamp2Date(Object obj) {
