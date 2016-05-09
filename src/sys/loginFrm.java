@@ -159,8 +159,10 @@ public class loginFrm extends JFrame {
 		        saveCf.saveFile(System.getProperty("user.dir")+"/logon.properties","");
 		        MD5 getMD5 = new MD5();
 				String password = getMD5.GetMD5Code(userPwd);
-				String sql = "select '"+warehouseCode+"' CUR_WAREHOUSE_CODE,'"+warehouseName+"' CUR_WAREHOUSE_NAME,WAREHOUSE_CODE,USER_CODE,USER_NAME,ROLE_NAME,ACTIVE from sys_user "
-				+"where (user_code= '"+userCode+"' or login_code = '"+userCode+"') and password='"+password+"' ";
+				String sql = "select '"+warehouseCode+"' CUR_WAREHOUSE_CODE,'"+warehouseName+"' CUR_WAREHOUSE_NAME,"
+						+ "WAREHOUSE_CODE,USER_CODE,USER_NAME,ROLE_NAME,ACTIVE from sys_user "
+						+"where (user_code= '"+userCode+"' or login_code = '"+userCode+"') and password='"+password+"' "
+						+ " ";
 				if(sqlValidate(sql)){
 					DataManager dm = DBOperator.DoSelect2DM(sql);
 					if(dm==null || dm.getCurrentCount()==0){
@@ -175,6 +177,16 @@ public class loginFrm extends JFrame {
 							txt_user_code.selectAll();
 							return;
 						}
+						//没有指定仓库的账户，可以登录所有仓库，否则按照账户设定的仓库进行登录
+						if(!dm.getString("WAREHOUSE_CODE", 0).equals("")){
+							if(!warehouseCode.equals(dm.getString("WAREHOUSE_CODE", 0))){
+								Message.showWarningMessage("请选择其他仓库");
+								txt_user_code.requestFocus();
+								txt_user_code.selectAll();
+								return;
+							}
+						}
+						
 						MainFrm.setUserInfo(dm);
 						MainFrm.createUI();
 						setVisible(false);
