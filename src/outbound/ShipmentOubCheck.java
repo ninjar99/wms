@@ -327,6 +327,29 @@ public class ShipmentOubCheck extends InnerFrame {
 								txt_tracking_no.requestFocus();
 								return;
 							}
+							//更改订单状态前先判断，如果海外直邮仓，需要判断该包裹明细是否有相同收货人的身份证号，如果有，不允许加入到该订单包裹明细
+							String wrap_no = txt_wrap_no.getText().trim();
+							String warehouse_code = MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0);
+							String user_code = MainFrm.getUserInfo().getString("USER_CODE", 0);
+							if(cb_abroad.isSelected() && !wrap_no.equals("")){
+								sql = "select SHIP_TO_CONTACT_IDCARD from oub_shipment_header "
+									+ "where SHIPMENT_NO='"+shipmentNo+"' and WAREHOUSE_CODE='"+warehouse_code+"' "
+									+ "and SHIP_TO_CONTACT_IDCARD in "
+									+ "( "
+									+ "select osh.SHIP_TO_CONTACT_IDCARD "
+									+ "from oub_wrap_detail owd "
+									+ "left join oub_shipment_header osh on owd.SHIPMENT_NO=osh.SHIPMENT_NO and owd.WAREHOUSE_CODE=osh.WAREHOUSE_CODE "
+									+ "where owd.WRAP_NO='"+wrap_no+"' and owd.WAREHOUSE_CODE='"+warehouse_code+"' "
+									+ ")";
+								DataManager dmcheck = DBOperator.DoSelect2DM(sql);
+								if(dmcheck.getCurrentCount()>0){
+									Message.showWarningMessage("订单不能加入到此包裹，同一个身份证号码【"+dmcheck.getString("SHIP_TO_CONTACT_IDCARD", 0)+"】在一个包裹中只能存在一个订单!");
+									txt_tracking_no.setText("");
+									txt_tracking_no.requestFocus();
+									return;
+								}
+							}
+							//更新订单状态
 							sql = "update oub_shipment_header set status='700',CHECK_BY_USER='"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"'"
 									+",CHECK_DTM_LOC=now(),UPDATED_BY_USER='"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"',UPDATED_DTM_LOC=now() "
 									+" where SHIPMENT_NO='"+shipmentNo+"' ";
@@ -338,9 +361,6 @@ public class ShipmentOubCheck extends InnerFrame {
 								return;
 							}else{
 								//写入订单包裹表
-								String wrap_no = txt_wrap_no.getText().trim();
-								String warehouse_code = MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0);
-								String user_code = MainFrm.getUserInfo().getString("USER_CODE", 0);
 								if(cb_abroad.isSelected() && !wrap_no.equals("")){
 									//写入表头
 									sql = "insert into oub_wrap_header(WRAP_NO,WRAP_NAME,WAREHOUSE_CODE,WRAP_START_DATE"
@@ -353,7 +373,7 @@ public class ShipmentOubCheck extends InnerFrame {
 									//写入明细
 									sql = "insert into oub_wrap_detail(OUB_WRAP_HEADER_ID,WRAP_NO,STATUS,WAREHOUSE_CODE,"
 										+ "SHIPMENT_NO,CREATED_BY_USER,CREATED_DTM_LOC) "
-										+ "select (select OUB_WRAP_HEADER_ID from oub_wrap_header where WAREHOUSE_CODE='"+warehouse_code+"' limit 1),"
+										+ "select (select OUB_WRAP_HEADER_ID from oub_wrap_header where WAREHOUSE_CODE='"+warehouse_code+"' and WRAP_NO='"+wrap_no+"' limit 1),"
 										+ "'"+wrap_no+"',100,'"+warehouse_code+"','"+shipmentNo+"','"+user_code+"',now() from dual "
 										+ "where not exists(select WRAP_NO from oub_wrap_detail "
 										+ "where WRAP_NO='"+wrap_no+"' and SHIPMENT_NO='"+shipmentNo+"' "
