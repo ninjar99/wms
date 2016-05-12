@@ -160,7 +160,7 @@ public class loginFrm extends JFrame {
 		        MD5 getMD5 = new MD5();
 				String password = getMD5.GetMD5Code(userPwd);
 				String sql = "select '"+warehouseCode+"' CUR_WAREHOUSE_CODE,'"+warehouseName+"' CUR_WAREHOUSE_NAME,"
-						+ "WAREHOUSE_CODE,USER_CODE,USER_NAME,ROLE_NAME,ACTIVE from sys_user "
+						+ "WAREHOUSE_CODE,USER_CODE,USER_NAME,ROLE_NAME,ACTIVE,USER_TYPE from sys_user "
 						+"where (user_code= '"+userCode+"' or login_code = '"+userCode+"') and password='"+password+"' "
 						+ " ";
 				if(sqlValidate(sql)){
@@ -171,6 +171,12 @@ public class loginFrm extends JFrame {
 						txt_user_code.selectAll();
 						return;
 					}else{
+						if(dm.getString("USER_TYPE", 0).equalsIgnoreCase("admin")){
+							MainFrm.setUserInfo(dm);
+							MainFrm.createUI();
+							setVisible(false);
+							return;
+						}
 						if(!dm.getString("ACTIVE", 0).toString().equals("true")){
 							Message.showWarningMessage("’Àªß“—Õ£”√");
 							txt_user_code.requestFocus();

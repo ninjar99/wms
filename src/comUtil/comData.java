@@ -66,6 +66,10 @@ public class comData {
 	
 	public static boolean getUserMenuPower(String menuItem){
 		DataManager dm = MainFrm.getUserInfo();
+		if(dm.getString("USER_TYPE", 0).equalsIgnoreCase("admin")){
+			//管理员直接返回True
+			return true;
+		}
 		String role = dm.getString("ROLE_NAME", 0);
 		String[] roles = role.split(",");
 		StringBuffer menuID = new StringBuffer(" in(");

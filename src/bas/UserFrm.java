@@ -329,9 +329,13 @@ public class UserFrm extends InnerFrame {
 		};
 
 	private void initData(String strWhere){
-        String sql = "select su.warehouse_code 仓库号,bw.warehouse_name 仓库名称,su.USER_CODE 用户编码,su.LOGIN_CODE 登录账号,su.USER_NAME 用户名称,su.PASSWORD 密码,su.ROLE_NAME 用户权限,case su.active when '1' then '是' else '否' end 是否启用 from sys_user su "
-        			+"inner join bas_warehouse bw on su.warehouse_code=bw.warehouse_code "
-        			+" where 1=1 ";
+        String sql = "select su.warehouse_code 仓库号,bw.warehouse_name 仓库名称,su.USER_CODE 用户编码,"
+        		+ "su.LOGIN_CODE 登录账号,su.USER_NAME 用户名称,su.PASSWORD 密码,su.ROLE_NAME 用户权限,"
+        		+ "case su.active when '1' then '是' else '否' end 是否启用  "
+        		+ "from sys_user su "
+        		+ "left join bas_warehouse bw on su.warehouse_code=bw.warehouse_code "
+        		+ "where 1=1 and su.warehouse_code='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"'"
+        		+ "and ifnull(su.USER_TYPE,'')<>'admin' ";
         if(!strWhere.equals("")){
 			sql = sql + strWhere;
 			System.out.println("strWhere = "+strWhere);

@@ -83,6 +83,7 @@ import outbound.ShipmentInputFrm;
 import outbound.ShipmentOubCheck;
 import outbound.ShipmentOubScan;
 import outbound.ShipmentQueryFrm;
+import outbound.ShipmentWrapQueryFrm;
 import outbound.StockTakeFrm;
 import outbound.StockTakeQueryFrm;
 import outbound.TrackingNoScanFrm;
@@ -142,7 +143,7 @@ public class MainFrm extends JPanel {
 		MainFrm.versionInfo = versionInfo;
 	}
 
-	//CUR_WAREHOUSE_CODE WAREHOUSE_CODE  USER_CODE  USER_NAME  ROLE_NAME
+	//CUR_WAREHOUSE_CODE WAREHOUSE_CODE  USER_CODE  USER_NAME  ROLE_NAME  ACTIVE  USER_TYPE
 	public static DataManager getUserInfo() {
 		return userInfo;
 	}
@@ -482,7 +483,16 @@ public class MainFrm extends JPanel {
 				btnShipmentQuery.setOpaque(false);
 				pnl.add(btnShipmentQuery);
 				
-				pnl.setSize(new Dimension(0, 250));
+				JButton btnShipmentWrapQuery = new JButton("订单包裹查询");
+				btnShipmentWrapQuery.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						initButtonMenu(ShipmentWrapQueryFrm.getInstance(),"AGG WMS 【订单包裹查询】");
+					}
+				});
+				btnShipmentWrapQuery.setOpaque(false);
+				pnl.add(btnShipmentWrapQuery);
+				
+				pnl.setSize(new Dimension(0, 300));
 				pnl.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
 				return pnl;
 				

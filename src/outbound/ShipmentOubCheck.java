@@ -8,6 +8,8 @@ import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyVetoException;
 import java.beans.VetoableChangeListener;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Vector;
 
 import javax.swing.JFrame;
@@ -25,9 +27,11 @@ import sys.InnerFrame;
 import sys.JTableUtil;
 import sys.MainFrm;
 import sys.Message;
+import sys.tableQueryDialog;
 
 import java.awt.GridLayout;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 
 import javax.swing.JLabel;
 import java.awt.FlowLayout;
@@ -39,6 +43,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import javax.swing.JCheckBox;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
 
 public class ShipmentOubCheck extends InnerFrame {
 
@@ -47,6 +54,11 @@ public class ShipmentOubCheck extends InnerFrame {
 	private static boolean isOpen = false;
 	private JTextField txt_tracking_no;
 	private PBSUIBaseGrid table;
+	private JTextField txt_wrap_no;
+	private JButton btnNextWrap;
+	private JButton btnWrapQuery;
+	private JButton btnNewWrap;
+	private JButton btnWrapPrint;
 	
 	public static ShipmentOubCheck getInstance() {
 		 if(instance == null) { 
@@ -120,17 +132,137 @@ public class ShipmentOubCheck extends InnerFrame {
 		
 		JPanel topPanel = new JPanel();
 		contentPane.add(topPanel, BorderLayout.NORTH);
-		topPanel.setLayout(new GridLayout(0, 1, 0, 0));
+		topPanel.setLayout(new GridLayout(2, 1, 0, 0));
 		
 		JPanel panel = new JPanel();
 		FlowLayout flowLayout = (FlowLayout) panel.getLayout();
 		flowLayout.setAlignment(FlowLayout.LEFT);
 		topPanel.add(panel);
 		
+		JCheckBox cb_abroad = new JCheckBox("\u6D77\u5916\u76F4\u90AE\u6253\u5305");
+		cb_abroad.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent arg0) {
+				if(cb_abroad.isSelected()){
+					btnNextWrap.setEnabled(true);
+					btnWrapQuery.setEnabled(true);
+					btnNewWrap.setEnabled(true);
+					btnWrapPrint.setEnabled(true);
+				}else{
+					btnNextWrap.setEnabled(false);
+					btnWrapQuery.setEnabled(false);
+					btnNewWrap.setEnabled(false);
+					btnWrapPrint.setEnabled(false);
+				}
+			}
+		});
+		panel.add(cb_abroad);
+		
+		JLabel label = new JLabel("\u5305\u88F9\u53F7\uFF1A");
+		panel.add(label);
+		
+		txt_wrap_no = new JTextField();
+		txt_wrap_no.setEditable(false);
+		panel.add(txt_wrap_no);
+		txt_wrap_no.setColumns(12);
+		
+		btnNextWrap = new JButton("\u6362\u5305\u88F9\u53F7");
+		btnNextWrap.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				boolean b_confirm = Message.showOKorCancelMessage("需要先提交当前页面订单，才能获取下一个包裹号，是否提交?");
+				if(!b_confirm){
+					return;
+				}
+				if(!txt_wrap_no.getText().trim().equals("")){
+					String wrap_no = comData.getValueFromBasNumRule("oub_wrap_header", "WRAP_NO");
+					txt_wrap_no.setText(wrap_no);
+				}
+			}
+		});
+		
+		btnWrapQuery = new JButton("\u67E5\u8BE2");
+		btnWrapQuery.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				String sql = "select WRAP_NO 包裹号,WRAP_NAME 包裹名称,WRAP_START_DATE 包裹打包开始时间  "
+						+ "from oub_wrap_header "
+						+ "where WAREHOUSE_CODE= '"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' "
+						+ "order by WRAP_START_DATE desc";
+				tableQueryDialog tableQuery = new tableQueryDialog(sql,false);
+				Toolkit toolkit = Toolkit.getDefaultToolkit();
+				int x = (int)(toolkit.getScreenSize().getWidth()-tableQuery.getWidth())/2;
+				int y = (int)(toolkit.getScreenSize().getHeight()-tableQuery.getHeight())/2;
+				tableQuery.setLocation(x, y);
+				tableQuery.setModal(true);
+				tableQuery.setVisible(true);
+				DataManager dm = tableQueryDialog.resultDM;
+				if(dm==null){
+					return;
+				}
+				Object obj = dm.getObject("包裹号", 0);
+				if(obj==null || obj.equals("")){
+					return;
+				}else{
+					txt_wrap_no.setText((String) dm.getObject("包裹号", 0));
+				}
+			}
+		});
+		btnWrapQuery.setEnabled(false);
+		panel.add(btnWrapQuery);
+		
+		btnNewWrap = new JButton("\u65B0\u5305\u88F9\u53F7");
+		btnNewWrap.setEnabled(false);
+		btnNewWrap.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if(txt_wrap_no.getText().trim().equals("")){
+					String wrap_no = comData.getValueFromBasNumRule("oub_wrap_header", "WRAP_NO");
+					txt_wrap_no.setText(wrap_no);
+				}else{
+					Message.showWarningMessage("已有包裹号，请提交重新获取新包裹号!");
+				}
+			}
+		});
+		panel.add(btnNewWrap);
+		btnNextWrap.setEnabled(false);
+		panel.add(btnNextWrap);
+		
+		btnWrapPrint = new JButton("\u6253\u5370\u5305\u88F9\u53F7");
+		btnWrapPrint.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if(txt_wrap_no.getText().trim().equals("")){
+					Message.showWarningMessage("包裹号为空，请查询选择或重新获取新包裹号!");
+					return;
+				}else{
+					Process process;
+					String wrap_no = txt_wrap_no.getText().trim();
+					Runtime runtime = Runtime.getRuntime(); 
+					try {
+						String sql = "select '"+wrap_no+"' wrap_no from dual";
+						DataManager dm = DBOperator.DoSelect2DM(sql);
+						HashMap<String, String> hm = new HashMap<String, String>();
+						hm.put("reportname", "包裹号打印");
+						String data = "\""+(DBOperator.DataManager2JSONString(dm,"data",hm)).replaceAll("\"", "\\\\\"").replaceAll("&", "")+"\"";
+						//String data = "\"{\\\"reportname\\\":\\\"SKU查询\\\",\\\"data\\\":[{\\\"ITEM_CODE\\\":\\\"AZKJPB1E7670001\\\",\\\"ITEM_NAME\\\":\\\"日本熊野油脂无硅天然弱酸性马油洗发水600ml\\\",\\\"RETAIL_PRICE\\\":\\\"\\\"},{\\\"ITEM_CODE\\\":\\\"AZKJPB1E7670002\\\",\\\"ITEM_NAME\\\":\\\"日本熊野油脂无硅天然弱酸性马油护发素600ml\\\",\\\"RETAIL_PRICE\\\":\\\"\\\"},{\\\"ITEM_CODE\\\":\\\"0094-00031\\\",\\\"ITEM_NAME\\\":\\\"LOSHI 马油面霜 220g /瓶\\\",\\\"RETAIL_PRICE\\\":\\\"0.000\\\"}]}\"";
+						System.out.println((data));
+						runtime.exec("cmd /c "+System.getProperty("user.dir")+"/wmsReport.exe "+(data));
+						//runtime.exec("cmd /c "+System.getProperty("user.dir")+"/Report_SKU.exe "+txt1.getText().trim()+","+txt2.getText().trim());
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+				}
+			}
+		});
+		btnWrapPrint.setEnabled(false);
+		panel.add(btnWrapPrint);
+		
+		JPanel panel_1 = new JPanel();
+		FlowLayout flowLayout_1 = (FlowLayout) panel_1.getLayout();
+		flowLayout_1.setAlignment(FlowLayout.LEFT);
+		topPanel.add(panel_1);
+		
 		JLabel lblNewLabel = new JLabel("\u8FD0\u5355\u53F7\uFF1A");
-		panel.add(lblNewLabel);
+		panel_1.add(lblNewLabel);
 		
 		txt_tracking_no = new JTextField();
+		panel_1.add(txt_tracking_no);
 		txt_tracking_no.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyReleased(KeyEvent e) {
@@ -141,8 +273,17 @@ public class ShipmentOubCheck extends InnerFrame {
 					String status = "";
 					String checkUser = "";
 					String checkTime = "";
+					if(cb_abroad.isSelected() && txt_wrap_no.getText().trim().equals("")){
+						Message.showWarningMessage("请查询选择包裹号或获取新包裹号!");
+						btnWrapQuery.requestFocus();
+						return;
+					}
 					if(!trackingNo.equals("")){
-						sql = "select SHIPMENT_NO,status,CHECK_BY_USER,CHECK_DTM_LOC from oub_shipment_header where TRANSFER_ORDER_NO='"+trackingNo+"' ";
+						sql = "select SHIPMENT_NO,status,CHECK_BY_USER,CHECK_DTM_LOC "
+							+ "from oub_shipment_header "
+							+ "where TRANSFER_ORDER_NO='"+trackingNo+"' "
+							+ "and WAREHOUSE_CODE='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' "
+							+ " ";
 						DataManager dm = DBOperator.DoSelect2DM(sql);
 						if(dm==null || dm.getCurrentCount()==0){
 							Message.showWarningMessage("运单号不正确，请重新输入！");
@@ -196,6 +337,30 @@ public class ShipmentOubCheck extends InnerFrame {
 								Message.showWarningMessage("后台数据更新失败，请重新扫描！");
 								return;
 							}else{
+								//写入订单包裹表
+								String wrap_no = txt_wrap_no.getText().trim();
+								String warehouse_code = MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0);
+								String user_code = MainFrm.getUserInfo().getString("USER_CODE", 0);
+								if(cb_abroad.isSelected() && !wrap_no.equals("")){
+									//写入表头
+									sql = "insert into oub_wrap_header(WRAP_NO,WRAP_NAME,WAREHOUSE_CODE,WRAP_START_DATE"
+										+ ",CREATED_BY_USER,CREATED_DTM_LOC) "
+										+ "select '"+wrap_no+"','出库订单大包裹号',"
+										+ "'"+warehouse_code+"',"
+										+ "now(),'"+user_code+"',now() "
+										+ "from dual where not exists(select WRAP_NO from oub_wrap_header where WRAP_NO='"+wrap_no+"')";
+									t = DBOperator.DoUpdate(sql);
+									//写入明细
+									sql = "insert into oub_wrap_detail(OUB_WRAP_HEADER_ID,WRAP_NO,STATUS,WAREHOUSE_CODE,"
+										+ "SHIPMENT_NO,CREATED_BY_USER,CREATED_DTM_LOC) "
+										+ "select (select OUB_WRAP_HEADER_ID from oub_wrap_header where WAREHOUSE_CODE='"+warehouse_code+"' limit 1),"
+										+ "'"+wrap_no+"',100,'"+warehouse_code+"','"+shipmentNo+"','"+user_code+"',now() from dual "
+										+ "where not exists(select WRAP_NO from oub_wrap_detail "
+										+ "where WRAP_NO='"+wrap_no+"' and SHIPMENT_NO='"+shipmentNo+"' "
+										+ "and WAREHOUSE_CODE='"+warehouse_code+"')";
+									t = DBOperator.DoUpdate(sql);
+									
+								}
 								txt_tracking_no.setText("");
 								txt_tracking_no.requestFocus();
 								getHeaderTableData(" and osh.status='700' ");
@@ -211,10 +376,13 @@ public class ShipmentOubCheck extends InnerFrame {
 				}
 			}
 		});
-		panel.add(txt_tracking_no);
 		txt_tracking_no.setColumns(12);
 		
+		JButton btn_submit = new JButton("\u63D0\u4EA4");
+		panel_1.add(btn_submit);
+		
 		JButton btnClose = new JButton("\u5173\u95ED");
+		panel_1.add(btnClose);
 		btnClose.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
@@ -225,8 +393,6 @@ public class ShipmentOubCheck extends InnerFrame {
 				}
 			}
 		});
-		
-		JButton btn_submit = new JButton("\u63D0\u4EA4");
 		btn_submit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				String sql = "";
@@ -351,6 +517,7 @@ public class ShipmentOubCheck extends InnerFrame {
 				if(!sb.toString().equals("")){
 					Message.showWarningMessage(sb.toString());
 				}
+				txt_wrap_no.setText("");
 				txt_tracking_no.setText("");
 				txt_tracking_no.requestFocus();
 				getHeaderTableData(" and osh.status='800' ");
@@ -384,8 +551,6 @@ public class ShipmentOubCheck extends InnerFrame {
 				
 			}
 		});
-		panel.add(btn_submit);
-		panel.add(btnClose);
 		
 		JPanel centerPanel = new JPanel();
 		contentPane.add(centerPanel, BorderLayout.CENTER);
@@ -410,7 +575,7 @@ public class ShipmentOubCheck extends InnerFrame {
 				+"inner join bas_storer bs on osh.storer_code=bs.storer_code "
 				+"where osh.CHECK_BY_USER='"+MainFrm.getUserInfo().getString("USER_CODE", 0)+"' "
 				+"and osh.WAREHOUSE_CODE='"+MainFrm.getUserInfo().getString("CUR_WAREHOUSE_CODE", 0)+"' "
-				+"and osh.STATUS<'800' ";
+				+"and osh.STATUS>=500 and osh.STATUS<800 ";
 		if(!strWhere.equals("")){
 			sql = sql + strWhere;
 		}
